@@ -1,6 +1,6 @@
 {
-    "name": "findlink",
-    "short_name": "findlink",
+    "name": "ravens_nest",
+    "short_name": "ravens_nest",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",

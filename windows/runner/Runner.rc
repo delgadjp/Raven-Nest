@@ -90,12 +90,12 @@ BEGIN
         BLOCK "040904e4"
         BEGIN
             VALUE "CompanyName", "com.example" "\0"
-            VALUE "FileDescription", "findlink" "\0"
+            VALUE "FileDescription", "ravens_nest" "\0"
             VALUE "FileVersion", VERSION_AS_STRING "\0"
-            VALUE "InternalName", "findlink" "\0"
+            VALUE "InternalName", "ravens_nest" "\0"
             VALUE "LegalCopyright", "Copyright (C) 2025 com.example. All rights reserved." "\0"
-            VALUE "OriginalFilename", "findlink.exe" "\0"
-            VALUE "ProductName", "findlink" "\0"
+            VALUE "OriginalFilename", "ravens_nest.exe" "\0"
+            VALUE "ProductName", "ravens_nest" "\0"
             VALUE "ProductVersion", VERSION_AS_STRING "\0"
         END
     END
