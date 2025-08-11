@@ -1,0 +1,47 @@
+name: findlink
+description: "A new Flutter project."
+publish_to: 'none' # Remove this line if you wish to publish to pub.dev
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.5.4
+
+dependencies:
+  flutter:
+    sdk: flutter
+  image_picker: ^1.0.7 
+  shared_preferences: ^2.2.2  # Check for latest version
+  permission_handler: ^11.0.1
+  shimmer: ^3.0.0
+  provider: ^6.1.2
+  flutter_localizations:
+    sdk: flutter
+  cached_network_image: ^3.3.1
+  flutter_svg: ^2.0.10+1
+  philippines_rpcmb: ^0.0.3
+  google_maps_flutter: ^2.5.0
+  geolocator: ^10.1.0
+  uuid: ^4.5.1
+  intl: ^0.19.0
+  photo_view: ^0.14.0
+  url_launcher: ^6.3.1
+  geocoding: ^2.1.0 # Added geocoding package for address lookup
+
+  cupertino_icons: ^1.0.8
+  firebase_core: ^3.10.1
+  firebase_auth: ^5.4.1
+  google_sign_in: ^6.2.2
+  cloud_firestore: ^5.6.4
+  firebase_storage: ^12.4.4
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/
+    - assets/images/
+    - assets/images/google_logo.png
