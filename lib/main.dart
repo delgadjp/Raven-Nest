@@ -74,12 +74,7 @@ class CondoManagerApp extends StatelessWidget {
         ),
         scaffoldBackgroundColor: Colors.transparent,
       ),
-<<<<<<< Updated upstream
-      initialRoute: AppRoutes.login,  // Use named routes
-      routes: AppRoutes.routes,       // Set the routes
-=======
       routerConfig: _router,
->>>>>>> Stashed changes
     );
   }
 }
