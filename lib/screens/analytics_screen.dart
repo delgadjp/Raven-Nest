@@ -12,6 +12,12 @@ class AnalyticsScreen extends StatelessWidget {
     {'month': 'Apr', 'revenue': 2900, 'bookings': 11},
     {'month': 'May', 'revenue': 3500, 'bookings': 14},
     {'month': 'Jun', 'revenue': 4200, 'bookings': 16},
+    {'month': 'Jul', 'revenue': 4800, 'bookings': 18},
+    {'month': 'Aug', 'revenue': 4600, 'bookings': 17},
+    {'month': 'Sep', 'revenue': 3800, 'bookings': 15},
+    {'month': 'Oct', 'revenue': 3400, 'bookings': 13},
+    {'month': 'Nov', 'revenue': 3100, 'bookings': 12},
+    {'month': 'Dec', 'revenue': 3600, 'bookings': 14},
   ];
 
   final List<Map<String, dynamic>> bookingSources = const [
@@ -234,16 +240,27 @@ class AnalyticsScreen extends StatelessWidget {
   }
 
   Widget _buildChartsSection() {
-    return Column(
-      children: [
-        Row(
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        // Use column layout on smaller screens (like React's grid-cols-1 lg:grid-cols-2)
+        if (constraints.maxWidth < 1024) {
+          return Column(
+            children: [
+              _buildRevenueChart(),
+              const SizedBox(height: 32),
+              _buildBookingSourcesChart(),
+            ],
+          );
+        }
+        // Use row layout on larger screens
+        return Row(
           children: [
             Expanded(child: _buildRevenueChart()),
-            const SizedBox(width: 16),
+            const SizedBox(width: 32),
             Expanded(child: _buildBookingSourcesChart()),
           ],
-        ),
-      ],
+        );
+      },
     );
   }
 
@@ -282,7 +299,7 @@ class AnalyticsScreen extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           SizedBox(
-            height: 200,
+            height: 300,
             child: _buildSimpleLineChart(),
           ),
         ],
@@ -291,10 +308,7 @@ class AnalyticsScreen extends StatelessWidget {
   }
 
   Widget _buildSimpleLineChart() {
-    return CustomPaint(
-      size: const Size(double.infinity, 200),
-      painter: LineChartPainter(monthlyRevenue),
-    );
+    return InteractiveLineChart(data: monthlyRevenue);
   }
 
   Widget _buildBookingSourcesChart() {
@@ -332,7 +346,7 @@ class AnalyticsScreen extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           SizedBox(
-            height: 200,
+            height: 300,
             child: _buildPieChart(),
           ),
         ],
@@ -593,17 +607,110 @@ class LineChartPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final paint = Paint()
+    // Chart margins
+    const double leftMargin = 50;
+    const double rightMargin = 20;
+    const double topMargin = 20;
+    const double bottomMargin = 40;
+    
+    final chartWidth = size.width - leftMargin - rightMargin;
+    final chartHeight = size.height - topMargin - bottomMargin;
+    
+    // Calculate data bounds
+    final maxRevenue = data.map((e) => e['revenue'] as int).reduce((a, b) => a > b ? a : b);
+    final minRevenue = data.map((e) => e['revenue'] as int).reduce((a, b) => a < b ? a : b);
+    final revenueRange = maxRevenue - minRevenue;
+    
+    // Draw grid lines (dashed)
+    final gridPaint = Paint()
+      ..color = Colors.grey.withOpacity(0.3)
+      ..strokeWidth = 1
+      ..style = PaintingStyle.stroke;
+    
+    // Horizontal grid lines
+    for (int i = 0; i <= 4; i++) {
+      final y = topMargin + (i * chartHeight / 4);
+      _drawDashedLine(canvas, Offset(leftMargin, y), Offset(leftMargin + chartWidth, y), gridPaint);
+    }
+    
+    // Vertical grid lines
+    for (int i = 0; i < data.length; i++) {
+      final x = leftMargin + (i * chartWidth / (data.length - 1));
+      _drawDashedLine(canvas, Offset(x, topMargin), Offset(x, topMargin + chartHeight), gridPaint);
+    }
+    
+    // Draw axes
+    final axisPaint = Paint()
+      ..color = Colors.grey.withOpacity(0.6)
+      ..strokeWidth = 1;
+    
+    // Y-axis
+    canvas.drawLine(
+      Offset(leftMargin, topMargin),
+      Offset(leftMargin, topMargin + chartHeight),
+      axisPaint,
+    );
+    
+    // X-axis
+    canvas.drawLine(
+      Offset(leftMargin, topMargin + chartHeight),
+      Offset(leftMargin + chartWidth, topMargin + chartHeight),
+      axisPaint,
+    );
+    
+    // Draw Y-axis labels
+    final textPainter = TextPainter(
+      textDirection: TextDirection.ltr,
+    );
+    
+    for (int i = 0; i <= 4; i++) {
+      final value = maxRevenue - (i * revenueRange / 4);
+      final y = topMargin + (i * chartHeight / 4);
+      
+      textPainter.text = TextSpan(
+        text: '\$${(value / 1000).toStringAsFixed(1)}k',
+        style: const TextStyle(
+          color: Colors.grey,
+          fontSize: 11,
+        ),
+      );
+      textPainter.layout();
+      textPainter.paint(canvas, Offset(leftMargin - textPainter.width - 8, y - textPainter.height / 2));
+    }
+    
+    // Draw X-axis labels
+    for (int i = 0; i < data.length; i++) {
+      final x = leftMargin + (i * chartWidth / (data.length - 1));
+      final month = data[i]['month'] as String;
+      
+      textPainter.text = TextSpan(
+        text: month,
+        style: const TextStyle(
+          color: Colors.grey,
+          fontSize: 11,
+        ),
+      );
+      textPainter.layout();
+      textPainter.paint(canvas, Offset(x - textPainter.width / 2, topMargin + chartHeight + 8));
+    }
+    
+    // Draw the line path
+    final linePaint = Paint()
       ..color = const Color(0xFF10B981)
       ..strokeWidth = 3
-      ..style = PaintingStyle.stroke;
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round;
 
     final path = Path();
-    final maxRevenue = data.map((e) => e['revenue'] as int).reduce((a, b) => a > b ? a : b);
+    final points = <Offset>[];
     
     for (int i = 0; i < data.length; i++) {
-      final x = (i / (data.length - 1)) * size.width;
-      final y = size.height - ((data[i]['revenue'] as int) / maxRevenue) * size.height;
+      final x = leftMargin + (i * chartWidth / (data.length - 1));
+      final normalizedValue = ((data[i]['revenue'] as int) - minRevenue) / revenueRange;
+      final y = topMargin + chartHeight - (normalizedValue * chartHeight);
+      
+      points.add(Offset(x, y));
       
       if (i == 0) {
         path.moveTo(x, y);
@@ -612,7 +719,37 @@ class LineChartPainter extends CustomPainter {
       }
     }
 
-    canvas.drawPath(path, paint);
+    canvas.drawPath(path, linePaint);
+    
+    // Draw data points
+    final pointPaint = Paint()
+      ..color = const Color(0xFF10B981)
+      ..style = PaintingStyle.fill;
+    
+    final pointBorderPaint = Paint()
+      ..color = Colors.white
+      ..style = PaintingStyle.fill;
+    
+    for (final point in points) {
+      // Draw white border
+      canvas.drawCircle(point, 6, pointBorderPaint);
+      // Draw colored point
+      canvas.drawCircle(point, 4, pointPaint);
+    }
+  }
+  
+  void _drawDashedLine(Canvas canvas, Offset start, Offset end, Paint paint) {
+    const dashWidth = 3.0;
+    const dashSpace = 3.0;
+    
+    final distance = (end - start).distance;
+    final normalizedDistance = distance / (dashWidth + dashSpace);
+    
+    for (int i = 0; i < normalizedDistance.floor(); i++) {
+      final startPos = start + (end - start) * (i * (dashWidth + dashSpace)) / distance;
+      final endPos = start + (end - start) * (i * (dashWidth + dashSpace) + dashWidth) / distance;
+      canvas.drawLine(startPos, endPos, paint);
+    }
   }
 
   @override
@@ -684,4 +821,345 @@ class BarChartPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+// Interactive Line Chart Widget
+class InteractiveLineChart extends StatefulWidget {
+  final List<Map<String, dynamic>> data;
+
+  const InteractiveLineChart({super.key, required this.data});
+
+  @override
+  State<InteractiveLineChart> createState() => _InteractiveLineChartState();
+}
+
+class _InteractiveLineChartState extends State<InteractiveLineChart> {
+  int? hoveredIndex;
+  Offset? hoverPosition;
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      children: [
+        GestureDetector(
+          onPanUpdate: (details) {
+            _handleHover(details.localPosition);
+          },
+          onPanEnd: (_) {
+            setState(() {
+              hoveredIndex = null;
+              hoverPosition = null;
+            });
+          },
+          onTapDown: (details) {
+            _handleHover(details.localPosition);
+          },
+          child: CustomPaint(
+            size: const Size(double.infinity, 300),
+            painter: InteractiveLineChartPainter(
+              widget.data,
+              hoveredIndex: hoveredIndex,
+            ),
+          ),
+        ),
+        if (hoveredIndex != null && hoverPosition != null)
+          Positioned(
+            left: hoverPosition!.dx - 60,
+            top: hoverPosition!.dy - 80,
+            child: _buildTooltip(),
+          ),
+      ],
+    );
+  }
+
+  void _handleHover(Offset position) {
+    const double leftMargin = 50;
+    const double rightMargin = 20;
+    
+    final RenderBox renderBox = context.findRenderObject() as RenderBox;
+    final chartWidth = renderBox.size.width - leftMargin - rightMargin;
+    final dataPointWidth = chartWidth / (widget.data.length - 1);
+    
+    if (position.dx >= leftMargin && position.dx <= renderBox.size.width - rightMargin) {
+      final relativeX = position.dx - leftMargin;
+      final index = (relativeX / dataPointWidth).round();
+      
+      if (index >= 0 && index < widget.data.length) {
+        setState(() {
+          hoveredIndex = index;
+          hoverPosition = position;
+        });
+      }
+    }
+  }
+
+  Widget _buildTooltip() {
+    if (hoveredIndex == null) return const SizedBox.shrink();
+    
+    final data = widget.data[hoveredIndex!];
+    return Container(
+      padding: const EdgeInsets.all(8),
+      decoration: BoxDecoration(
+        color: Colors.black87,
+        borderRadius: BorderRadius.circular(6),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.2),
+            blurRadius: 4,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            data['month'],
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 12,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 8,
+                height: 8,
+                decoration: const BoxDecoration(
+                  color: Color(0xFF10B981),
+                  shape: BoxShape.circle,
+                ),
+              ),
+              const SizedBox(width: 6),
+              Text(
+                'Revenue: \$${data['revenue']}',
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 11,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 2),
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 8,
+                height: 8,
+                decoration: const BoxDecoration(
+                  color: Color(0xFF3B82F6),
+                  shape: BoxShape.circle,
+                ),
+              ),
+              const SizedBox(width: 6),
+              Text(
+                'Bookings: ${data['bookings']}',
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 11,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// Enhanced Interactive Line Chart Painter
+class InteractiveLineChartPainter extends CustomPainter {
+  final List<Map<String, dynamic>> data;
+  final int? hoveredIndex;
+
+  InteractiveLineChartPainter(this.data, {this.hoveredIndex});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    // Chart margins
+    const double leftMargin = 50;
+    const double rightMargin = 20;
+    const double topMargin = 20;
+    const double bottomMargin = 40;
+    
+    final chartWidth = size.width - leftMargin - rightMargin;
+    final chartHeight = size.height - topMargin - bottomMargin;
+    
+    // Calculate data bounds
+    final maxRevenue = data.map((e) => e['revenue'] as int).reduce((a, b) => a > b ? a : b);
+    final minRevenue = data.map((e) => e['revenue'] as int).reduce((a, b) => a < b ? a : b);
+    final revenueRange = maxRevenue - minRevenue;
+    
+    // Draw grid lines (dashed)
+    final gridPaint = Paint()
+      ..color = Colors.grey.withOpacity(0.3)
+      ..strokeWidth = 1
+      ..style = PaintingStyle.stroke;
+    
+    // Horizontal grid lines
+    for (int i = 0; i <= 4; i++) {
+      final y = topMargin + (i * chartHeight / 4);
+      _drawDashedLine(canvas, Offset(leftMargin, y), Offset(leftMargin + chartWidth, y), gridPaint);
+    }
+    
+    // Vertical grid lines
+    for (int i = 0; i < data.length; i++) {
+      final x = leftMargin + (i * chartWidth / (data.length - 1));
+      _drawDashedLine(canvas, Offset(x, topMargin), Offset(x, topMargin + chartHeight), gridPaint);
+    }
+    
+    // Draw axes
+    final axisPaint = Paint()
+      ..color = Colors.grey.withOpacity(0.6)
+      ..strokeWidth = 1;
+    
+    // Y-axis
+    canvas.drawLine(
+      Offset(leftMargin, topMargin),
+      Offset(leftMargin, topMargin + chartHeight),
+      axisPaint,
+    );
+    
+    // X-axis
+    canvas.drawLine(
+      Offset(leftMargin, topMargin + chartHeight),
+      Offset(leftMargin + chartWidth, topMargin + chartHeight),
+      axisPaint,
+    );
+    
+    // Draw Y-axis labels
+    final textPainter = TextPainter(
+      textDirection: TextDirection.ltr,
+    );
+    
+    for (int i = 0; i <= 4; i++) {
+      final value = maxRevenue - (i * revenueRange / 4);
+      final y = topMargin + (i * chartHeight / 4);
+      
+      textPainter.text = TextSpan(
+        text: '\$${(value / 1000).toStringAsFixed(1)}k',
+        style: const TextStyle(
+          color: Colors.grey,
+          fontSize: 11,
+        ),
+      );
+      textPainter.layout();
+      textPainter.paint(canvas, Offset(leftMargin - textPainter.width - 8, y - textPainter.height / 2));
+    }
+    
+    // Draw X-axis labels
+    for (int i = 0; i < data.length; i++) {
+      final x = leftMargin + (i * chartWidth / (data.length - 1));
+      final month = data[i]['month'] as String;
+      
+      textPainter.text = TextSpan(
+        text: month,
+        style: TextStyle(
+          color: hoveredIndex == i ? const Color(0xFF10B981) : Colors.grey,
+          fontSize: 11,
+          fontWeight: hoveredIndex == i ? FontWeight.bold : FontWeight.normal,
+        ),
+      );
+      textPainter.layout();
+      textPainter.paint(canvas, Offset(x - textPainter.width / 2, topMargin + chartHeight + 8));
+    }
+    
+    // Draw the line path
+    final linePaint = Paint()
+      ..color = const Color(0xFF10B981)
+      ..strokeWidth = 3
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round;
+
+    final path = Path();
+    final points = <Offset>[];
+    
+    for (int i = 0; i < data.length; i++) {
+      final x = leftMargin + (i * chartWidth / (data.length - 1));
+      final normalizedValue = ((data[i]['revenue'] as int) - minRevenue) / revenueRange;
+      final y = topMargin + chartHeight - (normalizedValue * chartHeight);
+      
+      points.add(Offset(x, y));
+      
+      if (i == 0) {
+        path.moveTo(x, y);
+      } else {
+        path.lineTo(x, y);
+      }
+    }
+
+    canvas.drawPath(path, linePaint);
+    
+    // Draw hover line if hovering
+    if (hoveredIndex != null) {
+      final hoverX = leftMargin + (hoveredIndex! * chartWidth / (data.length - 1));
+      final hoverLinePaint = Paint()
+        ..color = const Color(0xFF10B981).withOpacity(0.3)
+        ..strokeWidth = 1
+        ..style = PaintingStyle.stroke;
+      
+      canvas.drawLine(
+        Offset(hoverX, topMargin),
+        Offset(hoverX, topMargin + chartHeight),
+        hoverLinePaint,
+      );
+    }
+    
+    // Draw data points
+    final pointPaint = Paint()
+      ..color = const Color(0xFF10B981)
+      ..style = PaintingStyle.fill;
+    
+    final pointBorderPaint = Paint()
+      ..color = Colors.white
+      ..style = PaintingStyle.fill;
+    
+    for (int i = 0; i < points.length; i++) {
+      final point = points[i];
+      final isHovered = hoveredIndex == i;
+      final pointRadius = isHovered ? 7.0 : 4.0;
+      final borderRadius = isHovered ? 9.0 : 6.0;
+      
+      // Draw white border
+      canvas.drawCircle(point, borderRadius, pointBorderPaint);
+      // Draw colored point
+      canvas.drawCircle(point, pointRadius, pointPaint);
+      
+      // Draw hover effect
+      if (isHovered) {
+        final hoverPaint = Paint()
+          ..color = const Color(0xFF10B981).withOpacity(0.2)
+          ..style = PaintingStyle.fill;
+        canvas.drawCircle(point, 12, hoverPaint);
+      }
+    }
+  }
+  
+  void _drawDashedLine(Canvas canvas, Offset start, Offset end, Paint paint) {
+    const dashWidth = 3.0;
+    const dashSpace = 3.0;
+    
+    final distance = (end - start).distance;
+    final normalizedDistance = distance / (dashWidth + dashSpace);
+    
+    for (int i = 0; i < normalizedDistance.floor(); i++) {
+      final startPos = start + (end - start) * (i * (dashWidth + dashSpace)) / distance;
+      final endPos = start + (end - start) * (i * (dashWidth + dashSpace) + dashWidth) / distance;
+      canvas.drawLine(startPos, endPos, paint);
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) {
+    if (oldDelegate is InteractiveLineChartPainter) {
+      return hoveredIndex != oldDelegate.hoveredIndex;
+    }
+    return true;
+  }
 }
