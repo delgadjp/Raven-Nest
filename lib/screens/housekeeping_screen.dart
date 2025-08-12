@@ -11,6 +11,7 @@ class HousekeepingScreen extends StatefulWidget {
 }
 
 class _HousekeepingScreenState extends State<HousekeepingScreen> {
+  // Data matching the React version
   final List<Map<String, dynamic>> tasks = [
     {
       'id': 1,
@@ -94,33 +95,34 @@ class _HousekeepingScreenState extends State<HousekeepingScreen> {
     }
   ];
 
+  // Helpers for colors and icons
   Color getStatusColor(String status) {
     switch (status) {
       case 'completed':
-        return Colors.green;
+        return Colors.green.shade600;
       case 'in_progress':
-        return Colors.blue;
+        return Colors.blue.shade600;
       case 'pending':
-        return Colors.orange;
+        return Colors.orange.shade600;
       case 'scheduled':
-        return Colors.purple;
+        return Colors.purple.shade600;
       case 'overdue':
-        return Colors.red;
+        return Colors.red.shade600;
       default:
-        return Colors.grey;
+        return Colors.grey.shade600;
     }
   }
 
   Color getPriorityColor(String priority) {
     switch (priority) {
       case 'high':
-        return Colors.red;
+        return Colors.red.shade600;
       case 'medium':
-        return Colors.orange;
+        return Colors.orange.shade600;
       case 'low':
-        return Colors.green;
+        return Colors.green.shade600;
       default:
-        return Colors.grey;
+        return Colors.grey.shade600;
     }
   }
 
@@ -129,9 +131,9 @@ class _HousekeepingScreenState extends State<HousekeepingScreen> {
       case 'checkout_cleaning':
         return Icons.check_circle;
       case 'maintenance':
-        return Icons.warning;
+        return Icons.warning_amber_rounded;
       case 'room_service':
-        return Icons.room_service;
+        return Icons.people_alt;
       default:
         return Icons.access_time;
     }
@@ -140,46 +142,39 @@ class _HousekeepingScreenState extends State<HousekeepingScreen> {
   Color getStaffStatusColor(String status) {
     switch (status) {
       case 'available':
-        return Colors.green;
+        return Colors.green.shade600;
       case 'busy':
-        return Colors.red;
+        return Colors.red.shade600;
       case 'offline':
-        return Colors.grey;
+        return Colors.grey.shade600;
       default:
-        return Colors.grey;
+        return Colors.grey.shade600;
     }
   }
 
   void updateTaskStatus(int taskId, String newStatus) {
     setState(() {
-      final taskIndex = tasks.indexWhere((task) => task['id'] == taskId);
-      if (taskIndex != -1) {
-        tasks[taskIndex]['status'] = newStatus;
-      }
+      final idx = tasks.indexWhere((t) => t['id'] == taskId);
+      if (idx != -1) tasks[idx]['status'] = newStatus;
     });
   }
 
   List<Map<String, dynamic>> get todayTasks {
     final today = DateTime.now();
     return tasks.where((task) {
-      final taskDate = task['dueDate'] as DateTime;
-      return taskDate.day == today.day &&
-          taskDate.month == today.month &&
-          taskDate.year == today.year;
+      final d = task['dueDate'] as DateTime;
+      return d.year == today.year && d.month == today.month && d.day == today.day;
     }).toList();
   }
 
   List<Map<String, dynamic>> get upcomingTasks {
-    final today = DateTime.now();
-    return tasks.where((task) {
-      final taskDate = task['dueDate'] as DateTime;
-      return taskDate.isAfter(today);
-    }).toList();
+    final now = DateTime.now();
+    return tasks.where((task) => (task['dueDate'] as DateTime).isAfter(now)).toList();
   }
 
-  int get completedTasks => tasks.where((task) => task['status'] == 'completed').length;
-  int get pendingTasks => tasks.where((task) => task['status'] != 'completed').length;
-  int get availableStaff => staff.where((member) => member['status'] == 'available').length;
+  int get completedTasks => tasks.where((t) => t['status'] == 'completed').length;
+  int get pendingTasks => tasks.where((t) => t['status'] != 'completed').length;
+  int get availableStaff => staff.where((m) => m['status'] == 'available').length;
 
   @override
   Widget build(BuildContext context) {
@@ -207,156 +202,123 @@ class _HousekeepingScreenState extends State<HousekeepingScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                    // Header
-                    Container(
-                      margin: const EdgeInsets.only(bottom: 24),
-                      child: Row(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(8),
-                            decoration: BoxDecoration(
-                              color: AppColors.primaryGreen,
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: const Icon(
-                              Icons.people,
-                              color: Colors.white,
-                              size: 24,
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          const Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Housekeeping Management',
-                                style: TextStyle(
-                                  fontSize: 24,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.black87,
-                                ),
+                      // Header
+                      Container(
+                        margin: const EdgeInsets.only(bottom: 24),
+                        child: Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                color: AppColors.primaryGreen,
+                                borderRadius: BorderRadius.circular(8),
                               ),
-                              Text(
-                                'Manage cleaning schedules and staff',
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  color: Colors.grey,
+                              child: const Icon(Icons.people, color: Colors.white, size: 24),
+                            ),
+                            const SizedBox(width: 12),
+                            const Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Housekeeping Management',
+                                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.black87),
                                 ),
+                                Text(
+                                  'Manage cleaning schedules and staff',
+                                  style: TextStyle(fontSize: 14, color: Colors.grey),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+
+                      // Summary Cards
+                      LayoutBuilder(
+                        builder: (context, constraints) {
+                          final isMd = constraints.maxWidth >= 900;
+                          final isLg = constraints.maxWidth >= 1200;
+                          int columns = 1;
+                          if (isLg) {
+                            columns = 4;
+                          } else if (isMd) {
+                            columns = 4;
+                          }
+                          return GridView.count(
+                            crossAxisCount: columns,
+                            childAspectRatio: 3.2,
+                            shrinkWrap: true,
+                            physics: const NeverScrollableScrollPhysics(),
+                            crossAxisSpacing: 16,
+                            mainAxisSpacing: 16,
+                            children: [
+                              SummaryCard(
+                                title: "Today's Tasks",
+                                value: todayTasks.length.toString(),
+                                subtitle: 'Due today',
+                                icon: Icons.access_time,
+                                iconColor: AppColors.primaryBlue,
+                              ),
+                              SummaryCard(
+                                title: 'Completed',
+                                value: completedTasks.toString(),
+                                subtitle: 'This week',
+                                icon: Icons.check_circle,
+                                iconColor: AppColors.successGreen,
+                              ),
+                              SummaryCard(
+                                title: 'Pending',
+                                value: pendingTasks.toString(),
+                                subtitle: 'Need attention',
+                                icon: Icons.warning_amber_rounded,
+                                iconColor: AppColors.warningYellow,
+                              ),
+                              SummaryGradientCard(
+                                title: 'Available Staff',
+                                value: availableStaff.toString(),
+                                subtitle: 'Ready to work',
                               ),
                             ],
+                          );
+                        },
+                      ),
+
+                      const SizedBox(height: 24),
+
+                      // Tabs
+                      Container(
+                        margin: const EdgeInsets.only(bottom: 24),
+                        height: 44,
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(4),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF1F5F9),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: TabBar(
+                          isScrollable: false,
+                          dividerColor: Colors.transparent,
+                          labelColor: const Color(0xFF0F172A),
+                          unselectedLabelColor: const Color(0xFF64748B),
+                          labelStyle: const TextStyle(fontWeight: FontWeight.w500, fontSize: 14),
+                          unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.w500, fontSize: 14),
+                          indicator: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(4),
+                            boxShadow: [
+                              BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 2, offset: const Offset(0, 1)),
+                            ],
                           ),
-                        ],
-                      ),
-                    ),
-
-                    // Summary Cards
-                    LayoutBuilder(
-                      builder: (context, constraints) {
-                        final isMd = constraints.maxWidth >= 900;
-                        final isLg = constraints.maxWidth >= 1200;
-                        int columns = 1;
-                        if (isLg) {
-                          columns = 4;
-                        } else if (isMd) {
-                          columns = 4;
-                        }
-                        return GridView.count(
-                          crossAxisCount: columns,
-                          childAspectRatio: 3.2,
-                          shrinkWrap: true,
-                          physics: const NeverScrollableScrollPhysics(),
-                          crossAxisSpacing: 16,
-                          mainAxisSpacing: 16,
-                          children: [
-                            SummaryCard(
-                              title: "Today's Tasks",
-                              value: todayTasks.length.toString(),
-                              subtitle: 'Due today',
-                              icon: Icons.access_time,
-                              iconColor: AppColors.primaryBlue,
-                            ),
-                            SummaryCard(
-                              title: 'Completed',
-                              value: completedTasks.toString(),
-                              subtitle: 'This week',
-                              icon: Icons.check_circle,
-                              iconColor: AppColors.successGreen,
-                            ),
-                            SummaryCard(
-                              title: 'Pending',
-                              value: pendingTasks.toString(),
-                              subtitle: 'Need attention',
-                              icon: Icons.warning,
-                              iconColor: AppColors.warningYellow,
-                            ),
-                            SummaryGradientCard(
-                              title: 'Available Staff',
-                              value: availableStaff.toString(),
-                              subtitle: 'Ready to work',
-                              gradientColors: const [Color(0xFF14B8A6), Color(0xFF0891B2)],
-                            ),
-                          ],
-                        );
-                      },
-                    ),
-
-                    const SizedBox(height: 24),
-
-                    // Tabs
-                    Container(
-                      margin: const EdgeInsets.only(bottom: 24),
-                      height: 44,
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(4),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFF1F5F9),
-                        borderRadius: BorderRadius.circular(6),
-                      ),
-                      child: TabBar(
-                        isScrollable: false,
-                        dividerColor: Colors.transparent,
-                        labelColor: const Color(0xFF0F172A),
-                        unselectedLabelColor: const Color(0xFF64748B),
-                        labelStyle: const TextStyle(
-                          fontWeight: FontWeight.w500,
-                          fontSize: 14,
-                        ),
-                        unselectedLabelStyle: const TextStyle(
-                          fontWeight: FontWeight.w500,
-                          fontSize: 14,
-                        ),
-                        indicator: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(4),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.05),
-                              blurRadius: 2,
-                              offset: const Offset(0, 1),
-                            ),
+                          indicatorSize: TabBarIndicatorSize.tab,
+                          indicatorPadding: EdgeInsets.zero,
+                          labelPadding: const EdgeInsets.symmetric(horizontal: 8),
+                          tabs: const [
+                            Tab(child: Text('Tasks & Schedule', style: TextStyle(fontSize: 13), textAlign: TextAlign.center)),
+                            Tab(child: Text('Staff Management', style: TextStyle(fontSize: 13), textAlign: TextAlign.center)),
                           ],
                         ),
-                        indicatorSize: TabBarIndicatorSize.tab,
-                        indicatorPadding: EdgeInsets.zero,
-                        labelPadding: const EdgeInsets.symmetric(horizontal: 8),
-                        tabs: const [
-                          Tab(
-                            child: Text(
-                              'Tasks & Schedule',
-                              style: TextStyle(fontSize: 13),
-                              textAlign: TextAlign.center,
-                            ),
-                          ),
-                          Tab(
-                            child: Text(
-                              'Staff Management',
-                              style: TextStyle(fontSize: 13),
-                              textAlign: TextAlign.center,
-                            ),
-                          ),
-                        ],
                       ),
-                    ),
+
                       _tabContent(),
                     ],
                   ),
@@ -367,11 +329,13 @@ class _HousekeepingScreenState extends State<HousekeepingScreen> {
         ],
       ),
     );
-  }  Widget _tabContent() {
+  }
+
+  Widget _tabContent() {
     return SizedBox(
-      height: 1200, // Enough height to render content within SingleChildScrollView
+      height: 1200,
       child: TabBarView(
-        physics: const NeverScrollableScrollPhysics(), // Prevent horizontal scrolling
+        physics: const NeverScrollableScrollPhysics(),
         children: [
           _buildTasksTab(),
           _buildStaffTab(),
@@ -380,15 +344,15 @@ class _HousekeepingScreenState extends State<HousekeepingScreen> {
     );
   }
 
+  // Matches React: Today's Tasks + Upcoming Tasks
   Widget _buildTasksTab() {
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(0),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Today's Tasks
           _buildTodayTasksCard(),
           const SizedBox(height: 24),
-          // Upcoming Tasks
           _buildUpcomingTasksCard(),
         ],
       ),
@@ -396,14 +360,13 @@ class _HousekeepingScreenState extends State<HousekeepingScreen> {
   }
 
   Widget _buildTodayTasksCard() {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.grey[50],
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey[200]!),
-      ),
+    return Card(
+      color: Colors.white.withOpacity(0.8),
+      surfaceTintColor: Colors.transparent,
+      elevation: 0,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Padding(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -413,76 +376,20 @@ class _HousekeepingScreenState extends State<HousekeepingScreen> {
                 const Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      "Today's Tasks",
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black87,
-                      ),
-                    ),
-                    Text(
-                      'Tasks scheduled for today',
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.grey,
-                      ),
-                    ),
+                    Text("Today's Tasks", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                    SizedBox(height: 2),
+                    Text('Tasks scheduled for today', style: TextStyle(color: Colors.grey)),
                   ],
                 ),
                 ElevatedButton.icon(
                   onPressed: () {},
                   icon: const Icon(Icons.add, size: 16),
                   label: const Text('Add Task'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primaryGreen,
-                    foregroundColor: Colors.white,
-                  ),
                 ),
               ],
             ),
             const SizedBox(height: 16),
-            ...todayTasks.map((task) => _buildTaskItem(task)),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildUpcomingTasksCard() {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.grey[50],
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey[200]!),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Upcoming Tasks',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black87,
-                  ),
-                ),
-                Text(
-                  'Tasks scheduled for the next few days',
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.grey,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            ...upcomingTasks.take(3).map((task) => _buildUpcomingTaskItem(task)),
+            Column(children: todayTasks.map((t) => _buildTaskItem(t)).toList()),
           ],
         ),
       ),
@@ -490,144 +397,74 @@ class _HousekeepingScreenState extends State<HousekeepingScreen> {
   }
 
   Widget _buildTaskItem(Map<String, dynamic> task) {
+    final due = task['dueDate'] as DateTime;
+    final dueTime = TimeOfDay.fromDateTime(due).format(context);
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.grey[200]!),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 4,
-            offset: const Offset(0, 2),
-          ),
-        ],
+        color: const Color(0xFFF8FAFC),
+        border: Border.all(color: const Color(0xFFF1F5F9)),
+        borderRadius: BorderRadius.circular(12),
       ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Icon(
-                getTypeIcon(task['type']),
-                size: 16,
-                color: getPriorityColor(task['priority']),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  'Room ${task['room']} - ${task['type'].toString().replaceAll('_', ' ').toUpperCase()}',
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.black87,
+              Row(
+                children: [
+                  Icon(getTypeIcon(task['type']), size: 18, color: getPriorityColor(task['priority'])),
+                  const SizedBox(width: 8),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('Room ${task['room']}', style: const TextStyle(fontWeight: FontWeight.w600)),
+                      Text(task['type'].toString().replaceAll('_', ' '), style: const TextStyle(fontSize: 12, color: Colors.grey)),
+                    ],
                   ),
-                ),
+                ],
               ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: getPriorityColor(task['priority']).withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Text(
-                  task['priority'].toString().toUpperCase(),
-                  style: TextStyle(
-                    fontSize: 11,
-                    color: getPriorityColor(task['priority']),
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 8),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: getStatusColor(task['status']).withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Text(
-                  task['status'].toString().replaceAll('_', ' ').toUpperCase(),
-                  style: TextStyle(
-                    fontSize: 11,
-                    color: getStatusColor(task['status']),
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
+              Row(
+                children: [
+                  _chip(task['priority'], getPriorityColor(task['priority'])),
+                  const SizedBox(width: 6),
+                  _chip(task['status'].toString().replaceAll('_', ' '), getStatusColor(task['status'])),
+                ],
               ),
             ],
           ),
           const SizedBox(height: 12),
-          Row(
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'Assignee',
-                      style: TextStyle(fontSize: 12, color: Colors.grey),
-                    ),
-                    Text(
-                      task['assignee'],
-                      style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
-                    ),
-                  ],
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final isMd = constraints.maxWidth >= 768;
+              return GridView(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: isMd ? 3 : 1,
+                  crossAxisSpacing: 12,
+                  mainAxisSpacing: 12,
+                  childAspectRatio: 4,
                 ),
-              ),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'Due Time',
-                      style: TextStyle(fontSize: 12, color: Colors.grey),
-                    ),
-                    Text(
-                      '${(task['dueDate'] as DateTime).hour.toString().padLeft(2, '0')}:${(task['dueDate'] as DateTime).minute.toString().padLeft(2, '0')}',
-                      style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
-                    ),
-                  ],
-                ),
-              ),
-              if (task['checkoutTime'] != null)
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'Checkout/Checkin',
-                        style: TextStyle(fontSize: 12, color: Colors.grey),
-                      ),
-                      Text(
-                        '${task['checkoutTime']} / ${task['checkinTime']}',
-                        style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
-                      ),
-                    ],
-                  ),
-                ),
-            ],
+                children: [
+                  _kv('Assigned to', task['assignee']),
+                  _kv('Due Time', dueTime),
+                  if (task['checkoutTime'] != null) _kv('Checkout/Checkin', '${task['checkoutTime']} → ${task['checkinTime']}'),
+                ],
+              );
+            },
           ),
           if (task['notes'] != null) ...[
             const SizedBox(height: 12),
-            const Text(
-              'Notes',
-              style: TextStyle(fontSize: 12, color: Colors.grey),
-            ),
-            const SizedBox(height: 4),
+            const Align(alignment: Alignment.centerLeft, child: Text('Notes', style: TextStyle(fontSize: 12, color: Colors.grey))),
+            const SizedBox(height: 6),
             Container(
               width: double.infinity,
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: Colors.grey[100],
-                borderRadius: BorderRadius.circular(6),
-              ),
-              child: Text(
-                task['notes'],
-                style: const TextStyle(fontSize: 14, color: Colors.black87),
-              ),
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(8)),
+              child: Text(task['notes'], style: const TextStyle(fontSize: 14, color: Colors.black87)),
             ),
           ],
           const SizedBox(height: 12),
@@ -635,106 +472,94 @@ class _HousekeepingScreenState extends State<HousekeepingScreen> {
             children: [
               if (task['status'] == 'pending')
                 ElevatedButton(
-                  onPressed: () => updateTaskStatus(task['id'], 'in_progress'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blue,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                  ),
-                  child: const Text('Start', style: TextStyle(fontSize: 12)),
+                  onPressed: () => updateTaskStatus(task['id'] as int, 'in_progress'),
+                  child: const Text('Start Task'),
                 ),
-              if (task['status'] == 'in_progress') ...[
+              if (task['status'] == 'in_progress')
                 ElevatedButton(
-                  onPressed: () => updateTaskStatus(task['id'], 'completed'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.green,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                  ),
-                  child: const Text('Complete', style: TextStyle(fontSize: 12)),
+                  onPressed: () => updateTaskStatus(task['id'] as int, 'completed'),
+                  child: const Text('Mark Complete'),
                 ),
-              ],
               if (task['status'] == 'scheduled')
-                ElevatedButton(
-                  onPressed: () => updateTaskStatus(task['id'], 'pending'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.orange,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                  ),
-                  child: const Text('Ready', style: TextStyle(fontSize: 12)),
-                ),
+                OutlinedButton(onPressed: () {}, child: const Text('View Details')),
             ],
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _kv(String k, String v) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(k, style: const TextStyle(fontSize: 12, color: Colors.grey)),
+        const SizedBox(height: 2),
+        Text(v, style: const TextStyle(fontWeight: FontWeight.w500)),
+      ],
+    );
+  }
+
+  Widget _chip(String text, Color color) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(color: color.withOpacity(0.1), borderRadius: BorderRadius.circular(12)),
+      child: Text(text, style: TextStyle(fontSize: 12, color: color, fontWeight: FontWeight.w600)),
+    );
+  }
+
+  // Upcoming Tasks card matching React
+  Widget _buildUpcomingTasksCard() {
+    return Card(
+      color: Colors.white.withOpacity(0.8),
+      surfaceTintColor: Colors.transparent,
+      elevation: 0,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('Upcoming Tasks', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 4),
+            const Text('Tasks scheduled for the next few days', style: TextStyle(color: Colors.grey)),
+            const SizedBox(height: 16),
+            Column(children: upcomingTasks.take(3).map((t) => _buildUpcomingTaskItem(t)).toList()),
+          ],
+        ),
       ),
     );
   }
 
   Widget _buildUpcomingTaskItem(Map<String, dynamic> task) {
+    final due = task['dueDate'] as DateTime;
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.grey[200]!),
-      ),
+      decoration: BoxDecoration(color: const Color(0xFFF8FAFC), borderRadius: BorderRadius.circular(12)),
       child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Icon(
-            getTypeIcon(task['type']),
-            size: 16,
-            color: getPriorityColor(task['priority']),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Room ${task['room']} - ${task['type'].toString().replaceAll('_', ' ')}',
-                  style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.black87,
-                  ),
-                ),
-                Text(
-                  task['assignee'],
-                  style: const TextStyle(
-                    fontSize: 12,
-                    color: Colors.grey,
-                  ),
-                ),
-              ],
-            ),
+          Row(
+            children: [
+              Icon(getTypeIcon(task['type']), size: 18, color: getPriorityColor(task['priority'])),
+              const SizedBox(width: 8),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Room ${task['room']} - ${task['type'].toString().replaceAll('_', ' ')}',
+                      style: const TextStyle(fontWeight: FontWeight.w600)),
+                  Text(task['assignee'], style: const TextStyle(fontSize: 12, color: Colors.grey)),
+                ],
+              ),
+            ],
           ),
           Column(
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
-              Text(
-                '${(task['dueDate'] as DateTime).day}/${(task['dueDate'] as DateTime).month}',
-                style: const TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                decoration: BoxDecoration(
-                  color: getStatusColor(task['status']).withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Text(
-                  task['status'].toString().replaceAll('_', ' ').toUpperCase(),
-                  style: TextStyle(
-                    fontSize: 10,
-                    color: getStatusColor(task['status']),
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ),
+              Text('${due.month}/${due.day}/${due.year}', style: const TextStyle(fontWeight: FontWeight.w600)),
+              const SizedBox(height: 4),
+              _chip(task['status'].toString().replaceAll('_', ' '), getStatusColor(task['status'])),
             ],
           ),
         ],
@@ -742,58 +567,52 @@ class _HousekeepingScreenState extends State<HousekeepingScreen> {
     );
   }
 
+  // Staff tab matching React layout
   Widget _buildStaffTab() {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Staff Overview',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black87,
-                ),
-              ),
-              Text(
-                'Manage your housekeeping team',
-                style: TextStyle(
-                  fontSize: 14,
-                  color: Colors.grey,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 20),
-          GridView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: MediaQuery.of(context).size.width > 1024 ? 3 : 
-                             MediaQuery.of(context).size.width > 768 ? 2 : 1,
-              crossAxisSpacing: 16,
-              mainAxisSpacing: 16,
-              childAspectRatio: 0.8,
+    return Card(
+      color: Colors.white.withOpacity(0.8),
+      surfaceTintColor: Colors.transparent,
+      elevation: 0,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('Staff Overview', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 4),
+            const Text('Manage your housekeeping team', style: TextStyle(color: Colors.grey)),
+            const SizedBox(height: 16),
+            LayoutBuilder(
+              builder: (context, constraints) {
+                int cols = 1;
+                if (constraints.maxWidth >= 1024) cols = 3;
+                else if (constraints.maxWidth >= 768) cols = 2;
+                return GridView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: cols,
+                    crossAxisSpacing: 16,
+                    mainAxisSpacing: 16,
+                    childAspectRatio: 1.1,
+                  ),
+                  itemCount: staff.length,
+                  itemBuilder: (context, i) => _buildStaffCard(staff[i]),
+                );
+              },
             ),
-            itemCount: staff.length,
-            itemBuilder: (context, index) => _buildStaffCard(staff[index]),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
 
-  Widget _buildStaffCard(Map<String, dynamic> member) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.grey[50],
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey[200]!),
-      ),
+  Widget _buildStaffCard(Map<String, dynamic> m) {
+    return Card(
+      color: const Color(0xFFF9FAFB),
+      elevation: 0,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -802,142 +621,60 @@ class _HousekeepingScreenState extends State<HousekeepingScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        member['name'],
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.black87,
-                        ),
-                      ),
-                      Text(
-                        member['role'],
-                        style: const TextStyle(
-                          fontSize: 14,
-                          color: Colors.grey,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: getStaffStatusColor(member['status']).withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Text(
-                    member['status'].toString().toUpperCase(),
-                    style: TextStyle(
-                      fontSize: 11,
-                      color: getStaffStatusColor(member['status']),
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'Contact',
-                  style: TextStyle(fontSize: 12, color: Colors.grey),
-                ),
-                Text(
-                  member['phone'],
-                  style: const TextStyle(fontSize: 14),
-                ),
-                Text(
-                  member['email'],
-                  style: const TextStyle(fontSize: 14, color: Colors.blue),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            Row(
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'Active Tasks',
-                        style: TextStyle(fontSize: 12, color: Colors.grey),
-                      ),
-                      Text(
-                        member['activeTasks'].toString(),
-                        style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                      ),
-                    ],
-                  ),
-                ),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'Completed Today',
-                        style: TextStyle(fontSize: 12, color: Colors.grey),
-                      ),
-                      Text(
-                        member['completedToday'].toString(),
-                        style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'Rating',
-                  style: TextStyle(fontSize: 12, color: Colors.grey),
-                ),
-                Row(
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Icon(Icons.star, color: Colors.amber, size: 16),
-                    const SizedBox(width: 4),
-                    Text(
-                      member['rating'].toString(),
-                      style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
-                    ),
+                    Text(m['name'], style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
+                    Text(m['role'], style: const TextStyle(fontSize: 13, color: Colors.grey)),
                   ],
                 ),
+                _chip(m['status'], getStaffStatusColor(m['status'])),
               ],
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 12),
+            const Text('Contact', style: TextStyle(fontSize: 12, color: Colors.grey)),
+            const SizedBox(height: 4),
+            Text(m['phone']),
+            Text(m['email'], style: const TextStyle(color: Colors.blue)),
+            const SizedBox(height: 12),
             Row(
               children: [
                 Expanded(
-                  child: OutlinedButton(
-                    onPressed: () {},
-                    style: OutlinedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 8),
-                    ),
-                    child: const Text('View Schedule', style: TextStyle(fontSize: 12)),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text('Active Tasks', style: TextStyle(fontSize: 12, color: Colors.grey)),
+                      Text('${m['activeTasks']}', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.blue)),
+                    ],
                   ),
                 ),
-                const SizedBox(width: 8),
                 Expanded(
-                  child: ElevatedButton(
-                    onPressed: () {},
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primaryGreen,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 8),
-                    ),
-                    child: const Text('Assign Task', style: TextStyle(fontSize: 12)),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text('Completed Today', style: TextStyle(fontSize: 12, color: Colors.grey)),
+                      Text('${m['completedToday']}', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.green)),
+                    ],
                   ),
                 ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            const Text('Rating', style: TextStyle(fontSize: 12, color: Colors.grey)),
+            const SizedBox(height: 4),
+            Row(
+              children: [
+                Text('${m['rating']}', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.amber)),
+                const SizedBox(width: 4),
+                const Text('/5.0', style: TextStyle(color: Colors.grey)),
+              ],
+            ),
+            const Spacer(),
+            Row(
+              children: [
+                Expanded(child: OutlinedButton(onPressed: () {}, child: const Text('View Schedule'))),
+                const SizedBox(width: 8),
+                Expanded(child: ElevatedButton(onPressed: () {}, child: const Text('Assign Task'))),
               ],
             ),
           ],
@@ -946,3 +683,4 @@ class _HousekeepingScreenState extends State<HousekeepingScreen> {
     );
   }
 }
+
