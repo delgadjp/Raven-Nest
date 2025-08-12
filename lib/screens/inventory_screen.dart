@@ -537,6 +537,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
     return SizedBox(
       height: 1200, // Enough height to render grid within SingleChildScrollView
       child: TabBarView(
+        physics: const NeverScrollableScrollPhysics(), // Prevent horizontal scrolling
         children: [
           _categorySection('Cleaning Supplies', 'cleaning', cleaningSupplies, (id) {
             setState(() => cleaningSupplies = cleaningSupplies.where((e) => e.id != id).toList());
@@ -566,45 +567,48 @@ class _InventoryScreenState extends State<InventoryScreen> {
         } else if (constraints.maxWidth >= 900) {
           crossAxisCount = 2;
         }
-  return Column(
-          children: [
-            // Section header with Add button
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
-                ElevatedButton.icon(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF7C3AED),
-                    foregroundColor: Colors.white,
-                    elevation: 0,
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+        return SingleChildScrollView(
+          physics: const ClampingScrollPhysics(),
+          child: Column(
+            children: [
+              // Section header with Add button
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
+                  ElevatedButton.icon(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF7C3AED),
+                      foregroundColor: Colors.white,
+                      elevation: 0,
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                    ),
+                    onPressed: () => _showAddItemDialog(categoryKey),
+                    icon: const Icon(Icons.add, size: 18),
+                    label: const Text('Add Item'),
                   ),
-                  onPressed: () => _showAddItemDialog(categoryKey),
-                  icon: const Icon(Icons.add, size: 18),
-                  label: const Text('Add Item'),
-                ),
-              ],
-            ),
-            const SizedBox(height: 24),
-
-            GridView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: crossAxisCount,
-                crossAxisSpacing: 24,
-                mainAxisSpacing: 24,
-                childAspectRatio: 1.1,
+                ],
               ),
-              itemCount: items.length,
-              itemBuilder: (context, index) {
-                final item = items[index];
-                return _itemCard(item, () => onDelete(item.id));
-              },
-            ),
-          ],
+              const SizedBox(height: 24),
+
+              GridView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: crossAxisCount,
+                  crossAxisSpacing: 24,
+                  mainAxisSpacing: 24,
+                  childAspectRatio: 1.1,
+                ),
+                itemCount: items.length,
+                itemBuilder: (context, index) {
+                  final item = items[index];
+                  return _itemCard(item, () => onDelete(item.id));
+                },
+              ),
+            ],
+          ),
         );
       },
     );
