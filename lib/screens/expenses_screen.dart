@@ -97,43 +97,63 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
                         // Summary Cards
                         LayoutBuilder(
                           builder: (context, constraints) {
-                            // Match React: grid-cols-1 md:grid-cols-4
-                            final int crossAxisCount = constraints.maxWidth >= 768 ? 4 : 1;
-                            return GridView.count(
-                              shrinkWrap: true,
-                              physics: const NeverScrollableScrollPhysics(),
-                              crossAxisCount: crossAxisCount,
-                              crossAxisSpacing: 16,
-                              mainAxisSpacing: 16,
-                              childAspectRatio: 2.5,
+                            return Wrap(
+                              spacing: 24,
+                              runSpacing: 24,
                               children: [
-                                _summaryCard(
-                                  title: 'Fixed Expenses',
-                                  value: "\$${fixedTotal.toInt()}",
-                                  description: 'Monthly recurring',
-                                  icon: Icons.trending_up,
-                                  valueColor: const Color(0xFF2563EB),
+                                SizedBox(
+                                  width: constraints.maxWidth >= 1200 
+                                    ? (constraints.maxWidth - 72) / 4 // 4 columns with spacing
+                                    : constraints.maxWidth >= 900 
+                                      ? (constraints.maxWidth - 24) / 2 // 2 columns with spacing
+                                      : constraints.maxWidth, // 1 column
+                                  child: _summaryCard(
+                                    title: 'Fixed Expenses',
+                                    value: "\$${fixedTotal.toInt()}",
+                                    subtitle: 'Monthly recurring',
+                                    icon: Icons.trending_up,
+                                    iconColor: const Color(0xFF2563EB),
+                                  ),
                                 ),
-                                _summaryCard(
-                                  title: 'Variable Expenses',
-                                  value: "\$${variableTotal.toInt()}",
-                                  description: 'This month',
-                                  icon: Icons.trending_down,
-                                  valueColor: const Color(0xFFEA580C),
+                                SizedBox(
+                                  width: constraints.maxWidth >= 1200 
+                                    ? (constraints.maxWidth - 72) / 4 // 4 columns with spacing
+                                    : constraints.maxWidth >= 900 
+                                      ? (constraints.maxWidth - 24) / 2 // 2 columns with spacing
+                                      : constraints.maxWidth, // 1 column
+                                  child: _summaryCard(
+                                    title: 'Variable Expenses',
+                                    value: "\$${variableTotal.toInt()}",
+                                    subtitle: 'This month',
+                                    icon: Icons.trending_down,
+                                    iconColor: const Color(0xFFEA580C),
+                                  ),
                                 ),
-                                _summaryCard(
-                                  title: 'Total Expenses',
-                                  value: "\$${grandTotal.toInt()}",
-                                  description: 'Combined total',
-                                  icon: Icons.attach_money,
-                                  valueColor: const Color(0xFFDC2626),
+                                SizedBox(
+                                  width: constraints.maxWidth >= 1200 
+                                    ? (constraints.maxWidth - 72) / 4 // 4 columns with spacing
+                                    : constraints.maxWidth >= 900 
+                                      ? (constraints.maxWidth - 24) / 2 // 2 columns with spacing
+                                      : constraints.maxWidth, // 1 column
+                                  child: _summaryCard(
+                                    title: 'Total Expenses',
+                                    value: "\$${grandTotal.toInt()}",
+                                    subtitle: 'Combined total',
+                                    icon: Icons.attach_money,
+                                    iconColor: const Color(0xFFDC2626),
+                                  ),
                                 ),
-                                _summaryGradientCard(
-                                  title: 'Budget Status',
-                                  value: '89%',
-                                  description: 'Within budget',
-                                  gradient: const LinearGradient(colors: [Color(0xFF22C55E), Color(0xFF059669)]),
-                                  icon: Icons.trending_up,
+                                SizedBox(
+                                  width: constraints.maxWidth >= 1200 
+                                    ? (constraints.maxWidth - 72) / 4 // 4 columns with spacing
+                                    : constraints.maxWidth >= 900 
+                                      ? (constraints.maxWidth - 24) / 2 // 2 columns with spacing
+                                      : constraints.maxWidth, // 1 column
+                                  child: _summaryGradientCard(
+                                    title: 'Budget Status',
+                                    value: '89%',
+                                    subtitle: 'Within budget',
+                                  ),
                                 ),
                               ],
                             );
@@ -182,32 +202,28 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
   Widget _summaryCard({
     required String title,
     required String value,
-    required String description,
+    required String subtitle,
     required IconData icon,
-    required Color valueColor,
+    required Color iconColor,
   }) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.8),
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 10, offset: const Offset(0, 2)),
-        ],
-      ),
+    return Card(
+      elevation: 0,
+      color: Colors.white.withOpacity(0.8),
+      surfaceTintColor: Colors.transparent,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(12),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(title, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: Colors.grey)),
-            const SizedBox(height: 8),
-            Text(value, style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: valueColor)),
-            const SizedBox(height: 4),
+            Text(title, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: Colors.black54)),
+            Text(value, style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: iconColor)),
             Row(
               children: [
-                Icon(icon, size: 12, color: Colors.grey),
+                Icon(icon, size: 12, color: Colors.black38),
                 const SizedBox(width: 4),
-                Text(description, style: const TextStyle(fontSize: 12, color: Colors.grey)),
+                Text(subtitle, style: const TextStyle(fontSize: 11, color: Colors.black45)),
               ],
             ),
           ],
@@ -219,25 +235,32 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
   Widget _summaryGradientCard({
     required String title,
     required String value,
-    required String description,
-    required LinearGradient gradient,
-    required IconData icon,
+    required String subtitle,
   }) {
     return Container(
-      decoration: BoxDecoration(gradient: gradient, borderRadius: BorderRadius.circular(12)),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Text(title, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: Colors.white70)),
-          const SizedBox(height: 8),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [Color(0xFF22C55E), Color(0xFF059669)],
+          begin: Alignment.centerLeft,
+          end: Alignment.centerRight,
+        ),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      padding: const EdgeInsets.all(12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(title, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: Colors.white70)),
           Text(value, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white)),
-          const SizedBox(height: 4),
-          Row(children: [
-            Icon(icon, size: 12, color: Colors.white70),
-            const SizedBox(width: 4),
-            Text(description, style: const TextStyle(fontSize: 12, color: Colors.white70)),
-          ]),
-        ]),
+          Row(
+            children: [
+              const Icon(Icons.trending_up, size: 12, color: Colors.white70),
+              const SizedBox(width: 4),
+              Text(subtitle, style: const TextStyle(fontSize: 11, color: Colors.white70)),
+            ],
+          ),
+        ],
       ),
     );
   }
@@ -406,37 +429,37 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
     _categoryController.dispose();
     super.dispose();
   }
-}
 
-Widget _grandTotalCard(int grandTotal) {
-  return Container(
-    decoration: const BoxDecoration(
-      gradient: LinearGradient(colors: [Color(0xFF111827), Color(0xFF374151)]),
-      borderRadius: BorderRadius.all(Radius.circular(12)),
-    ),
-    child: Padding(
-      padding: const EdgeInsets.all(16),
-      child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-        const Flexible(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+  Widget _grandTotalCard(int grandTotal) {
+    return Container(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(colors: [Color(0xFF111827), Color(0xFF374151)]),
+        borderRadius: BorderRadius.all(Radius.circular(12)),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+          const Flexible(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('Monthly Total', style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
+                SizedBox(height: 4),
+                Text('Combined fixed and variable expenses', style: TextStyle(color: Colors.white70)),
+              ],
+            ),
+          ),
+          const SizedBox(width: 16),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
             children: [
-              Text('Monthly Total', style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
-              SizedBox(height: 4),
-              Text('Combined fixed and variable expenses', style: TextStyle(color: Colors.white70)),
+              Text("\$$grandTotal", style: const TextStyle(color: Colors.white, fontSize: 32, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 2),
+              const Text('This month', style: TextStyle(color: Colors.white70)),
             ],
           ),
-        ),
-        const SizedBox(width: 16),
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.end,
-          children: [
-            Text("\$$grandTotal", style: const TextStyle(color: Colors.white, fontSize: 32, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 2),
-            const Text('This month', style: TextStyle(color: Colors.white70)),
-          ],
-        ),
-      ]),
-    ),
-  );
+        ]),
+      ),
+    );
+  }
 }
