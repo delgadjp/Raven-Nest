@@ -10,9 +10,7 @@ class HousekeepingScreen extends StatefulWidget {
   State<HousekeepingScreen> createState() => _HousekeepingScreenState();
 }
 
-class _HousekeepingScreenState extends State<HousekeepingScreen> with SingleTickerProviderStateMixin {
-  late TabController _tabController;
-
+class _HousekeepingScreenState extends State<HousekeepingScreen> {
   final List<Map<String, dynamic>> tasks = [
     {
       'id': 1,
@@ -95,18 +93,6 @@ class _HousekeepingScreenState extends State<HousekeepingScreen> with SingleTick
       'status': 'available'
     }
   ];
-
-  @override
-  void initState() {
-    super.initState();
-    _tabController = TabController(length: 2, vsync: this);
-  }
-
-  @override
-  void dispose() {
-    _tabController.dispose();
-    super.dispose();
-  }
 
   Color getStatusColor(String status) {
     switch (status) {
@@ -214,11 +200,13 @@ class _HousekeepingScreenState extends State<HousekeepingScreen> with SingleTick
                   ],
                 ),
               ),
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
+              child: DefaultTabController(
+                length: 2,
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
                     // Header
                     Container(
                       margin: const EdgeInsets.only(bottom: 24),
@@ -314,49 +302,79 @@ class _HousekeepingScreenState extends State<HousekeepingScreen> with SingleTick
 
                     const SizedBox(height: 24),
 
-                    // Tab Bar
+                    // Tabs
                     Container(
+                      margin: const EdgeInsets.only(bottom: 24),
+                      height: 44,
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(4),
                       decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.8),
-                        borderRadius: BorderRadius.circular(12),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.05),
-                            blurRadius: 10,
-                            offset: const Offset(0, 2),
-                          ),
-                        ],
+                        color: const Color(0xFFF1F5F9),
+                        borderRadius: BorderRadius.circular(6),
                       ),
-                      child: Column(
-                        children: [
-                          TabBar(
-                            controller: _tabController,
-                            tabs: const [
-                              Tab(text: 'Tasks & Schedule'),
-                              Tab(text: 'Staff Management'),
-                            ],
-                            labelColor: AppColors.primaryGreen,
-                            unselectedLabelColor: Colors.grey,
-                            indicatorColor: AppColors.primaryGreen,
+                      child: TabBar(
+                        isScrollable: false,
+                        dividerColor: Colors.transparent,
+                        labelColor: const Color(0xFF0F172A),
+                        unselectedLabelColor: const Color(0xFF64748B),
+                        labelStyle: const TextStyle(
+                          fontWeight: FontWeight.w500,
+                          fontSize: 14,
+                        ),
+                        unselectedLabelStyle: const TextStyle(
+                          fontWeight: FontWeight.w500,
+                          fontSize: 14,
+                        ),
+                        indicator: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(4),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.05),
+                              blurRadius: 2,
+                              offset: const Offset(0, 1),
+                            ),
+                          ],
+                        ),
+                        indicatorSize: TabBarIndicatorSize.tab,
+                        indicatorPadding: EdgeInsets.zero,
+                        labelPadding: const EdgeInsets.symmetric(horizontal: 8),
+                        tabs: const [
+                          Tab(
+                            child: Text(
+                              'Tasks & Schedule',
+                              style: TextStyle(fontSize: 13),
+                              textAlign: TextAlign.center,
+                            ),
                           ),
-                          SizedBox(
-                            height: 600,
-                            child: TabBarView(
-                              controller: _tabController,
-                              children: [
-                                _buildTasksTab(),
-                                _buildStaffTab(),
-                              ],
+                          Tab(
+                            child: Text(
+                              'Staff Management',
+                              style: TextStyle(fontSize: 13),
+                              textAlign: TextAlign.center,
                             ),
                           ),
                         ],
                       ),
                     ),
-                  ],
+                      _tabContent(),
+                    ],
+                  ),
                 ),
               ),
             ),
           ),
+        ],
+      ),
+    );
+  }  Widget _tabContent() {
+    return SizedBox(
+      height: 1200, // Enough height to render content within SingleChildScrollView
+      child: TabBarView(
+        physics: const NeverScrollableScrollPhysics(), // Prevent horizontal scrolling
+        children: [
+          _buildTasksTab(),
+          _buildStaffTab(),
         ],
       ),
     );
