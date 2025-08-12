@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'dart:math' as math;
 import '../widgets/navigation.dart';
 
 class AnalyticsScreen extends StatelessWidget {
@@ -355,50 +356,15 @@ class AnalyticsScreen extends StatelessWidget {
   }
 
   Widget _buildPieChart() {
-    return Column(
-      children: [
-        Expanded(
-          child: CustomPaint(
-            size: const Size(120, 120),
-            painter: PieChartPainter(bookingSources),
-          ),
-        ),
-        const SizedBox(height: 16),
-        Wrap(
-          children: bookingSources.map((source) {
-            return Padding(
-              padding: const EdgeInsets.only(right: 16, bottom: 8),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Container(
-                    width: 12,
-                    height: 12,
-                    decoration: BoxDecoration(
-                      color: source['color'],
-                      shape: BoxShape.circle,
-                    ),
-                  ),
-                  const SizedBox(width: 4),
-                  Text(
-                    '${source['name']} ${source['value']}%',
-                    style: const TextStyle(fontSize: 10),
-                  ),
-                ],
-              ),
-            );
-          }).toList(),
-        ),
-      ],
-    );
+    return InteractivePieChart(data: bookingSources);
   }
 
   Widget _buildBottomSection() {
-    return Row(
+    return Column(
       children: [
-        Expanded(child: _buildRoomPerformanceChart()),
-        const SizedBox(width: 16),
-        Expanded(child: _buildKPIMetrics()),
+        _buildRoomPerformanceChart(),
+        const SizedBox(height: 32),
+        _buildKPIMetrics(),
       ],
     );
   }
@@ -438,7 +404,7 @@ class AnalyticsScreen extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           SizedBox(
-            height: 200,
+            height: 220,
             child: _buildBarChart(),
           ),
         ],
@@ -447,10 +413,7 @@ class AnalyticsScreen extends StatelessWidget {
   }
 
   Widget _buildBarChart() {
-    return CustomPaint(
-      size: const Size(double.infinity, 200),
-      painter: BarChartPainter(roomPerformance),
-    );
+    return InteractiveBarChart(data: roomPerformance);
   }
 
   Widget _buildKPIMetrics() {
@@ -1159,6 +1122,614 @@ class InteractiveLineChartPainter extends CustomPainter {
   bool shouldRepaint(covariant CustomPainter oldDelegate) {
     if (oldDelegate is InteractiveLineChartPainter) {
       return hoveredIndex != oldDelegate.hoveredIndex;
+    }
+    return true;
+  }
+}
+
+// Interactive Pie Chart Widget
+class InteractivePieChart extends StatefulWidget {
+  final List<Map<String, dynamic>> data;
+
+  const InteractivePieChart({super.key, required this.data});
+
+  @override
+  State<InteractivePieChart> createState() => _InteractivePieChartState();
+}
+
+class _InteractivePieChartState extends State<InteractivePieChart> {
+  int? hoveredSegment;
+  Offset? hoverPosition;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Expanded(
+          child: Stack(
+            children: [
+              GestureDetector(
+                onPanUpdate: (details) {
+                  _handleHover(details.localPosition);
+                },
+                onPanEnd: (_) {
+                  setState(() {
+                    hoveredSegment = null;
+                    hoverPosition = null;
+                  });
+                },
+                onTapDown: (details) {
+                  _handleHover(details.localPosition);
+                },
+                child: CustomPaint(
+                  size: const Size(double.infinity, 300),
+                  painter: InteractivePieChartPainter(
+                    widget.data,
+                    hoveredSegment: hoveredSegment,
+                  ),
+                ),
+              ),
+              if (hoveredSegment != null && hoverPosition != null)
+                Positioned(
+                  left: hoverPosition!.dx - 40,
+                  top: hoverPosition!.dy - 40,
+                  child: _buildTooltip(),
+                ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 16),
+        Wrap(
+          alignment: WrapAlignment.center,
+          children: widget.data.asMap().entries.map((entry) {
+            final index = entry.key;
+            final source = entry.value;
+            final isHovered = hoveredSegment == index;
+            
+            return Padding(
+              padding: const EdgeInsets.only(right: 16, bottom: 8),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 12,
+                    height: 12,
+                    decoration: BoxDecoration(
+                      color: source['color'],
+                      shape: BoxShape.circle,
+                      border: isHovered 
+                        ? Border.all(color: Colors.black54, width: 2)
+                        : null,
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  Text(
+                    '${source['name']} ${source['value']}%',
+                    style: TextStyle(
+                      fontSize: isHovered ? 12 : 11,
+                      fontWeight: isHovered ? FontWeight.bold : FontWeight.normal,
+                      color: isHovered ? Colors.black87 : Colors.black54,
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }).toList(),
+        ),
+      ],
+    );
+  }
+
+  void _handleHover(Offset position) {
+    final RenderBox renderBox = context.findRenderObject() as RenderBox;
+    final center = Offset(renderBox.size.width / 2, renderBox.size.height / 2);
+    final radius = math.min(renderBox.size.width, renderBox.size.height) / 3; // Use smaller radius for better centering
+    final distance = (position - center).distance;
+    
+    if (distance <= radius) { // Within the pie chart radius
+      final angle = (position - center).direction;
+      final normalizedAngle = angle < 0 ? angle + 2 * 3.14159 : angle;
+      
+      double currentAngle = -3.14159 / 2; // Start from top (12 o'clock)
+      for (int i = 0; i < widget.data.length; i++) {
+        final segmentAngle = (widget.data[i]['value'] / 100) * 2 * 3.14159;
+        if (normalizedAngle >= currentAngle && normalizedAngle <= currentAngle + segmentAngle) {
+          setState(() {
+            hoveredSegment = i;
+            hoverPosition = position;
+          });
+          return;
+        }
+        currentAngle += segmentAngle;
+      }
+    }
+    
+    setState(() {
+      hoveredSegment = null;
+      hoverPosition = null;
+    });
+  }
+
+  Widget _buildTooltip() {
+    if (hoveredSegment == null) return const SizedBox.shrink();
+    
+    final data = widget.data[hoveredSegment!];
+    return Container(
+      padding: const EdgeInsets.all(8),
+      decoration: BoxDecoration(
+        color: Colors.black87,
+        borderRadius: BorderRadius.circular(6),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.2),
+            blurRadius: 4,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            data['name'],
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 12,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            '${data['value']}%',
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 11,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// Enhanced Interactive Pie Chart Painter
+class InteractivePieChartPainter extends CustomPainter {
+  final List<Map<String, dynamic>> data;
+  final int? hoveredSegment;
+
+  InteractivePieChartPainter(this.data, {this.hoveredSegment});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = Offset(size.width / 2, size.height / 2);
+    final radius = math.min(size.width, size.height) / 3; // Use smaller radius for better proportions
+    
+    double startAngle = -3.14159 / 2; // Start from top (12 o'clock)
+    
+    for (int i = 0; i < data.length; i++) {
+      final item = data[i];
+      final isHovered = hoveredSegment == i;
+      final currentRadius = isHovered ? radius + 5 : radius;
+      
+      final paint = Paint()
+        ..color = item['color']
+        ..style = PaintingStyle.fill;
+      
+      // Add shadow effect for hovered segment
+      if (isHovered) {
+        final shadowPaint = Paint()
+          ..color = Colors.black.withOpacity(0.3)
+          ..style = PaintingStyle.fill
+          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 3);
+        
+        final sweepAngle = (item['value'] / 100) * 2 * 3.14159;
+        canvas.drawArc(
+          Rect.fromCircle(center: center, radius: currentRadius + 2),
+          startAngle,
+          sweepAngle,
+          true,
+          shadowPaint,
+        );
+      }
+      
+      final sweepAngle = (item['value'] / 100) * 2 * 3.14159;
+      
+      canvas.drawArc(
+        Rect.fromCircle(center: center, radius: currentRadius),
+        startAngle,
+        sweepAngle,
+        true,
+        paint,
+      );
+      
+      // Draw segment border
+      final borderPaint = Paint()
+        ..color = Colors.white
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = isHovered ? 3 : 2;
+      
+      canvas.drawArc(
+        Rect.fromCircle(center: center, radius: currentRadius),
+        startAngle,
+        sweepAngle,
+        true,
+        borderPaint,
+      );
+      
+      // Draw percentage label on each segment
+      final labelAngle = startAngle + sweepAngle / 2;
+      final labelRadius = currentRadius * 0.7;
+      final labelX = center.dx + labelRadius * math.cos(labelAngle);
+      final labelY = center.dy + labelRadius * math.sin(labelAngle);
+      
+      final textPainter = TextPainter(
+        text: TextSpan(
+          text: '${item['value']}%',
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: isHovered ? 14 : 12, // Slightly larger text for better visibility
+            fontWeight: isHovered ? FontWeight.bold : FontWeight.normal,
+            shadows: [
+              Shadow(
+                color: Colors.black.withOpacity(0.8),
+                offset: const Offset(1, 1),
+                blurRadius: 2,
+              ),
+            ],
+          ),
+        ),
+        textDirection: TextDirection.ltr,
+      );
+      
+      textPainter.layout();
+      textPainter.paint(
+        canvas,
+        Offset(
+          labelX - textPainter.width / 2,
+          labelY - textPainter.height / 2,
+        ),
+      );
+      
+      startAngle += sweepAngle;
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) {
+    if (oldDelegate is InteractivePieChartPainter) {
+      return hoveredSegment != oldDelegate.hoveredSegment;
+    }
+    return true;
+  }
+}
+
+// Interactive Bar Chart Widget
+class InteractiveBarChart extends StatefulWidget {
+  final List<Map<String, dynamic>> data;
+
+  const InteractiveBarChart({super.key, required this.data});
+
+  @override
+  State<InteractiveBarChart> createState() => _InteractiveBarChartState();
+}
+
+class _InteractiveBarChartState extends State<InteractiveBarChart> {
+  int? hoveredBarIndex;
+  Offset? hoverPosition;
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      children: [
+        GestureDetector(
+          onPanUpdate: (details) {
+            _handleHover(details.localPosition);
+          },
+          onPanEnd: (_) {
+            setState(() {
+              hoveredBarIndex = null;
+              hoverPosition = null;
+            });
+          },
+          onTapDown: (details) {
+            _handleHover(details.localPosition);
+          },
+          child: CustomPaint(
+            size: const Size(double.infinity, 200),
+            painter: InteractiveBarChartPainter(
+              widget.data,
+              hoveredBarIndex: hoveredBarIndex,
+            ),
+          ),
+        ),
+        if (hoveredBarIndex != null && hoverPosition != null)
+          Positioned(
+            left: hoverPosition!.dx - 60,
+            top: hoverPosition!.dy - 80,
+            child: _buildTooltip(),
+          ),
+      ],
+    );
+  }
+
+  void _handleHover(Offset position) {
+    const double leftMargin = 50;
+    const double rightMargin = 20;
+    
+    final RenderBox renderBox = context.findRenderObject() as RenderBox;
+    final chartWidth = renderBox.size.width - leftMargin - rightMargin;
+    final barWidth = chartWidth / (widget.data.length * 2);
+    
+    if (position.dx >= leftMargin && position.dx <= renderBox.size.width - rightMargin) {
+      for (int i = 0; i < widget.data.length; i++) {
+        final barX = leftMargin + (i * (chartWidth / widget.data.length)) + barWidth / 2;
+        final barLeft = barX - barWidth / 2;
+        final barRight = barX + barWidth / 2;
+        
+        if (position.dx >= barLeft && position.dx <= barRight) {
+          setState(() {
+            hoveredBarIndex = i;
+            hoverPosition = position;
+          });
+          return;
+        }
+      }
+    }
+    
+    setState(() {
+      hoveredBarIndex = null;
+      hoverPosition = null;
+    });
+  }
+
+  Widget _buildTooltip() {
+    if (hoveredBarIndex == null) return const SizedBox.shrink();
+    
+    final data = widget.data[hoveredBarIndex!];
+    return Container(
+      padding: const EdgeInsets.all(8),
+      decoration: BoxDecoration(
+        color: Colors.black87,
+        borderRadius: BorderRadius.circular(6),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.2),
+            blurRadius: 4,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            data['room'],
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 12,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 8,
+                height: 8,
+                decoration: const BoxDecoration(
+                  color: Color(0xFF3B82F6),
+                  shape: BoxShape.rectangle,
+                ),
+              ),
+              const SizedBox(width: 6),
+              Text(
+                'Occupancy: ${data['occupancy']}%',
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 11,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// Enhanced Interactive Bar Chart Painter
+class InteractiveBarChartPainter extends CustomPainter {
+  final List<Map<String, dynamic>> data;
+  final int? hoveredBarIndex;
+
+  InteractiveBarChartPainter(this.data, {this.hoveredBarIndex});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    // Chart margins
+    const double leftMargin = 50;
+    const double rightMargin = 20;
+    const double topMargin = 20;
+    const double bottomMargin = 15; // Further reduced from 25 to 15
+    
+    final chartWidth = size.width - leftMargin - rightMargin;
+    final chartHeight = size.height - topMargin - bottomMargin;
+    
+    // Calculate data bounds (fixed scale from 0 to 100)
+    final maxOccupancy = 100; // Fixed maximum for percentage scale
+    final minOccupancy = 0; // Start from 0 for better visualization
+    final occupancyRange = maxOccupancy - minOccupancy;
+    
+    // Draw grid lines (dashed)
+    final gridPaint = Paint()
+      ..color = Colors.grey.withOpacity(0.3)
+      ..strokeWidth = 1
+      ..style = PaintingStyle.stroke;
+    
+    // Horizontal grid lines
+    for (int i = 0; i <= 4; i++) {
+      final y = topMargin + (i * chartHeight / 4);
+      _drawDashedLine(canvas, Offset(leftMargin, y), Offset(leftMargin + chartWidth, y), gridPaint);
+    }
+    
+    // Vertical grid lines
+    for (int i = 0; i < data.length; i++) {
+      final x = leftMargin + (i * chartWidth / data.length) + (chartWidth / data.length) / 2;
+      _drawDashedLine(canvas, Offset(x, topMargin), Offset(x, topMargin + chartHeight), gridPaint);
+    }
+    
+    // Draw axes
+    final axisPaint = Paint()
+      ..color = Colors.grey.withOpacity(0.6)
+      ..strokeWidth = 1;
+    
+    // Y-axis
+    canvas.drawLine(
+      Offset(leftMargin, topMargin),
+      Offset(leftMargin, topMargin + chartHeight),
+      axisPaint,
+    );
+    
+    // X-axis
+    canvas.drawLine(
+      Offset(leftMargin, topMargin + chartHeight),
+      Offset(leftMargin + chartWidth, topMargin + chartHeight),
+      axisPaint,
+    );
+    
+    // Draw Y-axis labels
+    final textPainter = TextPainter(
+      textDirection: TextDirection.ltr,
+    );
+    
+    for (int i = 0; i <= 4; i++) {
+      final value = maxOccupancy - (i * occupancyRange / 4);
+      final y = topMargin + (i * chartHeight / 4);
+      
+      textPainter.text = TextSpan(
+        text: '${value.toInt()}%',
+        style: const TextStyle(
+          color: Colors.grey,
+          fontSize: 11,
+        ),
+      );
+      textPainter.layout();
+      textPainter.paint(canvas, Offset(leftMargin - textPainter.width - 8, y - textPainter.height / 2));
+    }
+    
+    // Draw X-axis labels
+    for (int i = 0; i < data.length; i++) {
+      final x = leftMargin + (i * chartWidth / data.length) + (chartWidth / data.length) / 2;
+      final room = data[i]['room'] as String;
+      
+      textPainter.text = TextSpan(
+        text: room,
+        style: TextStyle(
+          color: hoveredBarIndex == i ? const Color(0xFF3B82F6) : Colors.grey,
+          fontSize: 10,
+          fontWeight: hoveredBarIndex == i ? FontWeight.bold : FontWeight.normal,
+        ),
+      );
+      textPainter.layout();
+      textPainter.paint(canvas, Offset(x - textPainter.width / 2, topMargin + chartHeight + 8));
+    }
+    
+    // Draw bars
+    final barWidth = chartWidth / (data.length * 2);
+    
+    for (int i = 0; i < data.length; i++) {
+      final isHovered = hoveredBarIndex == i;
+      final barColor = isHovered ? const Color(0xFF2563EB) : const Color(0xFF3B82F6);
+      
+      final paint = Paint()
+        ..color = barColor
+        ..style = PaintingStyle.fill;
+      
+      final occupancy = data[i]['occupancy'] as int;
+      final barHeight = (occupancy / maxOccupancy) * chartHeight;
+      final barX = leftMargin + (i * (chartWidth / data.length)) + (chartWidth / data.length) / 2 - barWidth / 2;
+      final barY = topMargin + chartHeight - barHeight;
+      
+      // Draw shadow for hovered bar
+      if (isHovered) {
+        final shadowPaint = Paint()
+          ..color = Colors.black.withOpacity(0.2)
+          ..style = PaintingStyle.fill
+          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 2);
+        
+        canvas.drawRRect(
+          RRect.fromRectAndRadius(
+            Rect.fromLTWH(barX + 2, barY + 2, barWidth, barHeight),
+            const Radius.circular(4),
+          ),
+          shadowPaint,
+        );
+      }
+      
+      // Draw main bar
+      canvas.drawRRect(
+        RRect.fromRectAndRadius(
+          Rect.fromLTWH(barX, barY, barWidth, barHeight),
+          const Radius.circular(4),
+        ),
+        paint,
+      );
+      
+      // Draw bar border
+      final borderPaint = Paint()
+        ..color = isHovered ? const Color(0xFF1E40AF) : Colors.white.withOpacity(0.3)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = isHovered ? 2 : 1;
+      
+      canvas.drawRRect(
+        RRect.fromRectAndRadius(
+          Rect.fromLTWH(barX, barY, barWidth, barHeight),
+          const Radius.circular(4),
+        ),
+        borderPaint,
+      );
+      
+      // Draw occupancy percentage on top of each bar
+      textPainter.text = TextSpan(
+        text: '${occupancy}%',
+        style: TextStyle(
+          color: isHovered ? Colors.black87 : Colors.black54,
+          fontSize: isHovered ? 11 : 10,
+          fontWeight: isHovered ? FontWeight.bold : FontWeight.normal,
+        ),
+      );
+      textPainter.layout();
+      textPainter.paint(
+        canvas,
+        Offset(
+          barX + barWidth / 2 - textPainter.width / 2,
+          barY - textPainter.height - 4,
+        ),
+      );
+    }
+  }
+  
+  void _drawDashedLine(Canvas canvas, Offset start, Offset end, Paint paint) {
+    const dashWidth = 3.0;
+    const dashSpace = 3.0;
+    
+    final distance = (end - start).distance;
+    final normalizedDistance = distance / (dashWidth + dashSpace);
+    
+    for (int i = 0; i < normalizedDistance.floor(); i++) {
+      final startPos = start + (end - start) * (i * (dashWidth + dashSpace)) / distance;
+      final endPos = start + (end - start) * (i * (dashWidth + dashSpace) + dashWidth) / distance;
+      canvas.drawLine(startPos, endPos, paint);
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) {
+    if (oldDelegate is InteractiveBarChartPainter) {
+      return hoveredBarIndex != oldDelegate.hoveredBarIndex;
     }
     return true;
   }
