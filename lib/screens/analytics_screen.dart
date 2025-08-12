@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'dart:math' as math;
+import 'package:fl_chart/fl_chart.dart';
 import '../widgets/navigation.dart';
 
 class AnalyticsScreen extends StatelessWidget {
@@ -309,7 +309,155 @@ class AnalyticsScreen extends StatelessWidget {
   }
 
   Widget _buildSimpleLineChart() {
-    return InteractiveLineChart(data: monthlyRevenue);
+    return LineChart(
+      LineChartData(
+        gridData: FlGridData(
+          show: true,
+          drawVerticalLine: true,
+          horizontalInterval: 1000,
+          verticalInterval: 1,
+          getDrawingHorizontalLine: (value) {
+            return FlLine(
+              color: Colors.grey.withOpacity(0.3),
+              strokeWidth: 1,
+              dashArray: [3, 3],
+            );
+          },
+          getDrawingVerticalLine: (value) {
+            return FlLine(
+              color: Colors.grey.withOpacity(0.3),
+              strokeWidth: 1,
+              dashArray: [3, 3],
+            );
+          },
+        ),
+        titlesData: FlTitlesData(
+          show: true,
+          rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          bottomTitles: AxisTitles(
+            sideTitles: SideTitles(
+              showTitles: true,
+              reservedSize: 30,
+              interval: 1,
+              getTitlesWidget: (double value, TitleMeta meta) {
+                if (value.toInt() >= 0 && value.toInt() < monthlyRevenue.length) {
+                  return Padding(
+                    padding: const EdgeInsets.only(top: 8.0),
+                    child: Text(
+                      monthlyRevenue[value.toInt()]['month'],
+                      style: TextStyle(
+                        color: Colors.grey[600],
+                        fontWeight: FontWeight.w400,
+                        fontSize: 11,
+                      ),
+                    ),
+                  );
+                }
+                return Container();
+              },
+            ),
+          ),
+          leftTitles: AxisTitles(
+            sideTitles: SideTitles(
+              showTitles: true,
+              interval: 1000,
+              getTitlesWidget: (double value, TitleMeta meta) {
+                return Text(
+                  '\$${(value / 1000).toStringAsFixed(1)}k',
+                  style: TextStyle(
+                    color: Colors.grey[600],
+                    fontWeight: FontWeight.w400,
+                    fontSize: 11,
+                  ),
+                );
+              },
+              reservedSize: 42,
+            ),
+          ),
+        ),
+        borderData: FlBorderData(
+          show: true,
+          border: Border(
+            left: BorderSide(color: Colors.grey.withOpacity(0.6)),
+            bottom: BorderSide(color: Colors.grey.withOpacity(0.6)),
+          ),
+        ),
+        minX: 0,
+        maxX: (monthlyRevenue.length - 1).toDouble(),
+        minY: 2000,
+        maxY: 5000,
+        lineBarsData: [
+          LineChartBarData(
+            spots: monthlyRevenue.asMap().entries.map((entry) {
+              return FlSpot(entry.key.toDouble(), entry.value['revenue'].toDouble());
+            }).toList(),
+            isCurved: false,
+            color: const Color(0xFF10B981),
+            barWidth: 3,
+            isStrokeCapRound: true,
+            dotData: FlDotData(
+              show: true,
+              getDotPainter: (spot, percent, barData, index) {
+                return FlDotCirclePainter(
+                  radius: 4,
+                  color: const Color(0xFF10B981),
+                  strokeWidth: 2,
+                  strokeColor: Colors.white,
+                );
+              },
+            ),
+            belowBarData: BarAreaData(show: false),
+          ),
+        ],
+        lineTouchData: LineTouchData(
+          enabled: true,
+          touchTooltipData: LineTouchTooltipData(
+            getTooltipColor: (touchedSpot) => Colors.black87,
+            getTooltipItems: (List<LineBarSpot> touchedBarSpots) {
+              return touchedBarSpots.map((barSpot) {
+                final flSpot = barSpot;
+                final index = flSpot.x.toInt();
+                if (index >= 0 && index < monthlyRevenue.length) {
+                  final data = monthlyRevenue[index];
+                  return LineTooltipItem(
+                    '${data['month']}\n',
+                    const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 12,
+                    ),
+                    children: [
+                      TextSpan(
+                        text: 'Revenue: \$${data['revenue']}\n',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 11,
+                          fontWeight: FontWeight.normal,
+                        ),
+                      ),
+                      TextSpan(
+                        text: 'Bookings: ${data['bookings']}',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 11,
+                          fontWeight: FontWeight.normal,
+                        ),
+                      ),
+                    ],
+                  );
+                }
+                return null;
+              }).toList();
+            },
+          ),
+          touchCallback: (FlTouchEvent event, LineTouchResponse? touchResponse) {
+            // Handle touch events if needed
+          },
+          handleBuiltInTouches: true,
+        ),
+      ),
+    );
   }
 
   Widget _buildBookingSourcesChart() {
@@ -356,7 +504,75 @@ class AnalyticsScreen extends StatelessWidget {
   }
 
   Widget _buildPieChart() {
-    return InteractivePieChart(data: bookingSources);
+    return Column(
+      children: [
+        Expanded(
+          child: PieChart(
+            PieChartData(
+              sectionsSpace: 2,
+              centerSpaceRadius: 0,
+              sections: bookingSources.map((source) {
+                return PieChartSectionData(
+                  color: source['color'],
+                  value: source['value'].toDouble(),
+                  title: '${source['value']}%',
+                  radius: 80,
+                  titleStyle: const TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                    shadows: [
+                      Shadow(
+                        color: Colors.black,
+                        offset: Offset(1, 1),
+                        blurRadius: 2,
+                      ),
+                    ],
+                  ),
+                  badgeWidget: null,
+                );
+              }).toList(),
+              pieTouchData: PieTouchData(
+                enabled: true,
+                touchCallback: (FlTouchEvent event, pieTouchResponse) {
+                  // Handle pie chart touch events
+                },
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(height: 16),
+        Wrap(
+          alignment: WrapAlignment.center,
+          children: bookingSources.map((source) {
+            return Padding(
+              padding: const EdgeInsets.only(right: 16, bottom: 8),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 12,
+                    height: 12,
+                    decoration: BoxDecoration(
+                      color: source['color'],
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  Text(
+                    '${source['name']} ${source['value']}%',
+                    style: const TextStyle(
+                      fontSize: 11,
+                      color: Colors.black54,
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }).toList(),
+        ),
+      ],
+    );
   }
 
   Widget _buildBottomSection() {
@@ -413,7 +629,121 @@ class AnalyticsScreen extends StatelessWidget {
   }
 
   Widget _buildBarChart() {
-    return InteractiveBarChart(data: roomPerformance);
+    return BarChart(
+      BarChartData(
+        alignment: BarChartAlignment.spaceAround,
+        maxY: 100,
+        barTouchData: BarTouchData(
+          enabled: true,
+          touchTooltipData: BarTouchTooltipData(
+            getTooltipColor: (group) => Colors.black87,
+            getTooltipItem: (group, groupIndex, rod, rodIndex) {
+              final data = roomPerformance[group.x.toInt()];
+              return BarTooltipItem(
+                '${data['room']}\n',
+                const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 12,
+                ),
+                children: [
+                  TextSpan(
+                    text: 'Occupancy: ${data['occupancy']}%',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 11,
+                      fontWeight: FontWeight.normal,
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
+        ),
+        titlesData: FlTitlesData(
+          show: true,
+          rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          bottomTitles: AxisTitles(
+            sideTitles: SideTitles(
+              showTitles: true,
+              getTitlesWidget: (double value, TitleMeta meta) {
+                if (value.toInt() >= 0 && value.toInt() < roomPerformance.length) {
+                  return Padding(
+                    padding: const EdgeInsets.only(top: 8.0),
+                    child: Text(
+                      roomPerformance[value.toInt()]['room'],
+                      style: TextStyle(
+                        color: Colors.grey[600],
+                        fontWeight: FontWeight.w400,
+                        fontSize: 10,
+                      ),
+                    ),
+                  );
+                }
+                return Container();
+              },
+              reservedSize: 30,
+            ),
+          ),
+          leftTitles: AxisTitles(
+            sideTitles: SideTitles(
+              showTitles: true,
+              interval: 25,
+              getTitlesWidget: (double value, TitleMeta meta) {
+                return Text(
+                  '${value.toInt()}%',
+                  style: TextStyle(
+                    color: Colors.grey[600],
+                    fontWeight: FontWeight.w400,
+                    fontSize: 11,
+                  ),
+                );
+              },
+              reservedSize: 40,
+            ),
+          ),
+        ),
+        borderData: FlBorderData(
+          show: true,
+          border: Border(
+            left: BorderSide(color: Colors.grey.withOpacity(0.6)),
+            bottom: BorderSide(color: Colors.grey.withOpacity(0.6)),
+          ),
+        ),
+        barGroups: roomPerformance.asMap().entries.map((entry) {
+          final index = entry.key;
+          final room = entry.value;
+          return BarChartGroupData(
+            x: index,
+            barRods: [
+              BarChartRodData(
+                toY: room['occupancy'].toDouble(),
+                color: const Color(0xFF3B82F6),
+                width: 20,
+                borderRadius: BorderRadius.circular(4),
+                borderSide: BorderSide(
+                  color: Colors.white.withOpacity(0.3),
+                  width: 1,
+                ),
+              ),
+            ],
+          );
+        }).toList(),
+        gridData: FlGridData(
+          show: true,
+          drawVerticalLine: false,
+          horizontalInterval: 25,
+          getDrawingHorizontalLine: (value) {
+            return FlLine(
+              color: Colors.grey.withOpacity(0.3),
+              strokeWidth: 1,
+              dashArray: [3, 3],
+            );
+          },
+        ),
+      ),
+    );
   }
 
   Widget _buildKPIMetrics() {
@@ -559,1178 +889,5 @@ class AnalyticsScreen extends StatelessWidget {
         ),
       ],
     );
-  }
-}
-
-// Custom painter for line chart
-class LineChartPainter extends CustomPainter {
-  final List<Map<String, dynamic>> data;
-
-  LineChartPainter(this.data);
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    // Chart margins
-    const double leftMargin = 50;
-    const double rightMargin = 20;
-    const double topMargin = 20;
-    const double bottomMargin = 40;
-    
-    final chartWidth = size.width - leftMargin - rightMargin;
-    final chartHeight = size.height - topMargin - bottomMargin;
-    
-    // Calculate data bounds
-    final maxRevenue = data.map((e) => e['revenue'] as int).reduce((a, b) => a > b ? a : b);
-    final minRevenue = data.map((e) => e['revenue'] as int).reduce((a, b) => a < b ? a : b);
-    final revenueRange = maxRevenue - minRevenue;
-    
-    // Draw grid lines (dashed)
-    final gridPaint = Paint()
-      ..color = Colors.grey.withOpacity(0.3)
-      ..strokeWidth = 1
-      ..style = PaintingStyle.stroke;
-    
-    // Horizontal grid lines
-    for (int i = 0; i <= 4; i++) {
-      final y = topMargin + (i * chartHeight / 4);
-      _drawDashedLine(canvas, Offset(leftMargin, y), Offset(leftMargin + chartWidth, y), gridPaint);
-    }
-    
-    // Vertical grid lines
-    for (int i = 0; i < data.length; i++) {
-      final x = leftMargin + (i * chartWidth / (data.length - 1));
-      _drawDashedLine(canvas, Offset(x, topMargin), Offset(x, topMargin + chartHeight), gridPaint);
-    }
-    
-    // Draw axes
-    final axisPaint = Paint()
-      ..color = Colors.grey.withOpacity(0.6)
-      ..strokeWidth = 1;
-    
-    // Y-axis
-    canvas.drawLine(
-      Offset(leftMargin, topMargin),
-      Offset(leftMargin, topMargin + chartHeight),
-      axisPaint,
-    );
-    
-    // X-axis
-    canvas.drawLine(
-      Offset(leftMargin, topMargin + chartHeight),
-      Offset(leftMargin + chartWidth, topMargin + chartHeight),
-      axisPaint,
-    );
-    
-    // Draw Y-axis labels
-    final textPainter = TextPainter(
-      textDirection: TextDirection.ltr,
-    );
-    
-    for (int i = 0; i <= 4; i++) {
-      final value = maxRevenue - (i * revenueRange / 4);
-      final y = topMargin + (i * chartHeight / 4);
-      
-      textPainter.text = TextSpan(
-        text: '\$${(value / 1000).toStringAsFixed(1)}k',
-        style: const TextStyle(
-          color: Colors.grey,
-          fontSize: 11,
-        ),
-      );
-      textPainter.layout();
-      textPainter.paint(canvas, Offset(leftMargin - textPainter.width - 8, y - textPainter.height / 2));
-    }
-    
-    // Draw X-axis labels
-    for (int i = 0; i < data.length; i++) {
-      final x = leftMargin + (i * chartWidth / (data.length - 1));
-      final month = data[i]['month'] as String;
-      
-      textPainter.text = TextSpan(
-        text: month,
-        style: const TextStyle(
-          color: Colors.grey,
-          fontSize: 11,
-        ),
-      );
-      textPainter.layout();
-      textPainter.paint(canvas, Offset(x - textPainter.width / 2, topMargin + chartHeight + 8));
-    }
-    
-    // Draw the line path
-    final linePaint = Paint()
-      ..color = const Color(0xFF10B981)
-      ..strokeWidth = 3
-      ..style = PaintingStyle.stroke
-      ..strokeCap = StrokeCap.round
-      ..strokeJoin = StrokeJoin.round;
-
-    final path = Path();
-    final points = <Offset>[];
-    
-    for (int i = 0; i < data.length; i++) {
-      final x = leftMargin + (i * chartWidth / (data.length - 1));
-      final normalizedValue = ((data[i]['revenue'] as int) - minRevenue) / revenueRange;
-      final y = topMargin + chartHeight - (normalizedValue * chartHeight);
-      
-      points.add(Offset(x, y));
-      
-      if (i == 0) {
-        path.moveTo(x, y);
-      } else {
-        path.lineTo(x, y);
-      }
-    }
-
-    canvas.drawPath(path, linePaint);
-    
-    // Draw data points
-    final pointPaint = Paint()
-      ..color = const Color(0xFF10B981)
-      ..style = PaintingStyle.fill;
-    
-    final pointBorderPaint = Paint()
-      ..color = Colors.white
-      ..style = PaintingStyle.fill;
-    
-    for (final point in points) {
-      // Draw white border
-      canvas.drawCircle(point, 6, pointBorderPaint);
-      // Draw colored point
-      canvas.drawCircle(point, 4, pointPaint);
-    }
-  }
-  
-  void _drawDashedLine(Canvas canvas, Offset start, Offset end, Paint paint) {
-    const dashWidth = 3.0;
-    const dashSpace = 3.0;
-    
-    final distance = (end - start).distance;
-    final normalizedDistance = distance / (dashWidth + dashSpace);
-    
-    for (int i = 0; i < normalizedDistance.floor(); i++) {
-      final startPos = start + (end - start) * (i * (dashWidth + dashSpace)) / distance;
-      final endPos = start + (end - start) * (i * (dashWidth + dashSpace) + dashWidth) / distance;
-      canvas.drawLine(startPos, endPos, paint);
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
-}
-
-// Custom painter for pie chart
-class PieChartPainter extends CustomPainter {
-  final List<Map<String, dynamic>> data;
-
-  PieChartPainter(this.data);
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final center = Offset(size.width / 2, size.height / 2);
-    final radius = size.width / 2;
-    
-    double startAngle = 0;
-    
-    for (final item in data) {
-      final paint = Paint()
-        ..color = item['color']
-        ..style = PaintingStyle.fill;
-      
-      final sweepAngle = (item['value'] / 100) * 2 * 3.14159;
-      
-      canvas.drawArc(
-        Rect.fromCircle(center: center, radius: radius),
-        startAngle,
-        sweepAngle,
-        true,
-        paint,
-      );
-      
-      startAngle += sweepAngle;
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
-}
-
-// Custom painter for bar chart
-class BarChartPainter extends CustomPainter {
-  final List<Map<String, dynamic>> data;
-
-  BarChartPainter(this.data);
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = const Color(0xFF3B82F6)
-      ..style = PaintingStyle.fill;
-
-    final barWidth = size.width / (data.length * 2);
-    final maxOccupancy = data.map((e) => e['occupancy'] as int).reduce((a, b) => a > b ? a : b);
-    
-    for (int i = 0; i < data.length; i++) {
-      final x = i * (size.width / data.length) + barWidth / 2;
-      final barHeight = ((data[i]['occupancy'] as int) / maxOccupancy) * size.height;
-      final y = size.height - barHeight;
-      
-      canvas.drawRect(
-        Rect.fromLTWH(x, y, barWidth, barHeight),
-        paint,
-      );
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
-}
-
-// Interactive Line Chart Widget
-class InteractiveLineChart extends StatefulWidget {
-  final List<Map<String, dynamic>> data;
-
-  const InteractiveLineChart({super.key, required this.data});
-
-  @override
-  State<InteractiveLineChart> createState() => _InteractiveLineChartState();
-}
-
-class _InteractiveLineChartState extends State<InteractiveLineChart> {
-  int? hoveredIndex;
-  Offset? hoverPosition;
-
-  @override
-  Widget build(BuildContext context) {
-    return Stack(
-      children: [
-        GestureDetector(
-          onPanUpdate: (details) {
-            _handleHover(details.localPosition);
-          },
-          onPanEnd: (_) {
-            setState(() {
-              hoveredIndex = null;
-              hoverPosition = null;
-            });
-          },
-          onTapDown: (details) {
-            _handleHover(details.localPosition);
-          },
-          child: CustomPaint(
-            size: const Size(double.infinity, 300),
-            painter: InteractiveLineChartPainter(
-              widget.data,
-              hoveredIndex: hoveredIndex,
-            ),
-          ),
-        ),
-        if (hoveredIndex != null && hoverPosition != null)
-          Positioned(
-            left: hoverPosition!.dx - 60,
-            top: hoverPosition!.dy - 80,
-            child: _buildTooltip(),
-          ),
-      ],
-    );
-  }
-
-  void _handleHover(Offset position) {
-    const double leftMargin = 50;
-    const double rightMargin = 20;
-    
-    final RenderBox renderBox = context.findRenderObject() as RenderBox;
-    final chartWidth = renderBox.size.width - leftMargin - rightMargin;
-    final dataPointWidth = chartWidth / (widget.data.length - 1);
-    
-    if (position.dx >= leftMargin && position.dx <= renderBox.size.width - rightMargin) {
-      final relativeX = position.dx - leftMargin;
-      final index = (relativeX / dataPointWidth).round();
-      
-      if (index >= 0 && index < widget.data.length) {
-        setState(() {
-          hoveredIndex = index;
-          hoverPosition = position;
-        });
-      }
-    }
-  }
-
-  Widget _buildTooltip() {
-    if (hoveredIndex == null) return const SizedBox.shrink();
-    
-    final data = widget.data[hoveredIndex!];
-    return Container(
-      padding: const EdgeInsets.all(8),
-      decoration: BoxDecoration(
-        color: Colors.black87,
-        borderRadius: BorderRadius.circular(6),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.2),
-            blurRadius: 4,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            data['month'],
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 12,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                width: 8,
-                height: 8,
-                decoration: const BoxDecoration(
-                  color: Color(0xFF10B981),
-                  shape: BoxShape.circle,
-                ),
-              ),
-              const SizedBox(width: 6),
-              Text(
-                'Revenue: \$${data['revenue']}',
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 11,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 2),
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                width: 8,
-                height: 8,
-                decoration: const BoxDecoration(
-                  color: Color(0xFF3B82F6),
-                  shape: BoxShape.circle,
-                ),
-              ),
-              const SizedBox(width: 6),
-              Text(
-                'Bookings: ${data['bookings']}',
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 11,
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-// Enhanced Interactive Line Chart Painter
-class InteractiveLineChartPainter extends CustomPainter {
-  final List<Map<String, dynamic>> data;
-  final int? hoveredIndex;
-
-  InteractiveLineChartPainter(this.data, {this.hoveredIndex});
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    // Chart margins
-    const double leftMargin = 50;
-    const double rightMargin = 20;
-    const double topMargin = 20;
-    const double bottomMargin = 40;
-    
-    final chartWidth = size.width - leftMargin - rightMargin;
-    final chartHeight = size.height - topMargin - bottomMargin;
-    
-    // Calculate data bounds
-    final maxRevenue = data.map((e) => e['revenue'] as int).reduce((a, b) => a > b ? a : b);
-    final minRevenue = data.map((e) => e['revenue'] as int).reduce((a, b) => a < b ? a : b);
-    final revenueRange = maxRevenue - minRevenue;
-    
-    // Draw grid lines (dashed)
-    final gridPaint = Paint()
-      ..color = Colors.grey.withOpacity(0.3)
-      ..strokeWidth = 1
-      ..style = PaintingStyle.stroke;
-    
-    // Horizontal grid lines
-    for (int i = 0; i <= 4; i++) {
-      final y = topMargin + (i * chartHeight / 4);
-      _drawDashedLine(canvas, Offset(leftMargin, y), Offset(leftMargin + chartWidth, y), gridPaint);
-    }
-    
-    // Vertical grid lines
-    for (int i = 0; i < data.length; i++) {
-      final x = leftMargin + (i * chartWidth / (data.length - 1));
-      _drawDashedLine(canvas, Offset(x, topMargin), Offset(x, topMargin + chartHeight), gridPaint);
-    }
-    
-    // Draw axes
-    final axisPaint = Paint()
-      ..color = Colors.grey.withOpacity(0.6)
-      ..strokeWidth = 1;
-    
-    // Y-axis
-    canvas.drawLine(
-      Offset(leftMargin, topMargin),
-      Offset(leftMargin, topMargin + chartHeight),
-      axisPaint,
-    );
-    
-    // X-axis
-    canvas.drawLine(
-      Offset(leftMargin, topMargin + chartHeight),
-      Offset(leftMargin + chartWidth, topMargin + chartHeight),
-      axisPaint,
-    );
-    
-    // Draw Y-axis labels
-    final textPainter = TextPainter(
-      textDirection: TextDirection.ltr,
-    );
-    
-    for (int i = 0; i <= 4; i++) {
-      final value = maxRevenue - (i * revenueRange / 4);
-      final y = topMargin + (i * chartHeight / 4);
-      
-      textPainter.text = TextSpan(
-        text: '\$${(value / 1000).toStringAsFixed(1)}k',
-        style: const TextStyle(
-          color: Colors.grey,
-          fontSize: 11,
-        ),
-      );
-      textPainter.layout();
-      textPainter.paint(canvas, Offset(leftMargin - textPainter.width - 8, y - textPainter.height / 2));
-    }
-    
-    // Draw X-axis labels
-    for (int i = 0; i < data.length; i++) {
-      final x = leftMargin + (i * chartWidth / (data.length - 1));
-      final month = data[i]['month'] as String;
-      
-      textPainter.text = TextSpan(
-        text: month,
-        style: TextStyle(
-          color: hoveredIndex == i ? const Color(0xFF10B981) : Colors.grey,
-          fontSize: 11,
-          fontWeight: hoveredIndex == i ? FontWeight.bold : FontWeight.normal,
-        ),
-      );
-      textPainter.layout();
-      textPainter.paint(canvas, Offset(x - textPainter.width / 2, topMargin + chartHeight + 8));
-    }
-    
-    // Draw the line path
-    final linePaint = Paint()
-      ..color = const Color(0xFF10B981)
-      ..strokeWidth = 3
-      ..style = PaintingStyle.stroke
-      ..strokeCap = StrokeCap.round
-      ..strokeJoin = StrokeJoin.round;
-
-    final path = Path();
-    final points = <Offset>[];
-    
-    for (int i = 0; i < data.length; i++) {
-      final x = leftMargin + (i * chartWidth / (data.length - 1));
-      final normalizedValue = ((data[i]['revenue'] as int) - minRevenue) / revenueRange;
-      final y = topMargin + chartHeight - (normalizedValue * chartHeight);
-      
-      points.add(Offset(x, y));
-      
-      if (i == 0) {
-        path.moveTo(x, y);
-      } else {
-        path.lineTo(x, y);
-      }
-    }
-
-    canvas.drawPath(path, linePaint);
-    
-    // Draw hover line if hovering
-    if (hoveredIndex != null) {
-      final hoverX = leftMargin + (hoveredIndex! * chartWidth / (data.length - 1));
-      final hoverLinePaint = Paint()
-        ..color = const Color(0xFF10B981).withOpacity(0.3)
-        ..strokeWidth = 1
-        ..style = PaintingStyle.stroke;
-      
-      canvas.drawLine(
-        Offset(hoverX, topMargin),
-        Offset(hoverX, topMargin + chartHeight),
-        hoverLinePaint,
-      );
-    }
-    
-    // Draw data points
-    final pointPaint = Paint()
-      ..color = const Color(0xFF10B981)
-      ..style = PaintingStyle.fill;
-    
-    final pointBorderPaint = Paint()
-      ..color = Colors.white
-      ..style = PaintingStyle.fill;
-    
-    for (int i = 0; i < points.length; i++) {
-      final point = points[i];
-      final isHovered = hoveredIndex == i;
-      final pointRadius = isHovered ? 7.0 : 4.0;
-      final borderRadius = isHovered ? 9.0 : 6.0;
-      
-      // Draw white border
-      canvas.drawCircle(point, borderRadius, pointBorderPaint);
-      // Draw colored point
-      canvas.drawCircle(point, pointRadius, pointPaint);
-      
-      // Draw hover effect
-      if (isHovered) {
-        final hoverPaint = Paint()
-          ..color = const Color(0xFF10B981).withOpacity(0.2)
-          ..style = PaintingStyle.fill;
-        canvas.drawCircle(point, 12, hoverPaint);
-      }
-    }
-  }
-  
-  void _drawDashedLine(Canvas canvas, Offset start, Offset end, Paint paint) {
-    const dashWidth = 3.0;
-    const dashSpace = 3.0;
-    
-    final distance = (end - start).distance;
-    final normalizedDistance = distance / (dashWidth + dashSpace);
-    
-    for (int i = 0; i < normalizedDistance.floor(); i++) {
-      final startPos = start + (end - start) * (i * (dashWidth + dashSpace)) / distance;
-      final endPos = start + (end - start) * (i * (dashWidth + dashSpace) + dashWidth) / distance;
-      canvas.drawLine(startPos, endPos, paint);
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) {
-    if (oldDelegate is InteractiveLineChartPainter) {
-      return hoveredIndex != oldDelegate.hoveredIndex;
-    }
-    return true;
-  }
-}
-
-// Interactive Pie Chart Widget
-class InteractivePieChart extends StatefulWidget {
-  final List<Map<String, dynamic>> data;
-
-  const InteractivePieChart({super.key, required this.data});
-
-  @override
-  State<InteractivePieChart> createState() => _InteractivePieChartState();
-}
-
-class _InteractivePieChartState extends State<InteractivePieChart> {
-  int? hoveredSegment;
-  Offset? hoverPosition;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Expanded(
-          child: Stack(
-            children: [
-              GestureDetector(
-                onPanUpdate: (details) {
-                  _handleHover(details.localPosition);
-                },
-                onPanEnd: (_) {
-                  setState(() {
-                    hoveredSegment = null;
-                    hoverPosition = null;
-                  });
-                },
-                onTapDown: (details) {
-                  _handleHover(details.localPosition);
-                },
-                child: CustomPaint(
-                  size: const Size(double.infinity, 300),
-                  painter: InteractivePieChartPainter(
-                    widget.data,
-                    hoveredSegment: hoveredSegment,
-                  ),
-                ),
-              ),
-              if (hoveredSegment != null && hoverPosition != null)
-                Positioned(
-                  left: hoverPosition!.dx - 40,
-                  top: hoverPosition!.dy - 40,
-                  child: _buildTooltip(),
-                ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 16),
-        Wrap(
-          alignment: WrapAlignment.center,
-          children: widget.data.asMap().entries.map((entry) {
-            final index = entry.key;
-            final source = entry.value;
-            final isHovered = hoveredSegment == index;
-            
-            return Padding(
-              padding: const EdgeInsets.only(right: 16, bottom: 8),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Container(
-                    width: 12,
-                    height: 12,
-                    decoration: BoxDecoration(
-                      color: source['color'],
-                      shape: BoxShape.circle,
-                      border: isHovered 
-                        ? Border.all(color: Colors.black54, width: 2)
-                        : null,
-                    ),
-                  ),
-                  const SizedBox(width: 6),
-                  Text(
-                    '${source['name']} ${source['value']}%',
-                    style: TextStyle(
-                      fontSize: isHovered ? 12 : 11,
-                      fontWeight: isHovered ? FontWeight.bold : FontWeight.normal,
-                      color: isHovered ? Colors.black87 : Colors.black54,
-                    ),
-                  ),
-                ],
-              ),
-            );
-          }).toList(),
-        ),
-      ],
-    );
-  }
-
-  void _handleHover(Offset position) {
-    final RenderBox renderBox = context.findRenderObject() as RenderBox;
-    final center = Offset(renderBox.size.width / 2, renderBox.size.height / 2);
-    final radius = math.min(renderBox.size.width, renderBox.size.height) / 3; // Use smaller radius for better centering
-    final distance = (position - center).distance;
-    
-    if (distance <= radius) { // Within the pie chart radius
-      final angle = (position - center).direction;
-      final normalizedAngle = angle < 0 ? angle + 2 * 3.14159 : angle;
-      
-      double currentAngle = -3.14159 / 2; // Start from top (12 o'clock)
-      for (int i = 0; i < widget.data.length; i++) {
-        final segmentAngle = (widget.data[i]['value'] / 100) * 2 * 3.14159;
-        if (normalizedAngle >= currentAngle && normalizedAngle <= currentAngle + segmentAngle) {
-          setState(() {
-            hoveredSegment = i;
-            hoverPosition = position;
-          });
-          return;
-        }
-        currentAngle += segmentAngle;
-      }
-    }
-    
-    setState(() {
-      hoveredSegment = null;
-      hoverPosition = null;
-    });
-  }
-
-  Widget _buildTooltip() {
-    if (hoveredSegment == null) return const SizedBox.shrink();
-    
-    final data = widget.data[hoveredSegment!];
-    return Container(
-      padding: const EdgeInsets.all(8),
-      decoration: BoxDecoration(
-        color: Colors.black87,
-        borderRadius: BorderRadius.circular(6),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.2),
-            blurRadius: 4,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            data['name'],
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 12,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: 2),
-          Text(
-            '${data['value']}%',
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 11,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-// Enhanced Interactive Pie Chart Painter
-class InteractivePieChartPainter extends CustomPainter {
-  final List<Map<String, dynamic>> data;
-  final int? hoveredSegment;
-
-  InteractivePieChartPainter(this.data, {this.hoveredSegment});
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final center = Offset(size.width / 2, size.height / 2);
-    final radius = math.min(size.width, size.height) / 3; // Use smaller radius for better proportions
-    
-    double startAngle = -3.14159 / 2; // Start from top (12 o'clock)
-    
-    for (int i = 0; i < data.length; i++) {
-      final item = data[i];
-      final isHovered = hoveredSegment == i;
-      final currentRadius = isHovered ? radius + 5 : radius;
-      
-      final paint = Paint()
-        ..color = item['color']
-        ..style = PaintingStyle.fill;
-      
-      // Add shadow effect for hovered segment
-      if (isHovered) {
-        final shadowPaint = Paint()
-          ..color = Colors.black.withOpacity(0.3)
-          ..style = PaintingStyle.fill
-          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 3);
-        
-        final sweepAngle = (item['value'] / 100) * 2 * 3.14159;
-        canvas.drawArc(
-          Rect.fromCircle(center: center, radius: currentRadius + 2),
-          startAngle,
-          sweepAngle,
-          true,
-          shadowPaint,
-        );
-      }
-      
-      final sweepAngle = (item['value'] / 100) * 2 * 3.14159;
-      
-      canvas.drawArc(
-        Rect.fromCircle(center: center, radius: currentRadius),
-        startAngle,
-        sweepAngle,
-        true,
-        paint,
-      );
-      
-      // Draw segment border
-      final borderPaint = Paint()
-        ..color = Colors.white
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = isHovered ? 3 : 2;
-      
-      canvas.drawArc(
-        Rect.fromCircle(center: center, radius: currentRadius),
-        startAngle,
-        sweepAngle,
-        true,
-        borderPaint,
-      );
-      
-      // Draw percentage label on each segment
-      final labelAngle = startAngle + sweepAngle / 2;
-      final labelRadius = currentRadius * 0.7;
-      final labelX = center.dx + labelRadius * math.cos(labelAngle);
-      final labelY = center.dy + labelRadius * math.sin(labelAngle);
-      
-      final textPainter = TextPainter(
-        text: TextSpan(
-          text: '${item['value']}%',
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: isHovered ? 14 : 12, // Slightly larger text for better visibility
-            fontWeight: isHovered ? FontWeight.bold : FontWeight.normal,
-            shadows: [
-              Shadow(
-                color: Colors.black.withOpacity(0.8),
-                offset: const Offset(1, 1),
-                blurRadius: 2,
-              ),
-            ],
-          ),
-        ),
-        textDirection: TextDirection.ltr,
-      );
-      
-      textPainter.layout();
-      textPainter.paint(
-        canvas,
-        Offset(
-          labelX - textPainter.width / 2,
-          labelY - textPainter.height / 2,
-        ),
-      );
-      
-      startAngle += sweepAngle;
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) {
-    if (oldDelegate is InteractivePieChartPainter) {
-      return hoveredSegment != oldDelegate.hoveredSegment;
-    }
-    return true;
-  }
-}
-
-// Interactive Bar Chart Widget
-class InteractiveBarChart extends StatefulWidget {
-  final List<Map<String, dynamic>> data;
-
-  const InteractiveBarChart({super.key, required this.data});
-
-  @override
-  State<InteractiveBarChart> createState() => _InteractiveBarChartState();
-}
-
-class _InteractiveBarChartState extends State<InteractiveBarChart> {
-  int? hoveredBarIndex;
-  Offset? hoverPosition;
-
-  @override
-  Widget build(BuildContext context) {
-    return Stack(
-      children: [
-        GestureDetector(
-          onPanUpdate: (details) {
-            _handleHover(details.localPosition);
-          },
-          onPanEnd: (_) {
-            setState(() {
-              hoveredBarIndex = null;
-              hoverPosition = null;
-            });
-          },
-          onTapDown: (details) {
-            _handleHover(details.localPosition);
-          },
-          child: CustomPaint(
-            size: const Size(double.infinity, 200),
-            painter: InteractiveBarChartPainter(
-              widget.data,
-              hoveredBarIndex: hoveredBarIndex,
-            ),
-          ),
-        ),
-        if (hoveredBarIndex != null && hoverPosition != null)
-          Positioned(
-            left: hoverPosition!.dx - 60,
-            top: hoverPosition!.dy - 80,
-            child: _buildTooltip(),
-          ),
-      ],
-    );
-  }
-
-  void _handleHover(Offset position) {
-    const double leftMargin = 50;
-    const double rightMargin = 20;
-    
-    final RenderBox renderBox = context.findRenderObject() as RenderBox;
-    final chartWidth = renderBox.size.width - leftMargin - rightMargin;
-    final barWidth = chartWidth / (widget.data.length * 2);
-    
-    if (position.dx >= leftMargin && position.dx <= renderBox.size.width - rightMargin) {
-      for (int i = 0; i < widget.data.length; i++) {
-        final barX = leftMargin + (i * (chartWidth / widget.data.length)) + barWidth / 2;
-        final barLeft = barX - barWidth / 2;
-        final barRight = barX + barWidth / 2;
-        
-        if (position.dx >= barLeft && position.dx <= barRight) {
-          setState(() {
-            hoveredBarIndex = i;
-            hoverPosition = position;
-          });
-          return;
-        }
-      }
-    }
-    
-    setState(() {
-      hoveredBarIndex = null;
-      hoverPosition = null;
-    });
-  }
-
-  Widget _buildTooltip() {
-    if (hoveredBarIndex == null) return const SizedBox.shrink();
-    
-    final data = widget.data[hoveredBarIndex!];
-    return Container(
-      padding: const EdgeInsets.all(8),
-      decoration: BoxDecoration(
-        color: Colors.black87,
-        borderRadius: BorderRadius.circular(6),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.2),
-            blurRadius: 4,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            data['room'],
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 12,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                width: 8,
-                height: 8,
-                decoration: const BoxDecoration(
-                  color: Color(0xFF3B82F6),
-                  shape: BoxShape.rectangle,
-                ),
-              ),
-              const SizedBox(width: 6),
-              Text(
-                'Occupancy: ${data['occupancy']}%',
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 11,
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-// Enhanced Interactive Bar Chart Painter
-class InteractiveBarChartPainter extends CustomPainter {
-  final List<Map<String, dynamic>> data;
-  final int? hoveredBarIndex;
-
-  InteractiveBarChartPainter(this.data, {this.hoveredBarIndex});
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    // Chart margins
-    const double leftMargin = 50;
-    const double rightMargin = 20;
-    const double topMargin = 20;
-    const double bottomMargin = 15; // Further reduced from 25 to 15
-    
-    final chartWidth = size.width - leftMargin - rightMargin;
-    final chartHeight = size.height - topMargin - bottomMargin;
-    
-    // Calculate data bounds (fixed scale from 0 to 100)
-    final maxOccupancy = 100; // Fixed maximum for percentage scale
-    final minOccupancy = 0; // Start from 0 for better visualization
-    final occupancyRange = maxOccupancy - minOccupancy;
-    
-    // Draw grid lines (dashed)
-    final gridPaint = Paint()
-      ..color = Colors.grey.withOpacity(0.3)
-      ..strokeWidth = 1
-      ..style = PaintingStyle.stroke;
-    
-    // Horizontal grid lines
-    for (int i = 0; i <= 4; i++) {
-      final y = topMargin + (i * chartHeight / 4);
-      _drawDashedLine(canvas, Offset(leftMargin, y), Offset(leftMargin + chartWidth, y), gridPaint);
-    }
-    
-    // Vertical grid lines
-    for (int i = 0; i < data.length; i++) {
-      final x = leftMargin + (i * chartWidth / data.length) + (chartWidth / data.length) / 2;
-      _drawDashedLine(canvas, Offset(x, topMargin), Offset(x, topMargin + chartHeight), gridPaint);
-    }
-    
-    // Draw axes
-    final axisPaint = Paint()
-      ..color = Colors.grey.withOpacity(0.6)
-      ..strokeWidth = 1;
-    
-    // Y-axis
-    canvas.drawLine(
-      Offset(leftMargin, topMargin),
-      Offset(leftMargin, topMargin + chartHeight),
-      axisPaint,
-    );
-    
-    // X-axis
-    canvas.drawLine(
-      Offset(leftMargin, topMargin + chartHeight),
-      Offset(leftMargin + chartWidth, topMargin + chartHeight),
-      axisPaint,
-    );
-    
-    // Draw Y-axis labels
-    final textPainter = TextPainter(
-      textDirection: TextDirection.ltr,
-    );
-    
-    for (int i = 0; i <= 4; i++) {
-      final value = maxOccupancy - (i * occupancyRange / 4);
-      final y = topMargin + (i * chartHeight / 4);
-      
-      textPainter.text = TextSpan(
-        text: '${value.toInt()}%',
-        style: const TextStyle(
-          color: Colors.grey,
-          fontSize: 11,
-        ),
-      );
-      textPainter.layout();
-      textPainter.paint(canvas, Offset(leftMargin - textPainter.width - 8, y - textPainter.height / 2));
-    }
-    
-    // Draw X-axis labels
-    for (int i = 0; i < data.length; i++) {
-      final x = leftMargin + (i * chartWidth / data.length) + (chartWidth / data.length) / 2;
-      final room = data[i]['room'] as String;
-      
-      textPainter.text = TextSpan(
-        text: room,
-        style: TextStyle(
-          color: hoveredBarIndex == i ? const Color(0xFF3B82F6) : Colors.grey,
-          fontSize: 10,
-          fontWeight: hoveredBarIndex == i ? FontWeight.bold : FontWeight.normal,
-        ),
-      );
-      textPainter.layout();
-      textPainter.paint(canvas, Offset(x - textPainter.width / 2, topMargin + chartHeight + 8));
-    }
-    
-    // Draw bars
-    final barWidth = chartWidth / (data.length * 2);
-    
-    for (int i = 0; i < data.length; i++) {
-      final isHovered = hoveredBarIndex == i;
-      final barColor = isHovered ? const Color(0xFF2563EB) : const Color(0xFF3B82F6);
-      
-      final paint = Paint()
-        ..color = barColor
-        ..style = PaintingStyle.fill;
-      
-      final occupancy = data[i]['occupancy'] as int;
-      final barHeight = (occupancy / maxOccupancy) * chartHeight;
-      final barX = leftMargin + (i * (chartWidth / data.length)) + (chartWidth / data.length) / 2 - barWidth / 2;
-      final barY = topMargin + chartHeight - barHeight;
-      
-      // Draw shadow for hovered bar
-      if (isHovered) {
-        final shadowPaint = Paint()
-          ..color = Colors.black.withOpacity(0.2)
-          ..style = PaintingStyle.fill
-          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 2);
-        
-        canvas.drawRRect(
-          RRect.fromRectAndRadius(
-            Rect.fromLTWH(barX + 2, barY + 2, barWidth, barHeight),
-            const Radius.circular(4),
-          ),
-          shadowPaint,
-        );
-      }
-      
-      // Draw main bar
-      canvas.drawRRect(
-        RRect.fromRectAndRadius(
-          Rect.fromLTWH(barX, barY, barWidth, barHeight),
-          const Radius.circular(4),
-        ),
-        paint,
-      );
-      
-      // Draw bar border
-      final borderPaint = Paint()
-        ..color = isHovered ? const Color(0xFF1E40AF) : Colors.white.withOpacity(0.3)
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = isHovered ? 2 : 1;
-      
-      canvas.drawRRect(
-        RRect.fromRectAndRadius(
-          Rect.fromLTWH(barX, barY, barWidth, barHeight),
-          const Radius.circular(4),
-        ),
-        borderPaint,
-      );
-      
-      // Draw occupancy percentage on top of each bar
-      textPainter.text = TextSpan(
-        text: '${occupancy}%',
-        style: TextStyle(
-          color: isHovered ? Colors.black87 : Colors.black54,
-          fontSize: isHovered ? 11 : 10,
-          fontWeight: isHovered ? FontWeight.bold : FontWeight.normal,
-        ),
-      );
-      textPainter.layout();
-      textPainter.paint(
-        canvas,
-        Offset(
-          barX + barWidth / 2 - textPainter.width / 2,
-          barY - textPainter.height - 4,
-        ),
-      );
-    }
-  }
-  
-  void _drawDashedLine(Canvas canvas, Offset start, Offset end, Paint paint) {
-    const dashWidth = 3.0;
-    const dashSpace = 3.0;
-    
-    final distance = (end - start).distance;
-    final normalizedDistance = distance / (dashWidth + dashSpace);
-    
-    for (int i = 0; i < normalizedDistance.floor(); i++) {
-      final startPos = start + (end - start) * (i * (dashWidth + dashSpace)) / distance;
-      final endPos = start + (end - start) * (i * (dashWidth + dashSpace) + dashWidth) / distance;
-      canvas.drawLine(startPos, endPos, paint);
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) {
-    if (oldDelegate is InteractiveBarChartPainter) {
-      return hoveredBarIndex != oldDelegate.hoveredBarIndex;
-    }
-    return true;
   }
 }

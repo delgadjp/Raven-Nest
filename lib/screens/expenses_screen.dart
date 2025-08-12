@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../widgets/navigation.dart';
+import '../widgets/summary_card.dart';
 
 class ExpensesScreen extends StatefulWidget {
   const ExpensesScreen({super.key});
@@ -107,7 +108,7 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
                                     : constraints.maxWidth >= 900 
                                       ? (constraints.maxWidth - 24) / 2 // 2 columns with spacing
                                       : constraints.maxWidth, // 1 column
-                                  child: _summaryCard(
+                                  child: SummaryCard(
                                     title: 'Fixed Expenses',
                                     value: "\$${fixedTotal.toInt()}",
                                     subtitle: 'Monthly recurring',
@@ -121,7 +122,7 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
                                     : constraints.maxWidth >= 900 
                                       ? (constraints.maxWidth - 24) / 2 // 2 columns with spacing
                                       : constraints.maxWidth, // 1 column
-                                  child: _summaryCard(
+                                  child: SummaryCard(
                                     title: 'Variable Expenses',
                                     value: "\$${variableTotal.toInt()}",
                                     subtitle: 'This month',
@@ -135,7 +136,7 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
                                     : constraints.maxWidth >= 900 
                                       ? (constraints.maxWidth - 24) / 2 // 2 columns with spacing
                                       : constraints.maxWidth, // 1 column
-                                  child: _summaryCard(
+                                  child: SummaryCard(
                                     title: 'Total Expenses',
                                     value: "\$${grandTotal.toInt()}",
                                     subtitle: 'Combined total',
@@ -149,7 +150,7 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
                                     : constraints.maxWidth >= 900 
                                       ? (constraints.maxWidth - 24) / 2 // 2 columns with spacing
                                       : constraints.maxWidth, // 1 column
-                                  child: _summaryGradientCard(
+                                  child: SummaryGradientCard(
                                     title: 'Budget Status',
                                     value: '89%',
                                     subtitle: 'Within budget',
@@ -193,72 +194,6 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
                 ),
               ),
             ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _summaryCard({
-    required String title,
-    required String value,
-    required String subtitle,
-    required IconData icon,
-    required Color iconColor,
-  }) {
-    return Card(
-      elevation: 0,
-      color: Colors.white.withOpacity(0.8),
-      surfaceTintColor: Colors.transparent,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(title, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: Colors.black54)),
-            Text(value, style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: iconColor)),
-            Row(
-              children: [
-                Icon(icon, size: 12, color: Colors.black38),
-                const SizedBox(width: 4),
-                Text(subtitle, style: const TextStyle(fontSize: 11, color: Colors.black45)),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _summaryGradientCard({
-    required String title,
-    required String value,
-    required String subtitle,
-  }) {
-    return Container(
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFF22C55E), Color(0xFF059669)],
-          begin: Alignment.centerLeft,
-          end: Alignment.centerRight,
-        ),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      padding: const EdgeInsets.all(12),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(title, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: Colors.white70)),
-          Text(value, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white)),
-          Row(
-            children: [
-              const Icon(Icons.trending_up, size: 12, color: Colors.white70),
-              const SizedBox(width: 4),
-              Text(subtitle, style: const TextStyle(fontSize: 11, color: Colors.white70)),
-            ],
           ),
         ],
       ),
@@ -384,7 +319,7 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
             const SizedBox(height: 8),
             TextField(
               controller: _amountController,
-                decoration: const InputDecoration(labelText: 'Amount (\$)'),
+              decoration: const InputDecoration(labelText: 'Amount (\$)'),
               keyboardType: TextInputType.number,
             ),
             const SizedBox(height: 8),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../widgets/navigation.dart';
+import '../widgets/summary_card.dart';
 
 class InventoryItem {
   final int id;
@@ -355,7 +356,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
                           if (isLg) {
                             columns = 4;
                           } else if (isMd) {
-                            columns = 4; // mimic md:grid-cols-4
+                            columns = 4;
                           }
                           return GridView.count(
                             crossAxisCount: columns,
@@ -365,32 +366,32 @@ class _InventoryScreenState extends State<InventoryScreen> {
                             crossAxisSpacing: 16,
                             mainAxisSpacing: 16,
                             children: [
-                              _summaryCard(
+                              SummaryCard(
                                 title: 'Total Items',
                                 value: '$_totalItems',
                                 subtitle: 'All categories',
                                 icon: Icons.inventory_2,
                                 iconColor: Colors.blue.shade600,
                               ),
-                              _summaryCard(
+                              SummaryCard(
                                 title: 'Low Stock',
                                 value: '$_lowStockItems',
                                 subtitle: 'Need attention',
                                 icon: Icons.warning_amber_rounded,
                                 iconColor: Colors.orange.shade600,
                               ),
-                              _summaryCard(
+                              SummaryCard(
                                 title: 'Critical',
                                 value: '$_criticalItems',
                                 subtitle: 'Urgent restock',
                                 icon: Icons.report_rounded,
                                 iconColor: Colors.red.shade600,
                               ),
-                              _summaryGradientCard(
+                              SummaryGradientCard(
                                 title: 'Stock Health',
-                value: _totalItems == 0
-                  ? '0%'
-                  : '${(((_totalItems - _lowStockItems) / _totalItems) * 100).round()}%',
+                                value: _totalItems == 0
+                                  ? '0%'
+                                  : '${(((_totalItems - _lowStockItems) / _totalItems) * 100).round()}%',
                                 subtitle: 'Well stocked',
                               ),
                             ],
@@ -398,147 +399,76 @@ class _InventoryScreenState extends State<InventoryScreen> {
                         },
                       ),
 
-                      const SizedBox(height: 8),
+                      const SizedBox(height: 24),
 
-                      // Tabs (shadcn/ui style)
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Container(
-                            margin: const EdgeInsets.only(bottom: 24),
-                            height: 44,
-                            width: double.infinity,
-                            padding: const EdgeInsets.all(4),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFFF1F5F9), // muted background
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                            child: TabBar(
-                              isScrollable: false,
-                              dividerColor: Colors.transparent,
-                              labelColor: const Color(0xFF0F172A), // foreground
-                              unselectedLabelColor: const Color(0xFF64748B), // muted-foreground
-                              labelStyle: const TextStyle(
-                                fontWeight: FontWeight.w500,
-                                fontSize: 14,
-                              ),
-                              unselectedLabelStyle: const TextStyle(
-                                fontWeight: FontWeight.w500,
-                                fontSize: 14,
-                              ),
-                              indicator: BoxDecoration(
-                                color: Colors.white, // background
-                                borderRadius: BorderRadius.circular(4),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black.withOpacity(0.05),
-                                    blurRadius: 2,
-                                    offset: const Offset(0, 1),
-                                  ),
-                                ],
-                              ),
-                              indicatorSize: TabBarIndicatorSize.tab,
-                              indicatorPadding: EdgeInsets.zero,
-                              labelPadding: const EdgeInsets.symmetric(horizontal: 8),
-                              tabs: const [
-                                Tab(
-                                  child: Text(
-                                    'Cleaning Supplies',
-                                    style: TextStyle(fontSize: 13),
-                                    textAlign: TextAlign.center,
-                                  ),
-                                ),
-                                Tab(
-                                  child: Text(
-                                    'Washables',
-                                    style: TextStyle(fontSize: 13),
-                                    textAlign: TextAlign.center,
-                                  ),
-                                ),
-                                Tab(
-                                  child: Text(
-                                    'Toiletries',
-                                    style: TextStyle(fontSize: 13),
-                                    textAlign: TextAlign.center,
-                                  ),
-                                ),
-                              ],
-                            ),
+                      // Tabs
+                      Container(
+                        margin: const EdgeInsets.only(bottom: 24),
+                        height: 44,
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(4),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF1F5F9),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: TabBar(
+                          isScrollable: false,
+                          dividerColor: Colors.transparent,
+                          labelColor: const Color(0xFF0F172A),
+                          unselectedLabelColor: const Color(0xFF64748B),
+                          labelStyle: const TextStyle(
+                            fontWeight: FontWeight.w500,
+                            fontSize: 14,
                           ),
-                          _tabContent(),
-                        ],
+                          unselectedLabelStyle: const TextStyle(
+                            fontWeight: FontWeight.w500,
+                            fontSize: 14,
+                          ),
+                          indicator: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(4),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.05),
+                                blurRadius: 2,
+                                offset: const Offset(0, 1),
+                              ),
+                            ],
+                          ),
+                          indicatorSize: TabBarIndicatorSize.tab,
+                          indicatorPadding: EdgeInsets.zero,
+                          labelPadding: const EdgeInsets.symmetric(horizontal: 8),
+                          tabs: const [
+                            Tab(
+                              child: Text(
+                                'Cleaning Supplies',
+                                style: TextStyle(fontSize: 13),
+                                textAlign: TextAlign.center,
+                              ),
+                            ),
+                            Tab(
+                              child: Text(
+                                'Washables',
+                                style: TextStyle(fontSize: 13),
+                                textAlign: TextAlign.center,
+                              ),
+                            ),
+                            Tab(
+                              child: Text(
+                                'Toiletries',
+                                style: TextStyle(fontSize: 13),
+                                textAlign: TextAlign.center,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
+                      _tabContent(),
                     ],
                   ),
                 ),
               ),
             ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _summaryCard({
-    required String title,
-    required String value,
-    required String subtitle,
-    required IconData icon,
-    required Color iconColor,
-  }) {
-    return Card(
-      elevation: 0,
-      color: Colors.white.withOpacity(0.8),
-      surfaceTintColor: Colors.transparent,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(title, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: Colors.black54)),
-            Text(value, style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: iconColor)),
-            Row(
-              children: [
-                Icon(icon, size: 12, color: Colors.black38),
-                const SizedBox(width: 4),
-                Text(subtitle, style: const TextStyle(fontSize: 11, color: Colors.black45)),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _summaryGradientCard({
-    required String title,
-    required String value,
-    required String subtitle,
-  }) {
-    return Container(
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFF22C55E), Color(0xFF059669)],
-          begin: Alignment.centerLeft,
-          end: Alignment.centerRight,
-        ),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      padding: const EdgeInsets.all(12),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(title, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: Colors.white70)),
-          Text(value, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white)),
-          Row(
-            children: const [
-              Icon(Icons.check_circle, size: 12, color: Colors.white70),
-              SizedBox(width: 4),
-              Text('Well stocked', style: TextStyle(fontSize: 11, color: Colors.white70)),
-            ],
           ),
         ],
       ),

@@ -90,7 +90,7 @@ class DashboardScreen extends StatelessWidget {
                           crossAxisCount: crossAxisCount,
                           crossAxisSpacing: 16,
                           mainAxisSpacing: 16,
-                          childAspectRatio: 2.5,
+                          childAspectRatio: 3.2,
                           children: [
                             _buildStatsCard(
                               'Monthly Expenses',
@@ -242,9 +242,10 @@ class DashboardScreen extends StatelessWidget {
             ],
           ),
           child: Padding(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(12),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -259,25 +260,23 @@ class DashboardScreen extends StatelessWidget {
                     ),
                     Icon(
                       icon,
-                      size: 20,
+                      size: 18,
                       color: iconColor,
                     ),
                   ],
                 ),
-                const SizedBox(height: 8),
                 Text(
                   value,
-                  style: const TextStyle(
-                    fontSize: 24,
+                  style: TextStyle(
+                    fontSize: 22,
                     fontWeight: FontWeight.bold,
-                    color: Colors.black87,
+                    color: iconColor,
                   ),
                 ),
-                const SizedBox(height: 4),
                 Text(
                   description,
                   style: const TextStyle(
-                    fontSize: 12,
+                    fontSize: 11,
                     color: Colors.grey,
                   ),
                 ),
@@ -451,6 +450,7 @@ class DashboardScreen extends StatelessWidget {
                       'View All Notifications',
                       style: TextStyle(
                         fontWeight: FontWeight.w500,
+                        color: Colors.black87,
                       ),
                     ),
                   ),
