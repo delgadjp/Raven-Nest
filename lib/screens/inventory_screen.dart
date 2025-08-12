@@ -573,12 +573,6 @@ class _InventoryScreenState extends State<InventoryScreen> {
   ) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        int crossAxisCount = 1;
-        if (constraints.maxWidth >= 1200) {
-          crossAxisCount = 3;
-        } else if (constraints.maxWidth >= 900) {
-          crossAxisCount = 2;
-        }
         return SingleChildScrollView(
           physics: const ClampingScrollPhysics(),
           child: Column(
@@ -604,20 +598,18 @@ class _InventoryScreenState extends State<InventoryScreen> {
               ),
               const SizedBox(height: 24),
 
-              GridView.builder(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: crossAxisCount,
-                  crossAxisSpacing: 24,
-                  mainAxisSpacing: 24,
-                  childAspectRatio: 1.1,
-                ),
-                itemCount: items.length,
-                itemBuilder: (context, index) {
-                  final item = items[index];
-                  return _itemCard(item, () => onDelete(item.id));
-                },
+              // Use Wrap instead of GridView for more flexible layout
+              Wrap(
+                spacing: 24,
+                runSpacing: 24,
+                children: items.map((item) => SizedBox(
+                  width: constraints.maxWidth >= 1200 
+                    ? (constraints.maxWidth - 48) / 3 // 3 columns with spacing
+                    : constraints.maxWidth >= 900 
+                      ? (constraints.maxWidth - 24) / 2 // 2 columns with spacing
+                      : constraints.maxWidth, // 1 column
+                  child: _itemCard(item, () => onDelete(item.id)),
+                )).toList(),
               ),
             ],
           ),
@@ -636,21 +628,25 @@ class _InventoryScreenState extends State<InventoryScreen> {
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
           children: [
             Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Row(
-                  children: [
-                    Icon(_statusIcon(item.status), size: 18, color: _statusTextColor(item.status)),
-                    const SizedBox(width: 8),
-                    Text(item.name, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16)),
-                  ],
+                Icon(_statusIcon(item.status), size: 16, color: _statusTextColor(item.status)),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    item.name, 
+                    style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15),
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ),
                 IconButton(
+                  constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                  padding: EdgeInsets.zero,
                   tooltip: 'Delete',
                   onPressed: onDelete,
-                  icon: const Icon(Icons.delete_outline, color: Colors.redAccent),
+                  icon: const Icon(Icons.delete_outline, color: Colors.redAccent, size: 18),
                 ),
               ],
             ),
@@ -660,14 +656,14 @@ class _InventoryScreenState extends State<InventoryScreen> {
               children: [
                 const Text('Stock Level', style: TextStyle(fontSize: 12, color: Colors.black54)),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                   decoration: BoxDecoration(
                     color: _statusBgColor(item.status),
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(8),
                   ),
                   child: Text(
                     item.status,
-                    style: TextStyle(fontSize: 11, color: _statusTextColor(item.status), fontWeight: FontWeight.w600),
+                    style: TextStyle(fontSize: 10, color: _statusTextColor(item.status), fontWeight: FontWeight.w600),
                   ),
                 ),
               ],
@@ -676,16 +672,16 @@ class _InventoryScreenState extends State<InventoryScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text('Current: ${item.quantity} ${item.unit}', style: const TextStyle(fontSize: 12, color: Colors.black54)),
-                Text('Min: ${item.minQuantity} ${item.unit}', style: const TextStyle(fontSize: 12, color: Colors.black54)),
+                Text('Current: ${item.quantity} ${item.unit}', style: const TextStyle(fontSize: 11, color: Colors.black54)),
+                Text('Min: ${item.minQuantity} ${item.unit}', style: const TextStyle(fontSize: 11, color: Colors.black54)),
               ],
             ),
             const SizedBox(height: 8),
             ClipRRect(
-              borderRadius: BorderRadius.circular(4),
+              borderRadius: BorderRadius.circular(3),
               child: LinearProgressIndicator(
                 value: _progress(item.quantity, item.minQuantity),
-                minHeight: 8,
+                minHeight: 6,
                 backgroundColor: Colors.black12,
                 valueColor: AlwaysStoppedAnimation<Color>(
                   item.status == 'good'
@@ -696,19 +692,21 @@ class _InventoryScreenState extends State<InventoryScreen> {
                 ),
               ),
             ),
-            const SizedBox(height: 8),
-            if (item.quantity <= item.minQuantity)
+            if (item.quantity <= item.minQuantity) ...[
+              const SizedBox(height: 8),
               Container(
+                width: double.infinity,
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
                   color: const Color(0xFFFFF7ED),
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(6),
                 ),
                 child: Text(
                   '⚠️ Need to restock: ${item.minQuantity - item.quantity} more ${item.unit}',
-                  style: const TextStyle(fontSize: 12, color: Color(0xFF9A3412)),
+                  style: const TextStyle(fontSize: 11, color: Color(0xFF9A3412)),
                 ),
               ),
+            ],
           ],
         ),
       ),
