@@ -359,7 +359,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
                           }
                           return GridView.count(
                             crossAxisCount: columns,
-                            childAspectRatio: 2.6,
+                            childAspectRatio: 3.2,
                             shrinkWrap: true,
                             physics: const NeverScrollableScrollPhysics(),
                             crossAxisSpacing: 16,
@@ -492,23 +492,17 @@ class _InventoryScreenState extends State<InventoryScreen> {
       surfaceTintColor: Colors.transparent,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(12),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(title, style: const TextStyle(fontSize: 13, color: Colors.black54)),
-            const SizedBox(height: 8),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(value, style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: iconColor)),
-              ],
-            ),
-            const SizedBox(height: 6),
+            Text(title, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: Colors.black54)),
+            Text(value, style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: iconColor)),
             Row(
               children: [
-                Icon(icon, size: 14, color: Colors.black38),
-                const SizedBox(width: 6),
+                Icon(icon, size: 12, color: Colors.black38),
+                const SizedBox(width: 4),
                 Text(subtitle, style: const TextStyle(fontSize: 11, color: Colors.black45)),
               ],
             ),
@@ -532,18 +526,17 @@ class _InventoryScreenState extends State<InventoryScreen> {
         ),
         borderRadius: BorderRadius.circular(12),
       ),
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(12),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(title, style: const TextStyle(fontSize: 13, color: Colors.white70)),
-          const SizedBox(height: 8),
-          Text(value, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.white)),
-          const SizedBox(height: 6),
+          Text(title, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: Colors.white70)),
+          Text(value, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white)),
           Row(
             children: const [
-              Icon(Icons.check_circle, size: 14, color: Colors.white70),
-              SizedBox(width: 6),
+              Icon(Icons.check_circle, size: 12, color: Colors.white70),
+              SizedBox(width: 4),
               Text('Well stocked', style: TextStyle(fontSize: 11, color: Colors.white70)),
             ],
           ),
