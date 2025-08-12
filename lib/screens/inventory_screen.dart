@@ -406,7 +406,8 @@ class _InventoryScreenState extends State<InventoryScreen> {
                         children: [
                           Container(
                             margin: const EdgeInsets.only(bottom: 24),
-                            height: 40,
+                            height: 44,
+                            width: double.infinity,
                             padding: const EdgeInsets.all(4),
                             decoration: BoxDecoration(
                               color: const Color(0xFFF1F5F9), // muted background
@@ -438,11 +439,29 @@ class _InventoryScreenState extends State<InventoryScreen> {
                               ),
                               indicatorSize: TabBarIndicatorSize.tab,
                               indicatorPadding: EdgeInsets.zero,
-                              labelPadding: const EdgeInsets.symmetric(horizontal: 12),
+                              labelPadding: const EdgeInsets.symmetric(horizontal: 8),
                               tabs: const [
-                                Tab(text: 'Cleaning Supplies'),
-                                Tab(text: 'Washables'),
-                                Tab(text: 'Toiletries'),
+                                Tab(
+                                  child: Text(
+                                    'Cleaning Supplies',
+                                    style: TextStyle(fontSize: 13),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                ),
+                                Tab(
+                                  child: Text(
+                                    'Washables',
+                                    style: TextStyle(fontSize: 13),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                ),
+                                Tab(
+                                  child: Text(
+                                    'Toiletries',
+                                    style: TextStyle(fontSize: 13),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                ),
                               ],
                             ),
                           ),
@@ -578,7 +597,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
                   Text(title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
                   ElevatedButton.icon(
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF7C3AED),
+                      backgroundColor: const Color.fromARGB(255, 0, 0, 0),
                       foregroundColor: Colors.white,
                       elevation: 0,
                       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
