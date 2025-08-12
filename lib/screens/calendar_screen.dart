@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:table_calendar/table_calendar.dart';
 import 'package:intl/intl.dart';
 import '../widgets/navigation.dart';
+
+// Utility function to check if two dates are the same day
+bool isSameDay(DateTime a, DateTime b) {
+  return a.year == b.year && a.month == b.month && a.day == b.day;
+}
 
 class Booking {
   final int id;
@@ -36,7 +40,6 @@ class CalendarScreen extends StatefulWidget {
 
 class _CalendarScreenState extends State<CalendarScreen> {
   late DateTime _focusedDay;
-  DateTime? _selectedDay;
 
   final List<Booking> bookings = [
     Booking(
@@ -89,7 +92,6 @@ class _CalendarScreenState extends State<CalendarScreen> {
   void initState() {
     super.initState();
     _focusedDay = DateTime.now();
-    _selectedDay = DateTime.now();
   }
 
   List<Booking> _getBookingsForDay(DateTime day) {
@@ -106,10 +108,6 @@ class _CalendarScreenState extends State<CalendarScreen> {
       }
     }
     return null;
-  }
-
-  bool _isBookedDay(DateTime day) {
-    return _getBookingsForDay(day).isNotEmpty;
   }
 
   List<Booking> get upcomingBookings {
@@ -418,141 +416,251 @@ class _CalendarScreenState extends State<CalendarScreen> {
     return Card(
       elevation: 0,
       color: Colors.white.withOpacity(0.8),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
+      surfaceTintColor: Colors.transparent,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Card Header
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Icon(
-                  Icons.calendar_today,
-                  size: 20,
-                  color: Color(0xFF2563EB),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.calendar_today,
+                          size: 20,
+                          color: Colors.grey.shade700,
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          DateFormat('MMMM yyyy').format(_focusedDay),
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.grey.shade900,
+                          ),
+                        ),
+                      ],
+                    ),
+                    Row(
+                      children: [
+                        Container(
+                          decoration: BoxDecoration(
+                            border: Border.all(color: Colors.grey.shade300),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: IconButton(
+                            onPressed: () {
+                              setState(() {
+                                _focusedDay = DateTime(_focusedDay.year, _focusedDay.month - 1);
+                              });
+                            },
+                            icon: Icon(
+                              Icons.chevron_left,
+                              size: 16,
+                              color: Colors.grey.shade600,
+                            ),
+                            constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                            padding: EdgeInsets.zero,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Container(
+                          decoration: BoxDecoration(
+                            border: Border.all(color: Colors.grey.shade300),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: IconButton(
+                            onPressed: () {
+                              setState(() {
+                                _focusedDay = DateTime(_focusedDay.year, _focusedDay.month + 1);
+                              });
+                            },
+                            icon: Icon(
+                              Icons.chevron_right,
+                              size: 16,
+                              color: Colors.grey.shade600,
+                            ),
+                            constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                            padding: EdgeInsets.zero,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(height: 4),
                 Text(
-                  DateFormat('MMMM yyyy').format(_focusedDay),
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w600,
+                  'Track check-ins, check-outs, and availability',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.grey.shade600,
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 4),
-            const Text(
-              'Track check-ins, check-outs, and availability',
-              style: TextStyle(
-                fontSize: 12,
-                color: Colors.grey,
-              ),
-            ),
-            const SizedBox(height: 16),
-            TableCalendar<Booking>(
-              firstDay: DateTime.utc(2020, 1, 1),
-              lastDay: DateTime.utc(2030, 12, 31),
-              focusedDay: _focusedDay,
-              selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
-              eventLoader: _getBookingsForDay,
-              calendarFormat: CalendarFormat.month,
-              startingDayOfWeek: StartingDayOfWeek.sunday,
-              onDaySelected: (selectedDay, focusedDay) {
-                setState(() {
-                  _selectedDay = selectedDay;
-                  _focusedDay = focusedDay;
-                });
-              },
-              onPageChanged: (focusedDay) {
-                setState(() {
-                  _focusedDay = focusedDay;
-                });
-              },
-              calendarStyle: CalendarStyle(
-                outsideDaysVisible: false,
-                weekendTextStyle: const TextStyle(color: Colors.black87),
-                holidayTextStyle: const TextStyle(color: Colors.black87),
-                selectedDecoration: BoxDecoration(
-                  color: const Color(0xFF2563EB),
-                  shape: BoxShape.circle,
-                ),
-                todayDecoration: BoxDecoration(
-                  color: Colors.blue.shade100,
-                  shape: BoxShape.circle,
-                  border: Border.all(color: Colors.blue.shade200),
-                ),
-                markerDecoration: BoxDecoration(
-                  color: Colors.green.shade400,
-                  shape: BoxShape.circle,
-                ),
-                markersMaxCount: 1,
-              ),
-              headerStyle: const HeaderStyle(
-                formatButtonVisible: false,
-                titleCentered: true,
-                leftChevronIcon: Icon(
-                  Icons.chevron_left,
-                  color: Color(0xFF2563EB),
-                ),
-                rightChevronIcon: Icon(
-                  Icons.chevron_right,
-                  color: Color(0xFF2563EB),
-                ),
-              ),
-              calendarBuilders: CalendarBuilders(
-                markerBuilder: (context, day, events) {
-                  final checkIn = _getCheckInForDay(day);
-                  if (checkIn != null) {
-                    return Positioned(
-                      bottom: 2,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 4, vertical: 1),
-                        decoration: BoxDecoration(
-                          color: Colors.blue.shade100,
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Text(
-                          'Check-in',
-                          style: TextStyle(
-                            fontSize: 8,
-                            color: Colors.blue.shade800,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ),
-                    );
-                  } else if (_isBookedDay(day)) {
-                    return Positioned(
-                      bottom: 2,
-                      child: Container(
-                        width: 24,
-                        height: 4,
-                        decoration: BoxDecoration(
-                          color: Colors.green.shade400,
-                          borderRadius: BorderRadius.circular(2),
-                        ),
-                      ),
-                    );
-                  }
-                  return null;
-                },
-              ),
-            ),
-            const SizedBox(height: 16),
-            Row(
+          ),
+          
+          // Card Content
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+            child: Column(
               children: [
-                _buildLegendItem(
-                    Colors.green.shade400, 'Occupied', isCircle: false),
-                const SizedBox(width: 16),
-                _buildLegendItem(Colors.blue.shade100, 'Check-in'),
-                const SizedBox(width: 16),
-                _buildLegendItem(Colors.blue.shade50, 'Today'),
+                // Custom Calendar Grid
+                Container(
+                  decoration: BoxDecoration(
+                    border: Border.all(color: Colors.grey.shade200),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Column(
+                    children: [
+                      // Calendar Grid
+                      _buildCustomCalendarGrid(),
+                    ],
+                  ),
+                ),
+                
+                const SizedBox(height: 16),
+                
+                // Legend
+                Row(
+                  children: [
+                    _buildLegendItem(Colors.green.shade400, 'Occupied', isCircle: false),
+                    const SizedBox(width: 16),
+                    _buildLegendItem(Colors.blue.shade100, 'Check-in'),
+                    const SizedBox(width: 16),
+                    _buildLegendItem(Colors.blue.shade50, 'Today'),
+                  ],
+                ),
               ],
             ),
-          ],
-        ),
+          ),
+        ],
       ),
+    );
+  }
+
+  Widget _buildCustomCalendarGrid() {
+    final daysInMonth = DateTime(_focusedDay.year, _focusedDay.month + 1, 0).day;
+    final firstDayOfMonth = DateTime(_focusedDay.year, _focusedDay.month, 1).weekday;
+    final adjustedFirstDay = firstDayOfMonth == 7 ? 0 : firstDayOfMonth; // Sunday = 0
+    
+    final dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    final today = DateTime.now();
+    
+    List<Widget> calendarCells = [];
+    
+    // Day headers
+    for (String dayName in dayNames) {
+      calendarCells.add(
+        Container(
+          height: 40,
+          alignment: Alignment.center,
+          child: Text(
+            dayName,
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
+              color: Colors.grey.shade500,
+            ),
+          ),
+        ),
+      );
+    }
+    
+    // Empty cells before month starts
+    for (int i = 0; i < adjustedFirstDay; i++) {
+      calendarCells.add(Container(
+        height: 80,
+        decoration: BoxDecoration(
+          border: Border.all(color: Colors.grey.shade100, width: 0.5),
+        ),
+      ));
+    }
+    
+    // Days of the month
+    for (int day = 1; day <= daysInMonth; day++) {
+      final currentDate = DateTime(_focusedDay.year, _focusedDay.month, day);
+      final isToday = isSameDay(currentDate, today);
+      final bookingsForDay = _getBookingsForDay(currentDate);
+      final checkInBooking = _getCheckInForDay(currentDate);
+      final hasBookings = bookingsForDay.isNotEmpty;
+      
+      calendarCells.add(
+        Container(
+          height: 80,
+          decoration: BoxDecoration(
+            border: Border.all(color: Colors.grey.shade100, width: 0.5),
+            color: isToday 
+                ? Colors.blue.shade50 
+                : hasBookings 
+                    ? Colors.green.shade50 
+                    : Colors.transparent,
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '$day',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                    color: isToday ? Colors.blue.shade600 : Colors.grey.shade900,
+                  ),
+                ),
+                if (checkInBooking != null) ...[
+                  const SizedBox(height: 4),
+                  Expanded(
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: Colors.blue.shade100,
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: Text(
+                        'Check-in: ${checkInBooking.guestName}',
+                        style: TextStyle(
+                          fontSize: 10,
+                          color: Colors.blue.shade800,
+                          fontWeight: FontWeight.w500,
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ),
+                ] else if (hasBookings && checkInBooking == null) ...[
+                  const Spacer(),
+                  Container(
+                    height: 8,
+                    margin: const EdgeInsets.symmetric(horizontal: 4),
+                    decoration: BoxDecoration(
+                      color: Colors.green.shade400,
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+    
+    return GridView.count(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      crossAxisCount: 7,
+      childAspectRatio: 1.0,
+      children: calendarCells,
     );
   }
 
