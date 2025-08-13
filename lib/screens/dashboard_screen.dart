@@ -77,56 +77,73 @@ class DashboardScreen extends StatelessWidget {
                     // Stats Cards
                     LayoutBuilder(
                       builder: (context, constraints) {
-                        int crossAxisCount = 1;
-                        if (constraints.maxWidth > 1024) {
-                          crossAxisCount = 4;
-                        } else if (constraints.maxWidth > 768) {
-                          crossAxisCount = 2;
-                        }
-                        
-                        return GridView.count(
-                          shrinkWrap: true,
-                          physics: const NeverScrollableScrollPhysics(),
-                          crossAxisCount: crossAxisCount,
-                          crossAxisSpacing: 16,
-                          mainAxisSpacing: 16,
-                          childAspectRatio: 3.2,
+                        return Wrap(
+                          spacing: 24,
+                          runSpacing: 24,
                           children: [
-                            _buildStatsCard(
-                              'Monthly Expenses',
-                              '\$2,450',
-                              'Fixed + Variable costs',
-                              Icons.attach_money,
-                              const Color(0xFF16A34A),
-                              '/expenses',
-                              context,
+                            SizedBox(
+                              width: constraints.maxWidth >= 1200 
+                                ? (constraints.maxWidth - 72) / 4 // 4 columns with spacing
+                                : constraints.maxWidth >= 900 
+                                  ? (constraints.maxWidth - 24) / 2 // 2 columns with spacing
+                                  : constraints.maxWidth, // 1 column
+                              child: _buildStatsCard(
+                                'Monthly Expenses',
+                                '\$2,450',
+                                'Fixed + Variable costs',
+                                Icons.attach_money,
+                                const Color(0xFF16A34A),
+                                '/expenses',
+                                context,
+                              ),
                             ),
-                            _buildStatsCard(
-                              'Active Bookings',
-                              '18',
-                              'This month',
-                              Icons.calendar_today,
-                              const Color(0xFF2563EB),
-                              '/calendar',
-                              context,
+                            SizedBox(
+                              width: constraints.maxWidth >= 1200 
+                                ? (constraints.maxWidth - 72) / 4 // 4 columns with spacing
+                                : constraints.maxWidth >= 900 
+                                  ? (constraints.maxWidth - 24) / 2 // 2 columns with spacing
+                                  : constraints.maxWidth, // 1 column
+                              child: _buildStatsCard(
+                                'Active Bookings',
+                                '18',
+                                'This month',
+                                Icons.calendar_today,
+                                const Color(0xFF2563EB),
+                                '/calendar',
+                                context,
+                              ),
                             ),
-                            _buildStatsCard(
-                              'Inventory Items',
-                              '45',
-                              'Supplies & washables',
-                              Icons.inventory,
-                              const Color(0xFF7C3AED),
-                              '/inventory',
-                              context,
+                            SizedBox(
+                              width: constraints.maxWidth >= 1200 
+                                ? (constraints.maxWidth - 72) / 4 // 4 columns with spacing
+                                : constraints.maxWidth >= 900 
+                                  ? (constraints.maxWidth - 24) / 2 // 2 columns with spacing
+                                  : constraints.maxWidth, // 1 column
+                              child: _buildStatsCard(
+                                'Inventory Items',
+                                '45',
+                                'Supplies & washables',
+                                Icons.inventory,
+                                const Color(0xFF7C3AED),
+                                '/inventory',
+                                context,
+                              ),
                             ),
-                            _buildStatsCard(
-                              'Pending Tasks',
-                              '3',
-                              'Housekeeping items',
-                              Icons.check_circle,
-                              const Color(0xFFEA580C),
-                              '/housekeeping',
-                              context,
+                            SizedBox(
+                              width: constraints.maxWidth >= 1200 
+                                ? (constraints.maxWidth - 72) / 4 // 4 columns with spacing
+                                : constraints.maxWidth >= 900 
+                                  ? (constraints.maxWidth - 24) / 2 // 2 columns with spacing
+                                  : constraints.maxWidth, // 1 column
+                              child: _buildStatsCard(
+                                'Pending Tasks',
+                                '3',
+                                'Housekeeping items',
+                                Icons.check_circle,
+                                const Color(0xFFEA580C),
+                                '/housekeeping',
+                                context,
+                              ),
                             ),
                           ],
                         );
@@ -142,7 +159,7 @@ class DashboardScreen extends StatelessWidget {
                         color: Colors.black87,
                       ),
                     ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 0),
                     LayoutBuilder(
                       builder: (context, constraints) {
                         int crossAxisCount = 1;

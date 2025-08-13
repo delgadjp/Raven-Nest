@@ -236,47 +236,63 @@ class _HousekeepingScreenState extends State<HousekeepingScreen> {
                       // Summary Cards
                       LayoutBuilder(
                         builder: (context, constraints) {
-                          final isMd = constraints.maxWidth >= 900;
-                          final isLg = constraints.maxWidth >= 1200;
-                          int columns = 1;
-                          if (isLg) {
-                            columns = 4;
-                          } else if (isMd) {
-                            columns = 4;
-                          }
-                          return GridView.count(
-                            crossAxisCount: columns,
-                            childAspectRatio: 3.2,
-                            shrinkWrap: true,
-                            physics: const NeverScrollableScrollPhysics(),
-                            crossAxisSpacing: 16,
-                            mainAxisSpacing: 16,
+                          return Wrap(
+                            spacing: 24,
+                            runSpacing: 24,
                             children: [
-                              SummaryCard(
-                                title: "Today's Tasks",
-                                value: todayTasks.length.toString(),
-                                subtitle: 'Due today',
-                                icon: Icons.access_time,
-                                iconColor: AppColors.primaryBlue,
+                              SizedBox(
+                                width: constraints.maxWidth >= 1200 
+                                  ? (constraints.maxWidth - 72) / 4 // 4 columns with spacing
+                                  : constraints.maxWidth >= 900 
+                                    ? (constraints.maxWidth - 24) / 2 // 2 columns with spacing
+                                    : constraints.maxWidth, // 1 column
+                                child: SummaryCard(
+                                  title: "Today's Tasks",
+                                  value: todayTasks.length.toString(),
+                                  subtitle: 'Due today',
+                                  icon: Icons.access_time,
+                                  iconColor: AppColors.primaryBlue,
+                                ),
                               ),
-                              SummaryCard(
-                                title: 'Completed',
-                                value: completedTasks.toString(),
-                                subtitle: 'This week',
-                                icon: Icons.check_circle,
-                                iconColor: AppColors.successGreen,
+                              SizedBox(
+                                width: constraints.maxWidth >= 1200 
+                                  ? (constraints.maxWidth - 72) / 4 // 4 columns with spacing
+                                  : constraints.maxWidth >= 900 
+                                    ? (constraints.maxWidth - 24) / 2 // 2 columns with spacing
+                                    : constraints.maxWidth, // 1 column
+                                child: SummaryCard(
+                                  title: 'Completed',
+                                  value: completedTasks.toString(),
+                                  subtitle: 'This week',
+                                  icon: Icons.check_circle,
+                                  iconColor: AppColors.successGreen,
+                                ),
                               ),
-                              SummaryCard(
-                                title: 'Pending',
-                                value: pendingTasks.toString(),
-                                subtitle: 'Need attention',
-                                icon: Icons.warning_amber_rounded,
-                                iconColor: AppColors.warningYellow,
+                              SizedBox(
+                                width: constraints.maxWidth >= 1200 
+                                  ? (constraints.maxWidth - 72) / 4 // 4 columns with spacing
+                                  : constraints.maxWidth >= 900 
+                                    ? (constraints.maxWidth - 24) / 2 // 2 columns with spacing
+                                    : constraints.maxWidth, // 1 column
+                                child: SummaryCard(
+                                  title: 'Pending',
+                                  value: pendingTasks.toString(),
+                                  subtitle: 'Need attention',
+                                  icon: Icons.warning_amber_rounded,
+                                  iconColor: AppColors.warningYellow,
+                                ),
                               ),
-                              SummaryGradientCard(
-                                title: 'Available Staff',
-                                value: availableStaff.toString(),
-                                subtitle: 'Ready to work',
+                              SizedBox(
+                                width: constraints.maxWidth >= 1200 
+                                  ? (constraints.maxWidth - 72) / 4 // 4 columns with spacing
+                                  : constraints.maxWidth >= 900 
+                                    ? (constraints.maxWidth - 24) / 2 // 2 columns with spacing
+                                    : constraints.maxWidth, // 1 column
+                                child: SummaryGradientCard(
+                                  title: 'Available Staff',
+                                  value: availableStaff.toString(),
+                                  subtitle: 'Ready to work',
+                                ),
                               ),
                             ],
                           );
