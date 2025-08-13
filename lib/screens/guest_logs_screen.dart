@@ -6,30 +6,6 @@ class GuestLogsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final List<Map<String, dynamic>> logs = [
-      {
-        'guest': 'John Smith',
-        'checkIn': '2024-08-01',
-        'checkOut': '2024-08-05',
-        'status': 'Completed',
-        'rating': 5,
-      },
-      {
-        'guest': 'Sarah Johnson',
-        'checkIn': '2024-08-06',
-        'checkOut': '2024-08-10',
-        'status': 'In Progress',
-        'rating': null,
-      },
-      {
-        'guest': 'Mike Davis',
-        'checkIn': '2024-08-12',
-        'checkOut': '2024-08-15',
-        'status': 'Upcoming',
-        'rating': null,
-      },
-    ];
-
     return Scaffold(
       body: Column(
         children: [
@@ -47,86 +23,146 @@ class GuestLogsScreen extends StatelessWidget {
                   ],
                 ),
               ),
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Header
-                    Container(
-                      margin: const EdgeInsets.only(bottom: 24),
-                      child: Row(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(8),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFF6366F1),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: const Icon(
-                              Icons.description,
-                              color: Colors.white,
-                              size: 24,
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          const Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  bool isWide = constraints.maxWidth > 600;
+                  double cardWidth =
+                      isWide
+                          ? (constraints.maxWidth - 48) / 2
+                          : constraints.maxWidth;
+
+                  return SingleChildScrollView(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Header
+                        Container(
+                          margin: const EdgeInsets.only(bottom: 24),
+                          child: Row(
                             children: [
-                              Text(
-                                'Guest Logs',
-                                style: TextStyle(
-                                  fontSize: 24,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.black87,
+                              Container(
+                                padding: const EdgeInsets.all(8),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFF6366F1),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: const Icon(
+                                  Icons.dashboard,
+                                  color: Colors.white,
+                                  size: 24,
                                 ),
                               ),
-                              Text(
-                                'Track guest stays and reviews',
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  color: Colors.grey,
-                                ),
+                              const SizedBox(width: 12),
+                              const Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Condo Manager',
+                                    style: TextStyle(
+                                      fontSize: 24,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.black87,
+                                    ),
+                                  ),
+                                  Text(
+                                    'Dashboard Overview',
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      color: Colors.grey,
+                                    ),
+                                  ),
+                                ],
                               ),
                             ],
                           ),
-                        ],
-                      ),
-                    ),
-                    // Guest Logs List
-                    Container(
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.8),
-                        borderRadius: BorderRadius.circular(12),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.05),
-                            blurRadius: 10,
-                            offset: const Offset(0, 2),
-                          ),
-                        ],
-                      ),
-                      child: Padding(
-                        padding: const EdgeInsets.all(20),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                        ),
+
+                        // Dashboard Cards
+                        Wrap(
+                          spacing: 16,
+                          runSpacing: 16,
                           children: [
-                            const Text(
-                              'Recent Guest Activity',
-                              style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.black87,
-                              ),
+                            _buildStatCard(
+                              "Active Guests",
+                              "1",
+                              "Currently checked in",
+                              width: cardWidth,
                             ),
-                            const SizedBox(height: 16),
-                            ...logs.map((log) => _buildGuestLogItem(log)),
+                            _buildStatCard(
+                              "Total Logs",
+                              "11",
+                              "All entries",
+                              width: cardWidth,
+                            ),
+                            _buildStatCard(
+                              "Requirements",
+                              "7",
+                              "Special requests",
+                              width: cardWidth,
+                            ),
+                            _buildStatCard(
+                              "Completion Rate",
+                              "98%",
+                              "Request fulfillment",
+                              backgroundColor: const Color(0xFF4A6CF7),
+                              textColor: Colors.white,
+                              width: cardWidth,
+                            ),
                           ],
                         ),
-                      ),
+                        const SizedBox(height: 16),
+
+                        // Buttons: Guest Management & Recent Activity
+                        Row(
+                          children: [
+                            Expanded(
+                              child: _buildOutlinedButton("Guest Management"),
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: _buildOutlinedButton("Recent Activity"),
+                            ),
+                          ],
+                        ),
+
+                        const SizedBox(height: 16),
+
+                        // Search + All Status + Add Log inside a Card
+                        Container(
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(12),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.05),
+                                blurRadius: 8,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          child: Column(
+                            children: [
+                              _buildSearchField(),
+                              const SizedBox(height: 12),
+                              Row(
+                                children: [
+                                  Expanded(flex: 2, child: _buildDropdown()),
+                                  const SizedBox(width: 8),
+                                  Expanded(
+                                    flex: 1,
+                                    child: _buildAddLogButton(),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
                     ),
-                  ],
-                ),
+                  );
+                },
               ),
             ),
           ),
@@ -135,89 +171,111 @@ class GuestLogsScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildGuestLogItem(Map<String, dynamic> log) {
-    Color statusColor;
-    switch (log['status']) {
-      case 'Completed':
-        statusColor = Colors.green;
-        break;
-      case 'In Progress':
-        statusColor = Colors.blue;
-        break;
-      default:
-        statusColor = Colors.orange;
-    }
-
+  // Stat Card
+  Widget _buildStatCard(
+    String title,
+    String value,
+    String subtitle, {
+    Color backgroundColor = Colors.white,
+    Color textColor = Colors.black,
+    double? width,
+  }) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 16),
+      width: width,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.grey[50],
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.grey[200]!),
+        color: backgroundColor,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                log['guest'],
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black87,
-                ),
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: statusColor.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Text(
-                  log['status'],
-                  style: TextStyle(
-                    fontSize: 11,
-                    color: statusColor,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ),
-            ],
+          Text(
+            title,
+            style: TextStyle(fontSize: 14, color: textColor.withOpacity(0.8)),
           ),
-          const SizedBox(height: 8),
-          Row(
-            children: [
-              const Icon(Icons.calendar_today, size: 14, color: Colors.grey),
-              const SizedBox(width: 4),
-              Text(
-                '${log['checkIn']} - ${log['checkOut']}',
-                style: const TextStyle(
-                  fontSize: 12,
-                  color: Colors.grey,
-                ),
-              ),
-            ],
-          ),
-          if (log['rating'] != null) ...[
-            const SizedBox(height: 8),
-            Row(
-              children: [
-                const Icon(Icons.star, size: 14, color: Colors.amber),
-                const SizedBox(width: 4),
-                Text(
-                  '${log['rating']}/5 stars',
-                  style: const TextStyle(
-                    fontSize: 12,
-                    color: Colors.grey,
-                  ),
-                ),
-              ],
+          const SizedBox(height: 6),
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+              color: textColor,
             ),
-          ],
+          ),
+          const SizedBox(height: 4),
+          Text(
+            subtitle,
+            style: TextStyle(fontSize: 12, color: textColor.withOpacity(0.7)),
+          ),
         ],
+      ),
+    );
+  }
+
+  // Outlined Button
+  Widget _buildOutlinedButton(String label) {
+    return ElevatedButton(
+      onPressed: () {},
+      style: ElevatedButton.styleFrom(
+        backgroundColor: Colors.white,
+        foregroundColor: Colors.black,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+      ),
+      child: Text(label),
+    );
+  }
+
+  // Search Field
+  Widget _buildSearchField() {
+    return TextField(
+      decoration: InputDecoration(
+        hintText: "Search guests, rooms, or sources...",
+        prefixIcon: const Icon(Icons.search),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+        filled: true,
+        fillColor: Colors.white,
+      ),
+    );
+  }
+
+  // Dropdown
+  Widget _buildDropdown() {
+    return DropdownButtonFormField<String>(
+      value: "All Status",
+      items:
+          ["All Status", "Checked In", "Checked Out"]
+              .map(
+                (status) =>
+                    DropdownMenuItem(value: status, child: Text(status)),
+              )
+              .toList(),
+      onChanged: (value) {},
+      decoration: InputDecoration(
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+        filled: true,
+        fillColor: Colors.white,
+      ),
+    );
+  }
+
+  // Add Log Button
+  Widget _buildAddLogButton() {
+    return ElevatedButton.icon(
+      onPressed: () {},
+      icon: const Icon(Icons.add),
+      label: const Text("Add Log"),
+      style: ElevatedButton.styleFrom(
+        backgroundColor: Colors.black,
+        foregroundColor: Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
       ),
     );
   }

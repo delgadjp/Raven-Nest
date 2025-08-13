@@ -148,7 +148,7 @@ class DashboardScreen extends StatelessWidget {
                           ],
                         );
                       },
-                    ),
+                    ),  
                     const SizedBox(height: 32),
                     // Quick Actions
                     const Text(
