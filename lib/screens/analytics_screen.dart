@@ -126,47 +126,63 @@ class AnalyticsScreen extends StatelessWidget {
   Widget _buildKPICards() {
     return LayoutBuilder(
       builder: (context, constraints) {
-        final isMd = constraints.maxWidth >= 900;
-        final isLg = constraints.maxWidth >= 1200;
-        int columns = 1;
-        if (isLg) {
-          columns = 4;
-        } else if (isMd) {
-          columns = 4; // mimic md:grid-cols-4
-        }
-        return GridView.count(
-          crossAxisCount: columns,
-          childAspectRatio: 3.2,
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          crossAxisSpacing: 16,
-          mainAxisSpacing: 16,
+        return Wrap(
+          spacing: 24,
+          runSpacing: 24,
           children: [
-            _buildKPICard(
-              title: 'Total Revenue',
-              value: '\$42,300',
-              subtitle: '+12% from last year',
-              icon: Icons.attach_money,
-              iconColor: const Color(0xFF10B981),
+            SizedBox(
+              width: constraints.maxWidth >= 1200 
+                ? (constraints.maxWidth - 72) / 4 // 4 columns with spacing
+                : constraints.maxWidth >= 900 
+                  ? (constraints.maxWidth - 24) / 2 // 2 columns with spacing
+                  : constraints.maxWidth, // 1 column
+              child: _buildKPICard(
+                title: 'Total Revenue',
+                value: '\$42,300',
+                subtitle: '+12% from last year',
+                icon: Icons.attach_money,
+                iconColor: const Color(0xFF10B981),
+              ),
             ),
-            _buildKPICard(
-              title: 'Avg Occupancy',
-              value: '78%',
-              subtitle: '+5% from last month',
-              icon: Icons.people,
-              iconColor: const Color(0xFF3B82F6),
+            SizedBox(
+              width: constraints.maxWidth >= 1200 
+                ? (constraints.maxWidth - 72) / 4 // 4 columns with spacing
+                : constraints.maxWidth >= 900 
+                  ? (constraints.maxWidth - 24) / 2 // 2 columns with spacing
+                  : constraints.maxWidth, // 1 column
+              child: _buildKPICard(
+                title: 'Avg Occupancy',
+                value: '78%',
+                subtitle: '+5% from last month',
+                icon: Icons.people,
+                iconColor: const Color(0xFF3B82F6),
+              ),
             ),
-            _buildKPICard(
-              title: 'Total Bookings',
-              value: '168',
-              subtitle: '+8% from last year',
-              icon: Icons.calendar_today,
-              iconColor: const Color(0xFF7C3AED),
+            SizedBox(
+              width: constraints.maxWidth >= 1200 
+                ? (constraints.maxWidth - 72) / 4 // 4 columns with spacing
+                : constraints.maxWidth >= 900 
+                  ? (constraints.maxWidth - 24) / 2 // 2 columns with spacing
+                  : constraints.maxWidth, // 1 column
+              child: _buildKPICard(
+                title: 'Total Bookings',
+                value: '168',
+                subtitle: '+8% from last year',
+                icon: Icons.calendar_today,
+                iconColor: const Color(0xFF7C3AED),
+              ),
             ),
-            _buildKPIGradientCard(
-              title: 'Avg Daily Rate',
-              value: '\$156',
-              subtitle: '-3% from last month',
+            SizedBox(
+              width: constraints.maxWidth >= 1200 
+                ? (constraints.maxWidth - 72) / 4 // 4 columns with spacing
+                : constraints.maxWidth >= 900 
+                  ? (constraints.maxWidth - 24) / 2 // 2 columns with spacing
+                  : constraints.maxWidth, // 1 column
+              child: _buildKPIGradientCard(
+                title: 'Avg Daily Rate',
+                value: '\$156',
+                subtitle: '-3% from last month',
+              ),
             ),
           ],
         );

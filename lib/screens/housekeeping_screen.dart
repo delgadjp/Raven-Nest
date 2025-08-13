@@ -294,27 +294,48 @@ class _HousekeepingScreenState extends State<HousekeepingScreen> {
                         decoration: BoxDecoration(
                           color: const Color(0xFFF1F5F9),
                           borderRadius: BorderRadius.circular(6),
-                        ),
-                        child: TabBar(
+                        ),                        child: TabBar(
                           isScrollable: false,
                           dividerColor: Colors.transparent,
                           labelColor: const Color(0xFF0F172A),
                           unselectedLabelColor: const Color(0xFF64748B),
-                          labelStyle: const TextStyle(fontWeight: FontWeight.w500, fontSize: 14),
-                          unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.w500, fontSize: 14),
+                          labelStyle: const TextStyle(
+                            fontWeight: FontWeight.w500,
+                            fontSize: 14,
+                          ),
+                          unselectedLabelStyle: const TextStyle(
+                            fontWeight: FontWeight.w500,
+                            fontSize: 14,
+                          ),
                           indicator: BoxDecoration(
                             color: Colors.white,
                             borderRadius: BorderRadius.circular(4),
                             boxShadow: [
-                              BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 2, offset: const Offset(0, 1)),
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.05),
+                                blurRadius: 2,
+                                offset: const Offset(0, 1),
+                              ),
                             ],
                           ),
                           indicatorSize: TabBarIndicatorSize.tab,
                           indicatorPadding: EdgeInsets.zero,
                           labelPadding: const EdgeInsets.symmetric(horizontal: 8),
                           tabs: const [
-                            Tab(child: Text('Tasks & Schedule', style: TextStyle(fontSize: 13), textAlign: TextAlign.center)),
-                            Tab(child: Text('Staff Management', style: TextStyle(fontSize: 13), textAlign: TextAlign.center)),
+                            Tab(
+                              child: Text(
+                                'Tasks & Schedule',
+                                style: TextStyle(fontSize: 13),
+                                textAlign: TextAlign.center,
+                              ),
+                            ),
+                            Tab(
+                              child: Text(
+                                'Staff Management',
+                                style: TextStyle(fontSize: 13),
+                                textAlign: TextAlign.center,
+                              ),
+                            ),
                           ],
                         ),
                       ),
@@ -380,8 +401,14 @@ class _HousekeepingScreenState extends State<HousekeepingScreen> {
                     SizedBox(height: 2),
                     Text('Tasks scheduled for today', style: TextStyle(color: Colors.grey)),
                   ],
-                ),
-                ElevatedButton.icon(
+                ),                ElevatedButton.icon(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.black,
+                    foregroundColor: Colors.white,
+                    elevation: 0,
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                  ),
                   onPressed: () {},
                   icon: const Icon(Icons.add, size: 16),
                   label: const Text('Add Task'),
@@ -507,7 +534,6 @@ class _HousekeepingScreenState extends State<HousekeepingScreen> {
       child: Text(text, style: TextStyle(fontSize: 12, color: color, fontWeight: FontWeight.w600)),
     );
   }
-
   // Upcoming Tasks card matching React
   Widget _buildUpcomingTasksCard() {
     return Card(
@@ -520,9 +546,19 @@ class _HousekeepingScreenState extends State<HousekeepingScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('Upcoming Tasks', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 4),
-            const Text('Tasks scheduled for the next few days', style: TextStyle(color: Colors.grey)),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Upcoming Tasks', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                    SizedBox(height: 2),
+                    Text('Tasks scheduled for the next few days', style: TextStyle(color: Colors.grey)),
+                  ],
+                ),
+              ],
+            ),
             const SizedBox(height: 16),
             Column(children: upcomingTasks.take(3).map((t) => _buildUpcomingTaskItem(t)).toList()),
           ],

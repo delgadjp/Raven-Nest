@@ -350,49 +350,65 @@ class _InventoryScreenState extends State<InventoryScreen> {
                       // Summary Cards
                       LayoutBuilder(
                         builder: (context, constraints) {
-                          final isMd = constraints.maxWidth >= 900;
-                          final isLg = constraints.maxWidth >= 1200;
-                          int columns = 1;
-                          if (isLg) {
-                            columns = 4;
-                          } else if (isMd) {
-                            columns = 4;
-                          }
-                          return GridView.count(
-                            crossAxisCount: columns,
-                            childAspectRatio: 3.2,
-                            shrinkWrap: true,
-                            physics: const NeverScrollableScrollPhysics(),
-                            crossAxisSpacing: 16,
-                            mainAxisSpacing: 16,
+                          return Wrap(
+                            spacing: 24,
+                            runSpacing: 24,
                             children: [
-                              SummaryCard(
-                                title: 'Total Items',
-                                value: '$_totalItems',
-                                subtitle: 'All categories',
-                                icon: Icons.inventory_2,
-                                iconColor: Colors.blue.shade600,
+                              SizedBox(
+                                width: constraints.maxWidth >= 1200 
+                                  ? (constraints.maxWidth - 72) / 4 // 4 columns with spacing
+                                  : constraints.maxWidth >= 900 
+                                    ? (constraints.maxWidth - 24) / 2 // 2 columns with spacing
+                                    : constraints.maxWidth, // 1 column
+                                child: SummaryCard(
+                                  title: 'Total Items',
+                                  value: '$_totalItems',
+                                  subtitle: 'All categories',
+                                  icon: Icons.inventory_2,
+                                  iconColor: Colors.blue.shade600,
+                                ),
                               ),
-                              SummaryCard(
-                                title: 'Low Stock',
-                                value: '$_lowStockItems',
-                                subtitle: 'Need attention',
-                                icon: Icons.warning_amber_rounded,
-                                iconColor: Colors.orange.shade600,
+                              SizedBox(
+                                width: constraints.maxWidth >= 1200 
+                                  ? (constraints.maxWidth - 72) / 4 // 4 columns with spacing
+                                  : constraints.maxWidth >= 900 
+                                    ? (constraints.maxWidth - 24) / 2 // 2 columns with spacing
+                                    : constraints.maxWidth, // 1 column
+                                child: SummaryCard(
+                                  title: 'Low Stock',
+                                  value: '$_lowStockItems',
+                                  subtitle: 'Need attention',
+                                  icon: Icons.warning_amber_rounded,
+                                  iconColor: Colors.orange.shade600,
+                                ),
                               ),
-                              SummaryCard(
-                                title: 'Critical',
-                                value: '$_criticalItems',
-                                subtitle: 'Urgent restock',
-                                icon: Icons.report_rounded,
-                                iconColor: Colors.red.shade600,
+                              SizedBox(
+                                width: constraints.maxWidth >= 1200 
+                                  ? (constraints.maxWidth - 72) / 4 // 4 columns with spacing
+                                  : constraints.maxWidth >= 900 
+                                    ? (constraints.maxWidth - 24) / 2 // 2 columns with spacing
+                                    : constraints.maxWidth, // 1 column
+                                child: SummaryCard(
+                                  title: 'Critical',
+                                  value: '$_criticalItems',
+                                  subtitle: 'Urgent restock',
+                                  icon: Icons.report_rounded,
+                                  iconColor: Colors.red.shade600,
+                                ),
                               ),
-                              SummaryGradientCard(
-                                title: 'Stock Health',
-                                value: _totalItems == 0
-                                  ? '0%'
-                                  : '${(((_totalItems - _lowStockItems) / _totalItems) * 100).round()}%',
-                                subtitle: 'Well stocked',
+                              SizedBox(
+                                width: constraints.maxWidth >= 1200 
+                                  ? (constraints.maxWidth - 72) / 4 // 4 columns with spacing
+                                  : constraints.maxWidth >= 900 
+                                    ? (constraints.maxWidth - 24) / 2 // 2 columns with spacing
+                                    : constraints.maxWidth, // 1 column
+                                child: SummaryGradientCard(
+                                  title: 'Stock Health',
+                                  value: _totalItems == 0
+                                    ? '0%'
+                                    : '${(((_totalItems - _lowStockItems) / _totalItems) * 100).round()}%',
+                                  subtitle: 'Well stocked',
+                                ),
                               ),
                             ],
                           );
