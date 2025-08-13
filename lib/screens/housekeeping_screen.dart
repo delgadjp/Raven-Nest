@@ -370,7 +370,7 @@ class _HousekeepingScreenState extends State<HousekeepingScreen> {
 
   Widget _tabContent() {
     return SizedBox(
-      height: 1200,
+      height: 250,
       child: TabBarView(
         physics: const NeverScrollableScrollPhysics(),
         children: [
@@ -389,7 +389,7 @@ class _HousekeepingScreenState extends State<HousekeepingScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _buildTodayTasksCard(),
-          const SizedBox(height: 24),
+          const SizedBox(height: 14),
           _buildUpcomingTasksCard(),
         ],
       ),
