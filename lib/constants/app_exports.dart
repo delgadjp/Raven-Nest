@@ -53,8 +53,21 @@ export '/widgets/platform_tile.dart'; //PLATFORM INTEGRATION TILE
 export '/widgets/settings_input_field.dart'; //TEXT BOX IN APP PREFERENCES
 export '/widgets/settings_section.dart'; //SETTINGS SECTION WITH SPACING
 
+//FROM HOUSEKEEPING
+export '/constants/housekeeping_helpers.dart'; //HOUSEKEEPING COLOR AND ICON HELPERS
+
+export '/widgets/tab_navigation.dart'; //REUSABLE TAB NAVIGATION
+export '/widgets/status_chip.dart'; //REUSABLE STATUS CHIP
+export '/widgets/info_row.dart'; //REUSABLE INFO ROW
+export '/widgets/task_card.dart'; //REUSABLE TASK CARD
+export '/widgets/staff_card.dart'; //REUSABLE STAFF CARD
+
+export '/screens/housekeeping/tasks_tab.dart';
+export '/screens/housekeeping/staff_tab.dart';
+
 //CONSTANTS
 export '/constants/app_constants.dart';
+
 
 //MODELS
 export '/models/notification_model.dart';
