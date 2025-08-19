@@ -1,6 +1,5 @@
-import 'package:flutter/material.dart';
+import '../constants/app_exports.dart';
 import 'package:intl/intl.dart';
-import '../widgets/navigation.dart';
 
 // Utility function to check if two dates are the same day
 bool isSameDay(DateTime a, DateTime b) {
@@ -126,128 +125,6 @@ class _CalendarScreenState extends State<CalendarScreen> {
     return bookings.where((booking) => booking.status == 'confirmed').length;
   }
 
-  Color _getSourceColor(String source) {
-    switch (source) {
-      case 'Airbnb':
-        return Colors.red.shade100;
-      case 'Booking.com':
-        return Colors.blue.shade100;
-      case 'Direct':
-        return Colors.green.shade100;
-      default:
-        return Colors.grey.shade100;
-    }
-  }
-
-  Color _getSourceTextColor(String source) {
-    switch (source) {
-      case 'Airbnb':
-        return Colors.red.shade800;
-      case 'Booking.com':
-        return Colors.blue.shade800;
-      case 'Direct':
-        return Colors.green.shade800;
-      default:
-        return Colors.grey.shade800;
-    }
-  }
-
-  Color _getStatusColor(String status) {
-    switch (status) {
-      case 'confirmed':
-        return Colors.green.shade100;
-      case 'pending':
-        return Colors.yellow.shade100;
-      case 'cancelled':
-        return Colors.red.shade100;
-      default:
-        return Colors.grey.shade100;
-    }
-  }
-
-  Color _getStatusTextColor(String status) {
-    switch (status) {
-      case 'confirmed':
-        return Colors.green.shade800;
-      case 'pending':
-        return Colors.yellow.shade800;
-      case 'cancelled':
-        return Colors.red.shade800;
-      default:
-        return Colors.grey.shade800;
-    }
-  }
-
-  Widget _summaryCard({
-    required String title,
-    required String value,
-    required String subtitle,
-    required IconData icon,
-    required Color iconColor,
-  }) {
-    return Card(
-      elevation: 0,
-      color: Colors.white.withOpacity(0.8),
-      surfaceTintColor: Colors.transparent,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(title, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: Colors.black54)),
-            const SizedBox(height: 8),
-            Text(value, style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: iconColor)),
-            const SizedBox(height: 8),
-            Row(
-              children: [
-                Icon(icon, size: 12, color: Colors.black38),
-                const SizedBox(width: 4),
-                Text(subtitle, style: const TextStyle(fontSize: 11, color: Colors.black45)),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _summaryGradientCard({
-    required String title,
-    required String value,
-    required String subtitle,
-  }) {
-    return Container(
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFF2563EB), Color(0xFF0EA5E9)],
-          begin: Alignment.centerLeft,
-          end: Alignment.centerRight,
-        ),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(title, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: Colors.white70)),
-          const SizedBox(height: 8),
-          Text(value, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white)),
-          const SizedBox(height: 8),
-          Row(
-            children: [
-              Icon(Icons.location_on, size: 12, color: Colors.white70),
-              const SizedBox(width: 4),
-              Text(subtitle, style: const TextStyle(fontSize: 11, color: Colors.white70)),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -272,102 +149,45 @@ class _CalendarScreenState extends State<CalendarScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Header
-                    Row(
+                    // Header using SectionHeader widget
+                    const SectionHeader(
+                      title: 'Calendar & Bookings',
+                      subtitle: 'Manage your property reservations',
+                      icon: Icons.calendar_today,
+                      iconColor: Color(0xFF2563EB),
+                    ),
+
+                    // Summary Cards using ResponsiveCardGrid
+                    ResponsiveCardGrid(
                       children: [
-                        Container(
-                          padding: const EdgeInsets.all(8),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFF2563EB),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: const Icon(
-                            Icons.calendar_today,
-                            color: Colors.white,
-                            size: 24,
-                          ),
+                        SummaryCard(
+                          title: 'Total Bookings',
+                          value: '${bookings.length}',
+                          subtitle: 'All time',
+                          icon: Icons.calendar_today,
+                          iconColor: const Color(0xFF2563EB),
                         ),
-                        const SizedBox(width: 12),
-                        const Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Calendar & Bookings',
-                              style: TextStyle(
-                                fontSize: 24,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.black87,
-                              ),
-                            ),
-                            Text(
-                              'Manage your property reservations',
-                              style: TextStyle(
-                                fontSize: 14,
-                                color: Colors.grey,
-                              ),
-                            ),
-                          ],
+                        SummaryCard(
+                          title: 'Confirmed',
+                          value: '$confirmedBookings',
+                          subtitle: 'Ready to host',
+                          icon: Icons.person,
+                          iconColor: Colors.green.shade600,
+                        ),
+                        SummaryCard(
+                          title: 'Total Revenue',
+                          value: '\$${totalRevenue.toStringAsFixed(0)}',
+                          subtitle: 'Expected income',
+                          icon: Icons.access_time,
+                          iconColor: Colors.purple.shade600,
+                        ),
+                        SummaryGradientCard(
+                          title: 'Occupancy',
+                          value: '78%',
+                          subtitle: 'This month',
+                          gradientColors: const [Color(0xFF2563EB), Color(0xFF0EA5E9)],
                         ),
                       ],
-                    ),
-                    const SizedBox(height: 24),
-
-                    // Summary Cards
-                    LayoutBuilder(
-                      builder: (context, constraints) {
-                        return Wrap(
-                          spacing: 12,
-                          runSpacing: 12,
-                          children: [
-                            SizedBox(
-                              width: constraints.maxWidth >= 600 
-                                ? (constraints.maxWidth - 12) / 2 // 2 columns with spacing
-                                : constraints.maxWidth, // 1 column
-                              child: _summaryCard(
-                                title: 'Total Bookings',
-                                value: '${bookings.length}',
-                                subtitle: 'All time',
-                                icon: Icons.calendar_today,
-                                iconColor: const Color(0xFF2563EB),
-                              ),
-                            ),
-                            SizedBox(
-                              width: constraints.maxWidth >= 600 
-                                ? (constraints.maxWidth - 12) / 2 // 2 columns with spacing
-                                : constraints.maxWidth, // 1 column
-                              child: _summaryCard(
-                                title: 'Confirmed',
-                                value: '$confirmedBookings',
-                                subtitle: 'Ready to host',
-                                icon: Icons.person,
-                                iconColor: Colors.green.shade600,
-                              ),
-                            ),
-                            SizedBox(
-                              width: constraints.maxWidth >= 600 
-                                ? (constraints.maxWidth - 12) / 2 // 2 columns with spacing
-                                : constraints.maxWidth, // 1 column
-                              child: _summaryCard(
-                                title: 'Total Revenue',
-                                value: '\$${totalRevenue.toStringAsFixed(0)}',
-                                subtitle: 'Expected income',
-                                icon: Icons.access_time,
-                                iconColor: Colors.purple.shade600,
-                              ),
-                            ),
-                            SizedBox(
-                              width: constraints.maxWidth >= 600 
-                                ? (constraints.maxWidth - 12) / 2 // 2 columns with spacing
-                                : constraints.maxWidth, // 1 column
-                              child: _summaryGradientCard(
-                                title: 'Occupancy',
-                                value: '78%',
-                                subtitle: 'This month',
-                              ),
-                            ),
-                          ],
-                        );
-                      },
                     ),
                     const SizedBox(height: 24),
 
@@ -413,11 +233,8 @@ class _CalendarScreenState extends State<CalendarScreen> {
   }
 
   Widget _buildCalendarCard() {
-    return Card(
-      elevation: 0,
-      color: Colors.white.withOpacity(0.8),
-      surfaceTintColor: Colors.transparent,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+    return ReusableCard(
+      padding: EdgeInsets.zero,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -528,14 +345,22 @@ class _CalendarScreenState extends State<CalendarScreen> {
                 
                 const SizedBox(height: 16),
                 
-                // Legend
-                Row(
-                  children: [
-                    _buildLegendItem(Colors.green.shade400, 'Occupied', isCircle: false),
-                    const SizedBox(width: 16),
-                    _buildLegendItem(Colors.blue.shade100, 'Check-in'),
-                    const SizedBox(width: 16),
-                    _buildLegendItem(Colors.blue.shade50, 'Today'),
+                // Legend using CalendarLegend widget
+                CalendarLegend(
+                  items: [
+                    CalendarLegendItem(
+                      color: Colors.green.shade400,
+                      label: 'Occupied',
+                      isCircle: false,
+                    ),
+                    CalendarLegendItem(
+                      color: Colors.blue.shade100,
+                      label: 'Check-in',
+                    ),
+                    CalendarLegendItem(
+                      color: Colors.blue.shade50,
+                      label: 'Today',
+                    ),
                   ],
                 ),
               ],
@@ -664,36 +489,9 @@ class _CalendarScreenState extends State<CalendarScreen> {
     );
   }
 
-  Widget _buildLegendItem(Color color, String label, {bool isCircle = true}) {
-    return Row(
-      children: [
-        Container(
-          width: 12,
-          height: 12,
-          decoration: BoxDecoration(
-            color: color,
-            shape: isCircle ? BoxShape.circle : BoxShape.rectangle,
-            borderRadius: isCircle ? null : BorderRadius.circular(2),
-            border: label == 'Today'
-                ? Border.all(color: Colors.blue.shade200)
-                : null,
-          ),
-        ),
-        const SizedBox(width: 4),
-        Text(
-          label,
-          style: const TextStyle(fontSize: 10),
-        ),
-      ],
-    );
-  }
-
   Widget _buildUpcomingBookingsCard() {
-    return Card(
-      elevation: 0,
-      color: Colors.white.withOpacity(0.8),
-      surfaceTintColor: Colors.transparent,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+    return ReusableCard(
+      padding: EdgeInsets.zero,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -748,120 +546,15 @@ class _CalendarScreenState extends State<CalendarScreen> {
                   )
                 else
                   Column(
-                    children: upcomingBookings.take(3).map((booking) => Container(
-                      margin: const EdgeInsets.only(bottom: 16),
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        border: Border.all(color: Colors.grey.shade200),
-                        borderRadius: BorderRadius.circular(8),
-                        color: Colors.grey.shade50.withOpacity(0.5),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          // Guest info and badges
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      booking.guestName,
-                                      style: TextStyle(
-                                        fontWeight: FontWeight.w600,
-                                        color: Colors.grey.shade900,
-                                        fontSize: 14,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 2),
-                                    Text(
-                                      'Room ${booking.room}',
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        color: Colors.grey.shade600,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.end,
-                                children: [
-                                  Container(
-                                    margin: const EdgeInsets.only(bottom: 4),
-                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                                    decoration: BoxDecoration(
-                                      color: _getSourceColor(booking.source),
-                                      borderRadius: BorderRadius.circular(6),
-                                    ),
-                                    child: Text(
-                                      booking.source,
-                                      style: TextStyle(
-                                        fontSize: 10,
-                                        color: _getSourceTextColor(booking.source),
-                                        fontWeight: FontWeight.w500,
-                                      ),
-                                    ),
-                                  ),
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                                    decoration: BoxDecoration(
-                                      color: _getStatusColor(booking.status),
-                                      borderRadius: BorderRadius.circular(6),
-                                    ),
-                                    child: Text(
-                                      booking.status,
-                                      style: TextStyle(
-                                        fontSize: 10,
-                                        color: _getStatusTextColor(booking.status),
-                                        fontWeight: FontWeight.w500,
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
-                          
-                          const SizedBox(height: 12),
-                          
-                          // Booking details
-                          Column(
-                            children: [
-                              _buildDetailRow(
-                                'Check-in:',
-                                DateFormat('M/d/yyyy').format(booking.checkIn),
-                              ),
-                              const SizedBox(height: 8),
-                              _buildDetailRow(
-                                'Check-out:',
-                                DateFormat('M/d/yyyy').format(booking.checkOut),
-                              ),
-                              const SizedBox(height: 8),
-                              _buildDetailRow(
-                                'Nights:',
-                                '${booking.nights}',
-                              ),
-                              
-                              // Divider line
-                              Container(
-                                margin: const EdgeInsets.symmetric(vertical: 8),
-                                height: 1,
-                                color: Colors.grey.shade200,
-                              ),
-                              
-                              _buildDetailRow(
-                                'Total:',
-                                '\$${booking.amount.toStringAsFixed(0)}',
-                                isTotal: true,
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
+                    children: upcomingBookings.take(3).map((booking) => BookingCard(
+                      guestName: booking.guestName,
+                      checkIn: booking.checkIn,
+                      checkOut: booking.checkOut,
+                      room: booking.room,
+                      source: booking.source,
+                      status: booking.status,
+                      nights: booking.nights,
+                      amount: booking.amount,
                     )).toList(),
                   ),
                 
@@ -875,27 +568,12 @@ class _CalendarScreenState extends State<CalendarScreen> {
                       top: BorderSide(color: Colors.grey.shade200),
                     ),
                   ),
-                  child: SizedBox(
-                    width: double.infinity,
-                    child: OutlinedButton(
-                      onPressed: () {
-                        // Handle sync functionality
-                      },
-                      style: OutlinedButton.styleFrom(
-                        side: BorderSide(color: Colors.grey.shade300),
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                      ),
-                      child: Text(
-                        'Sync with Airbnb & Booking.com',
-                        style: TextStyle(
-                          color: const Color.fromARGB(255, 0, 0, 0),
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ),
+                  child: ActionButton(
+                    text: 'Sync with Airbnb & Booking.com',
+                    icon: Icons.sync,
+                    onPressed: () {
+                      // Handle sync functionality
+                    },
                   ),
                 ),
               ],
@@ -903,29 +581,6 @@ class _CalendarScreenState extends State<CalendarScreen> {
           ),
         ],
       ),
-    );
-  }
-
-  Widget _buildDetailRow(String label, String value, {bool isTotal = false}) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 12,
-            color: Colors.grey.shade600,
-          ),
-        ),
-        Text(
-          value,
-          style: TextStyle(
-            fontSize: 12,
-            fontWeight: isTotal ? FontWeight.bold : FontWeight.w500,
-            color: isTotal ? Colors.green.shade600 : Colors.grey.shade900,
-          ),
-        ),
-      ],
     );
   }
 }

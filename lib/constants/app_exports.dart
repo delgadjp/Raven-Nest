@@ -23,7 +23,15 @@ export '/widgets/custom_tab_bar.dart';
 export '/widgets/status_indicators.dart';
 export '/widgets/restock_alert.dart';
 export '/widgets/inventory_item_card.dart';
-export '/widgets/section_header_with_action.dart';
+export '/widgets/section_header_with_action.dart'; //TITLE WITH ADD ITEM BUTTON
+
+//FROM CALENDAR
+export '/widgets/calendar_legend.dart';
+export '/widgets/booking_detail_row.dart';
+export '/widgets/status_badge.dart';
+export '/widgets/reusable_card.dart';
+export '/widgets/booking_card.dart';
+export '/widgets/action_button.dart'; //SYNC BUTTON
 
 //CONSTANTS
 export '/constants/app_constants.dart';
