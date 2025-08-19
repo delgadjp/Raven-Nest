@@ -204,15 +204,15 @@ class DashboardScreen extends StatelessWidget {
                               '/notifications',
                               context,
                             ),
-                            _buildQuickActionCard(
-                              'Guest Logs',
-                              Icons.description,
-                              const LinearGradient(
-                                colors: [Color(0xFF6366F1), Color(0xFF3B82F6)],
-                              ),
-                              '/guest-logs',
-                              context,
-                            ),
+                            // _buildQuickActionCard(
+                            //   'Guest Logs',
+                            //   Icons.description,
+                            //   const LinearGradient(
+                            //     colors: [Color(0xFF6366F1), Color(0xFF3B82F6)],
+                            //   ),
+                            //   '/guest-logs',
+                            //   context,
+                            // ),
                           ],
                         );
                       },

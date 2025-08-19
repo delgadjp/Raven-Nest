@@ -9,7 +9,7 @@ import 'screens/analytics_screen.dart';
 import 'screens/housekeeping_screen.dart';
 import 'screens/notifications_screen.dart';
 import 'screens/settings_screen.dart';
-import 'screens/guest_logs_screen.dart';
+// import 'screens/guest_logs_screen.dart';
 
 void main() {
   runApp(CondoManagerApp());
@@ -53,10 +53,10 @@ class CondoManagerApp extends StatelessWidget {
         path: '/settings',
         builder: (context, state) => const SettingsScreen(),
       ),
-      GoRoute(
-        path: '/guest-logs',
-        builder: (context, state) => const GuestLogsScreen(),
-      ),
+      // GoRoute(
+      //   path: '/guest-logs',
+      //   builder: (context, state) => const GuestLogsScreen(),
+      // ),
     ],
   );
 

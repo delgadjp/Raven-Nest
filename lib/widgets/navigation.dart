@@ -70,7 +70,7 @@ class NavigationWidget extends StatelessWidget {
                         _buildNavItem('Analytics', '/analytics', Icons.bar_chart, currentLocation, context),
                         _buildNavItem('Housekeeping', '/housekeeping', Icons.cleaning_services, currentLocation, context),
                         _buildNavItem('Notifications', '/notifications', Icons.notifications, currentLocation, context),
-                        _buildNavItem('Guest Logs', '/guest-logs', Icons.description, currentLocation, context),
+                        // _buildNavItem('Guest Logs', '/guest-logs', Icons.description, currentLocation, context),
                         _buildNavItem('Settings', '/settings', Icons.settings, currentLocation, context),
                       ],
                     ),
@@ -178,7 +178,7 @@ class _SideMenuContent extends StatelessWidget {
       ('Analytics', '/analytics', Icons.bar_chart),
       ('Housekeeping', '/housekeeping', Icons.cleaning_services),
       ('Notifications', '/notifications', Icons.notifications),
-      ('Guest Logs', '/guest-logs', Icons.description),
+      // ('Guest Logs', '/guest-logs', Icons.description),
       ('Settings', '/settings', Icons.settings),
     ];
 
