@@ -33,5 +33,11 @@ export '/widgets/reusable_card.dart';
 export '/widgets/booking_card.dart';
 export '/widgets/action_button.dart'; //SYNC BUTTON
 
+//FROM ANALYTICS
+export '/widgets/chart_container.dart';
+export '/widgets/revenue_line_chart.dart';
+export '/widgets/booking_sources_pie_chart.dart';
+export '/widgets/responsive_charts_layout.dart';
+
 //CONSTANTS
 export '/constants/app_constants.dart';

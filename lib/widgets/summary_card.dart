@@ -70,6 +70,7 @@ class SummaryGradientCard extends StatelessWidget {
   final String value;
   final String subtitle;
   final List<Color> gradientColors;
+  final IconData trendingIcon;
 
   const SummaryGradientCard({
     super.key,
@@ -77,6 +78,7 @@ class SummaryGradientCard extends StatelessWidget {
     required this.value,
     required this.subtitle,
     this.gradientColors = const [Color(0xFF22C55E), Color(0xFF059669)],
+    this.trendingIcon = Icons.trending_up,
   });
 
   @override
@@ -113,7 +115,7 @@ class SummaryGradientCard extends StatelessWidget {
           ),
           Row(
             children: [
-              const Icon(Icons.trending_up, size: 12, color: Colors.white70),
+              Icon(trendingIcon, size: 12, color: Colors.white70),
               const SizedBox(width: 4),
               Text(
                 subtitle,
