@@ -1,12 +1,4 @@
-import 'package:flutter/material.dart';
-import '../widgets/navigation.dart';
-import '../widgets/summary_card.dart';
-import '../widgets/expense_section_card.dart';
-import '../widgets/expense_item_card.dart';
-import '../widgets/add_expense_dialog.dart';
-import '../widgets/gradient_total_card.dart';
-import '../widgets/section_header.dart';
-import '../widgets/responsive_card_grid.dart';
+import '/constants/app_exports.dart';
 
 class ExpensesScreen extends StatefulWidget {
   const ExpensesScreen({super.key});
