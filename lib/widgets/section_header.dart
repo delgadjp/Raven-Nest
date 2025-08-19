@@ -35,25 +35,31 @@ class SectionHeader extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 12),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                title,
-                style: const TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black87,
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: const TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black87,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                  maxLines: 1,
                 ),
-              ),
-              Text(
-                subtitle,
-                style: const TextStyle(
-                  fontSize: 14,
-                  color: Colors.grey,
+                Text(
+                  subtitle,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    color: Colors.grey,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                  maxLines: 2,
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ],
       ),

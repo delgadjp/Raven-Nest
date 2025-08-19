@@ -1,5 +1,4 @@
 import '../constants/app_exports.dart';
-import 'notification_actions.dart';
 
 class NotificationListHeader extends StatelessWidget {
   final String title;

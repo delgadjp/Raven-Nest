@@ -8,6 +8,7 @@ class ActionButton extends StatelessWidget {
   final bool isFullWidth;
   final Color? backgroundColor;
   final Color? textColor;
+  final Color? borderColor;
   final EdgeInsets padding;
 
   const ActionButton({
@@ -19,6 +20,7 @@ class ActionButton extends StatelessWidget {
     this.isFullWidth = true,
     this.backgroundColor,
     this.textColor,
+    this.borderColor,
     this.padding = const EdgeInsets.symmetric(vertical: 12),
   });
 
@@ -48,11 +50,16 @@ class ActionButton extends StatelessWidget {
         child: OutlinedButton(
           onPressed: onPressed,
           style: OutlinedButton.styleFrom(
-            side: BorderSide(color: Colors.grey.shade300),
+            side: BorderSide(
+              color: borderColor ?? textColor ?? Colors.grey.shade300,
+              width: borderColor != null ? 1.5 : 1,
+            ),
             padding: padding,
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(6),
+              borderRadius: BorderRadius.circular(8),
             ),
+            elevation: 0,
+            shadowColor: Colors.transparent,
           ),
           child: buttonContent,
         ),
@@ -66,8 +73,10 @@ class ActionButton extends StatelessWidget {
             backgroundColor: backgroundColor ?? const Color(0xFF2563EB),
             padding: padding,
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(6),
+              borderRadius: BorderRadius.circular(8),
             ),
+            elevation: 2,
+            shadowColor: (backgroundColor ?? const Color(0xFF2563EB)).withOpacity(0.3),
           ),
           child: buttonContent,
         ),

@@ -46,6 +46,13 @@ export '/widgets/priority_badge.dart'; //PRIORITY BADGE = HIGH, MEDIUM, LOW
 export '/widgets/notification_actions.dart'; //MARK ALL READ, SETTINGS BUTTON
 export '/widgets/notification_list_header.dart'; //HEADER THAT CONTAINS NOTIFICATION TITLE AND ACTIONS
 
+//FROM SETTINGS
+export '/widgets/settings_card.dart'; //SETTINGS CARD WRAPPER
+export '/widgets/settings_switch_tile.dart'; //SWITCH TILE FOR SETTINGS
+export '/widgets/platform_tile.dart'; //PLATFORM INTEGRATION TILE
+export '/widgets/settings_input_field.dart'; //TEXT BOX IN APP PREFERENCES
+export '/widgets/settings_section.dart'; //SETTINGS SECTION WITH SPACING
+
 //CONSTANTS
 export '/constants/app_constants.dart';
 

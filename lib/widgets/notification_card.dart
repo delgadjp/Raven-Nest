@@ -1,6 +1,4 @@
 import '../constants/app_exports.dart';
-import 'notification_icon.dart';
-import 'priority_badge.dart';
 
 class NotificationCard extends StatelessWidget {
   final int id;
