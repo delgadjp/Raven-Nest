@@ -1,4 +1,4 @@
-import '../constants/app_exports.dart';
+import '/constants/app_exports.dart';
 import 'package:intl/intl.dart';
 
 // Utility function to check if two dates are the same day
@@ -149,14 +149,6 @@ class _CalendarScreenState extends State<CalendarScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Header using SectionHeader widget
-                    const SectionHeader(
-                      title: 'Calendar & Bookings',
-                      subtitle: 'Manage your property reservations',
-                      icon: Icons.calendar_today,
-                      iconColor: Color(0xFF2563EB),
-                    ),
-
                     // Summary Cards using ResponsiveCardGrid
                     ResponsiveCardGrid(
                       children: [

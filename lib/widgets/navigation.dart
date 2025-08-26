@@ -4,9 +4,70 @@ import 'package:go_router/go_router.dart';
 class NavigationWidget extends StatelessWidget {
   const NavigationWidget({super.key});
 
+  // Function to get page info based on current route
+  Map<String, dynamic> _getPageInfo(String currentLocation) {
+    switch (currentLocation) {
+      case '/':
+        return {
+          'title': 'Condo Manager',
+          'icon': Icons.home,
+          'color': const Color(0xFF2563EB),
+        };
+      case '/expenses':
+        return {
+          'title': 'Expense Management',
+          'icon': Icons.attach_money,
+          'color': const Color(0xFF16A34A),
+        };
+      case '/inventory':
+        return {
+          'title': 'Inventory Management',
+          'icon': Icons.inventory_2,
+          'color': const Color(0xFF7C3AED),
+        };
+      case '/calendar':
+        return {
+          'title': 'Calendar & Bookings',
+          'icon': Icons.calendar_today,
+          'color': const Color(0xFF2563EB),
+        };
+      case '/analytics':
+        return {
+          'title': 'Analytics Dashboard',
+          'icon': Icons.bar_chart,
+          'color': const Color(0xFF4F46E5),
+        };
+      case '/housekeeping':
+        return {
+          'title': 'Housekeeping Management',
+          'icon': Icons.people_alt_rounded,
+          'color': Colors.teal.shade600,
+        };
+      case '/notifications':
+        return {
+          'title': 'Notifications',
+          'icon': Icons.notifications,
+          'color': Colors.red.shade600,
+        };
+      case '/settings':
+        return {
+          'title': 'Settings',
+          'icon': Icons.settings,
+          'color': Colors.grey.shade600,
+        };
+      default:
+        return {
+          'title': 'Condo Manager',
+          'icon': Icons.home,
+          'color': const Color(0xFF2563EB),
+        };
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final currentLocation = GoRouterState.of(context).uri.toString();
+    final pageInfo = _getPageInfo(currentLocation);
     
     final width = MediaQuery.of(context).size.width;
     final bool isDesktop = width > 1024; // closer to React lg breakpoint
@@ -32,21 +93,19 @@ class NavigationWidget extends StatelessWidget {
                     Container(
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
-                        gradient: const LinearGradient(
-                          colors: [Color(0xFF2563EB), Color(0xFF7C3AED)],
-                        ),
+                        color: pageInfo['color'],
                         borderRadius: BorderRadius.circular(8),
                       ),
-                      child: const Icon(
-                        Icons.home,
+                      child: Icon(
+                        pageInfo['icon'],
                         color: Colors.white,
                         size: 20,
                       ),
                     ),
                     const SizedBox(width: 8),
-                    const Text(
-                      'Condo Manager',
-                      style: TextStyle(
+                    Text(
+                      pageInfo['title'],
+                      style: const TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
                         color: Colors.black87,

@@ -1,11 +1,4 @@
-import 'package:flutter/material.dart';
-import '../widgets/navigation.dart';
-import '../widgets/summary_card.dart';
-import '../widgets/section_header.dart';
-import '../widgets/responsive_card_grid.dart';
-import '../widgets/notification_card.dart';
-import '../widgets/notification_list_header.dart';
-import '../models/notification_model.dart';
+import '/constants/app_exports.dart';
 
 class NotificationsScreen extends StatefulWidget {
   const NotificationsScreen({super.key});
@@ -165,14 +158,6 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Header
-                    SectionHeader(
-                      title: 'Notifications',
-                      subtitle: 'Stay updated with your property activities',
-                      icon: Icons.notifications,
-                      iconColor: Colors.red.shade600,
-                    ),
-
                     // Summary Cards
                     ResponsiveCardGrid(
                       spacing: 16,

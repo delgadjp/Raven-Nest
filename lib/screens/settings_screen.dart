@@ -1,11 +1,4 @@
-import 'package:flutter/material.dart';
-import '../widgets/navigation.dart';
-import '../widgets/section_header.dart';
-import '../widgets/settings_card.dart';
-import '../widgets/settings_switch_tile.dart';
-import '../widgets/platform_tile.dart';
-import '../widgets/settings_input_field.dart';
-import '../widgets/action_button.dart';
+import '/constants/app_exports.dart';
 
 /// Settings screen with notification preferences, platform integrations, app preferences, and data management.
 class SettingsScreen extends StatefulWidget {
@@ -55,14 +48,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Header
-                    SectionHeader(
-                      title: 'Settings',
-                      subtitle: 'Manage your account and application preferences',
-                      icon: Icons.settings,
-                      iconColor: Colors.grey.shade600,
-                    ),
-
                     // Notification Preferences
                     _buildNotificationPreferences(),
                     const SizedBox(height: 24),

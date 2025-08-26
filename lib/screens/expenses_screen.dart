@@ -62,14 +62,6 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // Header
-                        SectionHeader(
-                          title: 'Expense Management',
-                          subtitle: 'Track your fixed and variable costs',
-                          icon: Icons.attach_money,
-                          iconColor: const Color(0xFF16A34A),
-                        ),
-
                         // Summary Cards
                         ResponsiveCardGrid(
                           children: [

@@ -1,5 +1,4 @@
-import 'package:flutter/material.dart';
-import '../constants/app_exports.dart';
+import '/constants/app_exports.dart';
 
 class AnalyticsScreen extends StatelessWidget {
   const AnalyticsScreen({super.key});
@@ -52,13 +51,6 @@ class AnalyticsScreen extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     // Header Section
-                    const SectionHeader(
-                      title: 'Analytics Dashboard',
-                      subtitle: 'Track your property performance',
-                      icon: Icons.bar_chart,
-                      iconColor: Color(0xFF4F46E5),
-                    ),
-                    
                     // KPI Cards
                     ResponsiveCardGrid(
                       children: [

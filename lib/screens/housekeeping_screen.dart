@@ -56,12 +56,6 @@ class _HousekeepingScreenState extends State<HousekeepingScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                SectionHeader(
-                  title: 'Housekeeping Management',
-                  subtitle: 'Manage cleaning schedules and staff',
-                  icon: Icons.people_alt_rounded,
-                  iconColor: Colors.teal.shade600,
-                ),
                 ResponsiveCardGrid(
                   children: [
                     SummaryCard(

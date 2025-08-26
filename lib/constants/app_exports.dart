@@ -3,7 +3,6 @@ export 'package:flutter/material.dart';
 
 //GENERAL WIDGETS
 export '/widgets/responsive_card_grid.dart'; //CONTAINER FOR SUMMARY CARD
-export '/widgets/section_header.dart'; //HEADER IN EACH SCREEN
 export '/widgets/summary_card.dart'; //SUMMARY CARDS
 export '/widgets/navigation.dart'; //NAVIGATION BAR
 export '/widgets/reusable_card.dart'; //USED FOR UPCOMING BOOKINGS COULD BE GENERIC (CALENDAR)

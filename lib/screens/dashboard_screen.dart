@@ -30,13 +30,6 @@ class DashboardScreen extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                    // Header
-                    SectionHeader(
-                      title: 'Condo Manager',
-                      subtitle: 'Your complete property management solution',
-                      icon: Icons.home,
-                      iconColor: const Color(0xFF2563EB),
-                    ),
                     // Stats Cards
                     ResponsiveCardGrid(
                       children: [
@@ -114,14 +107,7 @@ class DashboardScreen extends StatelessWidget {
                               ),
                               route: '/housekeeping',
                             ),
-                            QuickActionCard(
-                              title: 'Notifications',
-                              icon: Icons.notifications,
-                              gradient: const LinearGradient(
-                                colors: [Color(0xFFEF4444), Color(0xFFEC4899)],
-                              ),
-                              route: '/notifications',
-                            ),
+                            
                             // QuickActionCard(
                             //   title: 'Guest Logs',
                             //   icon: Icons.description,

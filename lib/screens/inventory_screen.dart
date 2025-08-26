@@ -258,15 +258,6 @@ class _InventoryScreenState extends State<InventoryScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Header using SectionHeader widget
-                      SectionHeader(
-                        title: 'Inventory Management',
-                        subtitle: 'Track supplies and washables',
-                        icon: Icons.inventory_2,
-                        iconColor: const Color(0xFF7C3AED),
-                        backgroundColor: const Color(0xFF7C3AED),
-                      ),
-
                       // Summary Cards using ResponsiveCardGrid
                       ResponsiveCardGrid(
                         children: [
