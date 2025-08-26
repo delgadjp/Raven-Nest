@@ -31,12 +31,6 @@ class NavigationWidget extends StatelessWidget {
           'icon': Icons.calendar_today,
           'color': const Color(0xFF2563EB),
         };
-      case '/analytics':
-        return {
-          'title': 'Analytics Dashboard',
-          'icon': Icons.bar_chart,
-          'color': const Color(0xFF4F46E5),
-        };
       case '/housekeeping':
         return {
           'title': 'Housekeeping Management',
@@ -126,7 +120,6 @@ class NavigationWidget extends StatelessWidget {
                         _buildNavItem('Expenses', '/expenses', Icons.attach_money, currentLocation, context),
                         _buildNavItem('Inventory', '/inventory', Icons.inventory, currentLocation, context),
                         _buildNavItem('Calendar', '/calendar', Icons.calendar_today, currentLocation, context),
-                        _buildNavItem('Analytics', '/analytics', Icons.bar_chart, currentLocation, context),
                         _buildNavItem('Housekeeping', '/housekeeping', Icons.cleaning_services, currentLocation, context),
                         _buildNavItem('Notifications', '/notifications', Icons.notifications, currentLocation, context),
                         // _buildNavItem('Guest Logs', '/guest-logs', Icons.description, currentLocation, context),
@@ -234,7 +227,6 @@ class _SideMenuContent extends StatelessWidget {
       ('Expenses', '/expenses', Icons.attach_money),
       ('Inventory', '/inventory', Icons.inventory),
       ('Calendar', '/calendar', Icons.calendar_today),
-      ('Analytics', '/analytics', Icons.bar_chart),
       ('Housekeeping', '/housekeeping', Icons.cleaning_services),
       ('Notifications', '/notifications', Icons.notifications),
       // ('Guest Logs', '/guest-logs', Icons.description),

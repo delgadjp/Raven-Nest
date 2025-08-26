@@ -5,7 +5,6 @@ import 'screens/dashboard_screen.dart';
 import 'screens/expenses_screen.dart';
 import 'screens/inventory_screen.dart';
 import 'screens/calendar_screen.dart';
-import 'screens/analytics_screen.dart';
 import 'screens/housekeeping_screen.dart';
 import 'screens/notifications_screen.dart';
 import 'screens/settings_screen.dart';
@@ -36,10 +35,6 @@ class CondoManagerApp extends StatelessWidget {
       GoRoute(
         path: '/calendar',
         builder: (context, state) => const CalendarScreen(),
-      ),
-      GoRoute(
-        path: '/analytics',
-        builder: (context, state) => const AnalyticsScreen(),
       ),
       GoRoute(
         path: '/housekeeping',

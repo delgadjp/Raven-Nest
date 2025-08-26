@@ -8,8 +8,8 @@ class ExpensesScreen extends StatefulWidget {
 }
 
 class _ExpensesScreenState extends State<ExpensesScreen> {
-  // Static fixed expenses (read-only)
-  final List<Map<String, dynamic>> fixedExpenses = const [
+  // Starting data for fixed expenses (mutable copy is created in initState)
+  final List<Map<String, dynamic>> _initialFixed = const [
     {'id': 1, 'name': 'Mortgage/Rent', 'amount': 1500, 'category': 'Housing'},
     {'id': 2, 'name': 'Property Insurance', 'amount': 200, 'category': 'Insurance'},
     {'id': 3, 'name': 'Property Tax', 'amount': 300, 'category': 'Taxes'},
@@ -23,6 +23,7 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
     {'id': 3, 'name': 'Repairs', 'amount': 250, 'category': 'Maintenance'},
   ];
 
+  late List<Map<String, dynamic>> fixedExpenses;
   late List<Map<String, dynamic>> variableExpenses;
 
   double get fixedTotal => fixedExpenses.fold(0.0, (sum, e) => sum + (e['amount'] as num).toDouble());
@@ -32,6 +33,7 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
   @override
   void initState() {
     super.initState();
+    fixedExpenses = List<Map<String, dynamic>>.from(_initialFixed);
     variableExpenses = List<Map<String, dynamic>>.from(_initialVariable);
   }
 
@@ -141,17 +143,17 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
           name: e['name'],
           category: e['category'],
           amount: (e['amount'] as num).toDouble(),
-          showDeleteButton: variable,
-          onDelete: variable ? () => _deleteExpense(e['id'] as int) : null,
+          showDeleteButton: true,
+          onDelete: () => _deleteExpense(e['id'] as int, variable),
           amountColor: amountColor,
         ),
       ).toList(),
-      actionButton: variable ? SizedBox(
+      actionButton: SizedBox(
         width: double.infinity,
         child: OutlinedButton.icon(
-          onPressed: _showAddExpenseDialog,
+          onPressed: () => _showAddExpenseDialog(variable),
           icon: const Icon(Icons.add, size: 18),
-          label: const Text('Add Variable Expense'),
+          label: Text(variable ? 'Add Variable Expense' : 'Add Fixed Expense'),
           style: OutlinedButton.styleFrom(
             padding: const EdgeInsets.symmetric(vertical: 12),
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
@@ -166,35 +168,56 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
             }),
           ),
         ),
-      ) : null,
+      ),
       totalLabel: variable ? 'Total Variable' : 'Total Fixed',
       totalAmount: variable ? "\$${variableTotal.toInt()}" : "\$${fixedTotal.toInt()}",
       totalAmountColor: amountColor,
     );
   }
 
-  void _showAddExpenseDialog() {
+  void _showAddExpenseDialog(bool isVariable) {
+    final String title = isVariable ? 'Add New Variable Expense' : 'Add New Fixed Expense';
     showDialog(
       context: context,
-      builder: (context) => AddExpenseDialog(
-        title: 'Add New Variable Expense',
-        onAdd: (name, amount, category) {
-          setState(() {
-            variableExpenses.add({
-              'id': DateTime.now().millisecondsSinceEpoch,
-              'name': name,
-              'amount': amount,
-              'category': category,
+      builder: (context) => Theme(
+        data: Theme.of(context).copyWith(
+          dialogBackgroundColor: Colors.white,
+          dialogTheme: DialogTheme(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+            elevation: 8,
+          ),
+        ),
+        child: AddExpenseDialog(
+          title: title,
+          onAdd: (name, amount, category) {
+            setState(() {
+              final newExpense = {
+                'id': DateTime.now().millisecondsSinceEpoch,
+                'name': name,
+                'amount': amount,
+                'category': category,
+              };
+              if (isVariable) {
+                variableExpenses.add(newExpense);
+              } else {
+                fixedExpenses.add(newExpense);
+              }
             });
-          });
-        },
+          },
+        ),
       ),
     );
   }
 
-  void _deleteExpense(int id) {
+  void _deleteExpense(int id, bool isVariable) {
     setState(() {
-      variableExpenses.removeWhere((expense) => expense['id'] == id);
+      if (isVariable) {
+        variableExpenses.removeWhere((expense) => expense['id'] == id);
+      } else {
+        fixedExpenses.removeWhere((expense) => expense['id'] == id);
+      }
     });
   }
 

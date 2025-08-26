@@ -3,6 +3,29 @@ import '/constants/app_exports.dart';
 class DashboardScreen extends StatelessWidget {
   const DashboardScreen({super.key});
 
+  // Analytics data for charts
+  final List<Map<String, dynamic>> monthlyRevenue = const [
+    {'month': 'Jan', 'revenue': 2400, 'bookings': 8},
+    {'month': 'Feb', 'revenue': 2800, 'bookings': 10},
+    {'month': 'Mar', 'revenue': 3200, 'bookings': 12},
+    {'month': 'Apr', 'revenue': 2900, 'bookings': 11},
+    {'month': 'May', 'revenue': 3500, 'bookings': 14},
+    {'month': 'Jun', 'revenue': 4200, 'bookings': 16},
+    {'month': 'Jul', 'revenue': 4800, 'bookings': 18},
+    {'month': 'Aug', 'revenue': 4600, 'bookings': 17},
+    {'month': 'Sep', 'revenue': 3800, 'bookings': 15},
+    {'month': 'Oct', 'revenue': 3400, 'bookings': 13},
+    {'month': 'Nov', 'revenue': 3100, 'bookings': 12},
+    {'month': 'Dec', 'revenue': 3600, 'bookings': 14},
+  ];
+
+  final List<Map<String, dynamic>> bookingSources = const [
+    {'name': 'Airbnb', 'value': 45, 'color': Color(0xFFFF5A5F)},
+    {'name': 'Booking.com', 'value': 35, 'color': Color(0xFF003580)},
+    {'name': 'Direct', 'value': 15, 'color': Color(0xFF10B981)},
+    {'name': 'Other', 'value': 5, 'color': Color(0xFF6B7280)},
+  ];
+
   @override
   Widget build(BuildContext context) {
     return GradientBackground(
@@ -18,40 +41,123 @@ class DashboardScreen extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // Stats Cards
-                        ResponsiveCardGrid(
+                        // Quick Stats Cards
+                        Row(
                           children: [
-                            SummaryCard(
-                              title: 'Monthly Expenses',
-                              value: '\$2,450',
-                              subtitle: 'Fixed + Variable costs',
-                              icon: Icons.attach_money,
-                              iconColor: const Color(0xFF16A34A),
+                            Expanded(
+                              child: SummaryCard(
+                                title: 'Monthly Expenses',
+                                value: '\$2,450',
+                                subtitle: 'Fixed + Variable costs',
+                                icon: Icons.attach_money,
+                                iconColor: const Color(0xFF16A34A),
+                              ),
                             ),
-                            SummaryCard(
-                              title: 'Active Bookings',
-                              value: '18',
-                              subtitle: 'This month',
-                              icon: Icons.calendar_today,
-                              iconColor: const Color(0xFF2563EB),
+                            const SizedBox(width: 16),
+                            Expanded(
+                              child: SummaryCard(
+                                title: 'Active Bookings',
+                                value: '18',
+                                subtitle: 'This month',
+                                icon: Icons.calendar_today,
+                                iconColor: const Color(0xFF2563EB),
+                              ),
                             ),
-                            SummaryCard(
-                              title: 'Inventory Items',
-                              value: '45',
-                              subtitle: 'Supplies & washables',
-                              icon: Icons.inventory,
-                              iconColor: const Color(0xFF7C3AED),
+                          ],
+                        ),
+                        const SizedBox(height: 16),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: SummaryCard(
+                                title: 'Inventory Items',
+                                value: '45',
+                                subtitle: 'Supplies & washables',
+                                icon: Icons.inventory,
+                                iconColor: const Color(0xFF7C3AED),
+                              ),
                             ),
-                            SummaryCard(
-                              title: 'Pending Tasks',
-                              value: '3',
-                              subtitle: 'Housekeeping items',
-                              icon: Icons.check_circle,
-                              iconColor: const Color(0xFFEA580C),
+                            const SizedBox(width: 16),
+                            Expanded(
+                              child: SummaryCard(
+                                title: 'Pending Tasks',
+                                value: '3',
+                                subtitle: 'Housekeeping items',
+                                icon: Icons.check_circle,
+                                iconColor: const Color(0xFFEA580C),
+                              ),
                             ),
                           ],
                         ),  
+                        const SizedBox(height: 10),
+
+                        // Analytics KPI Cards
+                        Row(
+                          children: [
+                            Expanded(
+                              child: SummaryCard(
+                                title: 'Total Revenue',
+                                value: '\$42,300',
+                                subtitle: '+12% from last year',
+                                icon: Icons.attach_money,
+                                iconColor: const Color(0xFF10B981),
+                              ),
+                            ),
+                            const SizedBox(width: 16),
+                            Expanded(
+                              child: SummaryCard(
+                                title: 'Avg Occupancy',
+                                value: '78%',
+                                subtitle: '+5% from last month',
+                                icon: Icons.people,
+                                iconColor: const Color(0xFF3B82F6),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 16),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: SummaryCard(
+                                title: 'Total Bookings',
+                                value: '168',
+                                subtitle: '+8% from last year',
+                                icon: Icons.calendar_today,
+                                iconColor: const Color(0xFF7C3AED),
+                              ),
+                            ),
+                            const SizedBox(width: 16),
+                            Expanded(
+                              child: SummaryCard(
+                                title: 'Avg Daily Rate',
+                                value: '\$156',
+                                subtitle: '-3% from last month',
+                                icon: Icons.trending_down,
+                                iconColor: const Color(0xFFDC2626),
+                              ),
+                            ),
+                          ],
+                        ),
                         const SizedBox(height: 32),
+
+                        // Analytics Charts Section
+                        ResponsiveChartsLayout(
+                          charts: [
+                            ChartContainer(
+                              title: 'Monthly Revenue',
+                              subtitle: 'Revenue and booking trends over the year',
+                              chart: RevenueLineChart(data: monthlyRevenue),
+                            ),
+                            ChartContainer(
+                              title: 'Booking Sources',
+                              subtitle: 'Distribution of bookings by platform',
+                              chart: BookingSourcesPieChart(data: bookingSources),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 32),
+
                         // Recent Activity
                         RecentActivityCard(
                           activities: const [
