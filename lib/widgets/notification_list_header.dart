@@ -4,7 +4,6 @@ class NotificationListHeader extends StatelessWidget {
   final String title;
   final String subtitle;
   final VoidCallback? onMarkAllRead;
-  final VoidCallback? onSettings;
   final int unreadCount;
 
   const NotificationListHeader({
@@ -12,7 +11,6 @@ class NotificationListHeader extends StatelessWidget {
     this.title = 'Recent Notifications',
     this.subtitle = 'All your property notifications',
     this.onMarkAllRead,
-    this.onSettings,
     this.unreadCount = 0,
   });
 
@@ -38,7 +36,6 @@ class NotificationListHeader extends StatelessWidget {
         const SizedBox(height: 12),
         NotificationActions(
           onMarkAllRead: onMarkAllRead,
-          onSettings: onSettings,
           unreadCount: unreadCount,
         ),
       ],

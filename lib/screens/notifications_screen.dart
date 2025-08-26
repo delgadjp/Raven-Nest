@@ -205,7 +205,6 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                           children: [
                             NotificationListHeader(
                               onMarkAllRead: markAllAsRead,
-                              onSettings: () {},
                               unreadCount: unreadCount,
                             ),
                             const SizedBox(height: 16),

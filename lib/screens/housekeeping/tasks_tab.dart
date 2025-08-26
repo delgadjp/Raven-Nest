@@ -94,25 +94,32 @@ class TasksTab extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
-                  'Upcoming Tasks',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                ),
-                SizedBox(height: 2),
-                Text(
-                  'Tasks scheduled for the next few days',
-                  style: TextStyle(color: Colors.grey),
+                const Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Upcoming Tasks',
+                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    ),
+                    SizedBox(height: 2),
+                    Text(
+                      'Tasks scheduled for the next few days',
+                      style: TextStyle(color: Colors.grey),
+                    ),
+                  ],
                 ),
               ],
             ),
             const SizedBox(height: 16),
             Column(
-              children: upcomingTasks.take(3).map((task) => TaskCard(
+              children: upcomingTasks.map((task) => TaskCard(
                 task: task,
-                isDetailed: false,
+                isDetailed: true,
+                onStatusUpdate: () => _handleStatusUpdate(task),
+                onViewDetails: () => _handleViewDetails(task),
               )).toList(),
             ),
           ],
