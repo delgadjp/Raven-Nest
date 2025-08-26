@@ -179,17 +179,8 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
     final String title = isVariable ? 'Add New Variable Expense' : 'Add New Fixed Expense';
     showDialog(
       context: context,
-      builder: (context) => Theme(
-        data: Theme.of(context).copyWith(
-          dialogBackgroundColor: Colors.white,
-          dialogTheme: DialogTheme(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
-            ),
-            elevation: 8,
-          ),
-        ),
-        child: AddExpenseDialog(
+      builder: (context) => GenericFormDialog(
+        config: DialogConfigurations.addExpense(
           title: title,
           onAdd: (name, amount, category) {
             setState(() {

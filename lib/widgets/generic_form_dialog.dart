@@ -1,43 +1,94 @@
 import 'package:flutter/material.dart';
 
-class AddExpenseDialog extends StatefulWidget {
-  final String title;
-  final Function(String name, double amount, String category) onAdd;
+class DialogField {
+  final String key;
+  final String label;
+  final String hintText;
+  final IconData icon;
+  final TextInputType? keyboardType;
+  final bool isRequired;
 
-  const AddExpenseDialog({
-    super.key,
+  const DialogField({
+    required this.key,
+    required this.label,
+    required this.hintText,
+    required this.icon,
+    this.keyboardType,
+    this.isRequired = true,
+  });
+}
+
+class DialogConfig {
+  final String title;
+  final IconData headerIcon;
+  final Color accentColor;
+  final String actionButtonText;
+  final List<DialogField> fields;
+  final Function(Map<String, String>) onSubmit;
+
+  const DialogConfig({
     required this.title,
-    required this.onAdd,
+    required this.headerIcon,
+    required this.accentColor,
+    required this.actionButtonText,
+    required this.fields,
+    required this.onSubmit,
+  });
+}
+
+class GenericFormDialog extends StatefulWidget {
+  final DialogConfig config;
+
+  const GenericFormDialog({
+    super.key,
+    required this.config,
   });
 
   @override
-  State<AddExpenseDialog> createState() => _AddExpenseDialogState();
+  State<GenericFormDialog> createState() => _GenericFormDialogState();
 }
 
-class _AddExpenseDialogState extends State<AddExpenseDialog> {
-  final _nameController = TextEditingController();
-  final _amountController = TextEditingController();
-  final _categoryController = TextEditingController();
+class _GenericFormDialogState extends State<GenericFormDialog> {
+  final Map<String, TextEditingController> _controllers = {};
+
+  @override
+  void initState() {
+    super.initState();
+    // Initialize controllers for each field
+    for (final field in widget.config.fields) {
+      _controllers[field.key] = TextEditingController();
+    }
+  }
 
   @override
   void dispose() {
-    _nameController.dispose();
-    _amountController.dispose();
-    _categoryController.dispose();
+    // Dispose all controllers
+    for (final controller in _controllers.values) {
+      controller.dispose();
+    }
     super.dispose();
   }
 
-  void _handleAdd() {
-    if (_nameController.text.isNotEmpty &&
-        _amountController.text.isNotEmpty &&
-        _categoryController.text.isNotEmpty) {
-      final amount = double.tryParse(_amountController.text) ?? 0;
-      widget.onAdd(_nameController.text, amount, _categoryController.text);
-      _nameController.clear();
-      _amountController.clear();
-      _categoryController.clear();
-      Navigator.of(context).pop();
+  void _handleSubmit() {
+    final values = <String, String>{};
+    
+    // Validate required fields and collect values
+    for (final field in widget.config.fields) {
+      final value = _controllers[field.key]?.text ?? '';
+      if (field.isRequired && value.isEmpty) {
+        return; // Don't submit if required field is empty
+      }
+      values[field.key] = value;
     }
+    
+    // Submit the form
+    widget.config.onSubmit(values);
+    
+    // Clear controllers and close dialog
+    for (final controller in _controllers.values) {
+      controller.clear();
+    }
+    Navigator.of(context).pop();
   }
 
   @override
@@ -71,19 +122,19 @@ class _AddExpenseDialogState extends State<AddExpenseDialog> {
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF10B981).withValues(alpha: 0.1),
+                    color: widget.config.accentColor.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  child: const Icon(
-                    Icons.add,
-                    color: Color(0xFF10B981),
+                  child: Icon(
+                    widget.config.headerIcon,
+                    color: widget.config.accentColor,
                     size: 20,
                   ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
-                    widget.title,
+                    widget.config.title,
                     style: const TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
@@ -96,27 +147,17 @@ class _AddExpenseDialogState extends State<AddExpenseDialog> {
             const SizedBox(height: 24),
             
             // Form Fields
-            _buildTextField(
-              controller: _nameController,
-              label: 'Expense Name',
-              hintText: 'e.g., Internet Bill',
-              icon: Icons.receipt_long,
-            ),
-            const SizedBox(height: 16),
-            _buildTextField(
-              controller: _amountController,
-              label: 'Amount (\$)',
-              hintText: '0.00',
-              icon: Icons.attach_money,
-              keyboardType: TextInputType.number,
-            ),
-            const SizedBox(height: 16),
-            _buildTextField(
-              controller: _categoryController,
-              label: 'Category',
-              hintText: 'e.g., Bills, Maintenance',
-              icon: Icons.category,
-            ),
+            ...widget.config.fields.asMap().entries.map((entry) {
+              final index = entry.key;
+              final field = entry.value;
+              return Column(
+                children: [
+                  if (index > 0) const SizedBox(height: 16),
+                  _buildFieldWidget(field),
+                ],
+              );
+            }).toList(),
+            
             const SizedBox(height: 32),
             
             // Actions
@@ -147,9 +188,9 @@ class _AddExpenseDialogState extends State<AddExpenseDialog> {
                 const SizedBox(width: 12),
                 Expanded(
                   child: ElevatedButton(
-                    onPressed: _handleAdd,
+                    onPressed: _handleSubmit,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF10B981),
+                      backgroundColor: widget.config.accentColor,
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       shape: RoundedRectangleBorder(
@@ -157,9 +198,9 @@ class _AddExpenseDialogState extends State<AddExpenseDialog> {
                       ),
                       elevation: 0,
                     ),
-                    child: const Text(
-                      'Add Expense',
-                      style: TextStyle(
+                    child: Text(
+                      widget.config.actionButtonText,
+                      style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
                       ),
@@ -174,18 +215,51 @@ class _AddExpenseDialogState extends State<AddExpenseDialog> {
     );
   }
 
+  Widget _buildFieldWidget(DialogField field) {
+    // Handle special cases where fields need to be side by side
+    if (field.key == 'quantity' || field.key == 'minQuantity') {
+      final quantityField = widget.config.fields.firstWhere((f) => f.key == 'quantity');
+      final minQuantityField = widget.config.fields.firstWhere((f) => f.key == 'minQuantity');
+      
+      // Only render once for the quantity field, skip for minQuantity
+      if (field.key == 'minQuantity') {
+        return const SizedBox.shrink();
+      }
+      
+      return Row(
+        children: [
+          Expanded(
+            child: _buildTextField(
+              controller: _controllers[quantityField.key]!,
+              field: quantityField,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: _buildTextField(
+              controller: _controllers[minQuantityField.key]!,
+              field: minQuantityField,
+            ),
+          ),
+        ],
+      );
+    }
+    
+    return _buildTextField(
+      controller: _controllers[field.key]!,
+      field: field,
+    );
+  }
+
   Widget _buildTextField({
     required TextEditingController controller,
-    required String label,
-    required String hintText,
-    required IconData icon,
-    TextInputType? keyboardType,
+    required DialogField field,
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          label,
+          field.label,
           style: const TextStyle(
             fontSize: 14,
             fontWeight: FontWeight.w600,
@@ -203,15 +277,15 @@ class _AddExpenseDialogState extends State<AddExpenseDialog> {
           ),
           child: TextField(
             controller: controller,
-            keyboardType: keyboardType,
+            keyboardType: field.keyboardType,
             decoration: InputDecoration(
-              hintText: hintText,
+              hintText: field.hintText,
               hintStyle: TextStyle(
                 color: Colors.grey.shade500,
                 fontSize: 14,
               ),
               prefixIcon: Icon(
-                icon,
+                field.icon,
                 color: Colors.grey.shade500,
                 size: 20,
               ),

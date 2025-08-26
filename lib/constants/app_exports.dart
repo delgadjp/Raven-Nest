@@ -13,7 +13,6 @@ export '/widgets/recent_activity_card.dart'; //RECENT ACTIVITY CARD
 export '/widgets/activity_item.dart'; //ACTIVITY ITEM FOR RECENT ACTIVITY CARD
 
 //FROM EXPENSES
-export '/widgets/add_expense_dialog.dart'; //ADD VARIABLE EXPENSES
 export '/widgets/expense_item_card.dart'; //VARIABLE EXPENSES
 export '/widgets/expense_section_card.dart'; //VARIABLE EXPENSES CARD
 export '/widgets/gradient_total_card.dart'; //MONTHLY TOTAL CARD
@@ -24,6 +23,10 @@ export '/widgets/status_indicators.dart'; //STATUS INDICATORS = GOOD, LOW, CRITI
 export '/widgets/restock_alert.dart'; //RESTOCK ALERT = NEED TO RESTOCK CARD
 export '/widgets/inventory_item_card.dart'; //INVENTORY ITEM CARD
 export '/widgets/section_header_with_action.dart'; //TITLE WITH ADD ITEM BUTTON
+
+//GENERIC DIALOGS
+export '/widgets/generic_form_dialog.dart'; //GENERIC FORM DIALOG COMPONENT
+export '/widgets/dialog_configurations.dart'; //DIALOG CONFIGURATION HELPERS
 
 //FROM CALENDAR
 export '/widgets/calendar_legend.dart';
