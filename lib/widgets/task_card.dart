@@ -1,7 +1,4 @@
-import 'package:flutter/material.dart';
-import '../../widgets/status_chip.dart';
-import '../../widgets/info_row.dart';
-import '../../constants/housekeeping_helpers.dart';
+import '/constants/app_exports.dart';
 
 class TaskCard extends StatelessWidget {
   final Map<String, dynamic> task;
@@ -99,7 +96,12 @@ class TaskCard extends StatelessWidget {
                   childAspectRatio: 4,
                 ),
                 children: [
-                  InfoRow(label: 'Assigned to', value: task['assignee']),
+                  InfoRow(
+                    label: 'Assigned to', 
+                    value: task['assignee'],
+                    valueColor: const Color(0xFF059669),
+                    valueFontWeight: FontWeight.w600,
+                  ),
                   InfoRow(label: 'Due Time', value: dueTime),
                   if (task['checkoutTime'] != null)
                     InfoRow(
@@ -190,9 +192,23 @@ class TaskCard extends StatelessWidget {
                     'Room ${task['room']} - ${HousekeepingHelpers.formatTaskType(task['type'])}',
                     style: const TextStyle(fontWeight: FontWeight.w600),
                   ),
-                  Text(
-                    task['assignee'],
-                    style: const TextStyle(fontSize: 12, color: Colors.grey),
+                  Row(
+                    children: [
+                      const Icon(
+                        Icons.person,
+                        size: 12,
+                        color: Color(0xFF059669),
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        task['assignee'],
+                        style: const TextStyle(
+                          fontSize: 12, 
+                          color: Color(0xFF059669),
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),

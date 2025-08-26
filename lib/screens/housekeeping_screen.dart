@@ -16,9 +16,9 @@ class _HousekeepingScreenState extends State<HousekeepingScreen> {
   ];
 
   final List<Map<String, dynamic>> staff = [
-    {'id': 1,'name': 'Maria Santos','role': 'Head Housekeeper','phone': '(555) 123-4567','email': 'maria@email.com','activeTasks': 3,'completedToday': 2,'rating': 4.9,'status': 'available'},
-    {'id': 2,'name': 'John Smith','role': 'Maintenance','phone': '(555) 234-5678','email': 'john@email.com','activeTasks': 1,'completedToday': 1,'rating': 4.7,'status': 'busy'},
-    {'id': 3,'name': 'Lisa Chen','role': 'Housekeeper','phone': '(555) 345-6789','email': 'lisa@email.com','activeTasks': 2,'completedToday': 0,'rating': 4.8,'status': 'available'},
+    {'id': 1,'name': 'Maria Santos','role': 'Head Housekeeper','phone': '(555) 123-4567','email': 'maria@email.com','activeTasks': 3,'completedToday': 2,'status': 'available'},
+    {'id': 2,'name': 'John Smith','role': 'Maintenance','phone': '(555) 234-5678','email': 'john@email.com','activeTasks': 1,'completedToday': 1,'status': 'busy'},
+    {'id': 3,'name': 'Lisa Chen','role': 'Housekeeper','phone': '(555) 345-6789','email': 'lisa@email.com','activeTasks': 2,'completedToday': 0,'status': 'available'},
   ];
 
   List<Map<String, dynamic>> get todayTasks { 
@@ -40,8 +40,141 @@ class _HousekeepingScreenState extends State<HousekeepingScreen> {
   void updateTaskStatus(int id, String newStatus) {
     setState(() {
       final i = tasks.indexWhere((t) => t['id'] == id);
-      if (i != -1) tasks[i]['status'] = newStatus;
+      if (i != -1) {
+        final task = tasks[i];
+        final oldStatus = task['status'];
+        task['status'] = newStatus;
+        
+        // Update staff statistics when task status changes
+        _updateStaffStatistics(task['assignee'], oldStatus, newStatus);
+      }
     });
+  }
+
+  void _updateStaffStatistics(String assigneeName, String oldStatus, String newStatus) {
+    final staffIndex = staff.indexWhere((s) => s['name'] == assigneeName);
+    if (staffIndex == -1) return;
+    
+    // Update active tasks count
+    if (oldStatus == 'pending' && newStatus == 'in_progress') {
+      // Task started - no change in active count (still active)
+    } else if ((oldStatus == 'pending' || oldStatus == 'in_progress') && newStatus == 'completed') {
+      // Task completed - decrease active count, increase completed count
+      staff[staffIndex]['activeTasks'] = (staff[staffIndex]['activeTasks'] as int) - 1;
+      staff[staffIndex]['completedToday'] = (staff[staffIndex]['completedToday'] as int) + 1;
+    }
+    
+    // Update staff status based on active tasks
+    if (staff[staffIndex]['activeTasks'] == 0) {
+      staff[staffIndex]['status'] = 'available';
+    } else {
+      staff[staffIndex]['status'] = 'busy';
+    }
+  }
+
+  void addTask(String room, String type, String assignee, DateTime dueDate, String priority, String? checkoutTime, String? checkinTime, String? notes) {
+    setState(() {
+      final newId = tasks.isNotEmpty ? tasks.map((t) => t['id'] as int).reduce((a, b) => a > b ? a : b) + 1 : 1;
+      tasks.add({
+        'id': newId,
+        'room': room,
+        'type': type,
+        'assignee': assignee,
+        'dueDate': dueDate,
+        'status': 'pending',
+        'priority': priority,
+        'checkoutTime': checkoutTime,
+        'checkinTime': checkinTime,
+        'notes': notes,
+      });
+      
+      // Update staff active tasks count
+      final staffIndex = staff.indexWhere((s) => s['name'] == assignee);
+      if (staffIndex != -1) {
+        staff[staffIndex]['activeTasks'] = (staff[staffIndex]['activeTasks'] as int) + 1;
+        staff[staffIndex]['status'] = 'busy';
+      }
+    });
+  }
+
+  void assignTaskToStaff(int taskId, String staffName) {
+    setState(() {
+      final taskIndex = tasks.indexWhere((t) => t['id'] == taskId);
+      if (taskIndex != -1) {
+        final oldAssignee = tasks[taskIndex]['assignee'];
+        
+        // Update task assignment
+        tasks[taskIndex]['assignee'] = staffName;
+        tasks[taskIndex]['status'] = 'pending'; // Reset status when reassigning
+        
+        // Update old assignee statistics (decrease active tasks)
+        final oldStaffIndex = staff.indexWhere((s) => s['name'] == oldAssignee);
+        if (oldStaffIndex != -1) {
+          staff[oldStaffIndex]['activeTasks'] = (staff[oldStaffIndex]['activeTasks'] as int) - 1;
+          if (staff[oldStaffIndex]['activeTasks'] == 0) {
+            staff[oldStaffIndex]['status'] = 'available';
+          }
+        }
+        
+        // Update new assignee statistics (increase active tasks)
+        final newStaffIndex = staff.indexWhere((s) => s['name'] == staffName);
+        if (newStaffIndex != -1) {
+          staff[newStaffIndex]['activeTasks'] = (staff[newStaffIndex]['activeTasks'] as int) + 1;
+          staff[newStaffIndex]['status'] = 'busy';
+        }
+      }
+    });
+  }
+
+  void addStaff(String name, String role, String phone, String email) {
+    setState(() {
+      final newId = staff.isNotEmpty ? staff.map((s) => s['id'] as int).reduce((a, b) => a > b ? a : b) + 1 : 1;
+      staff.add({
+        'id': newId,
+        'name': name,
+        'role': role,
+        'phone': phone,
+        'email': email,
+        'activeTasks': 0,
+        'completedToday': 0,
+        'status': 'available',
+      });
+    });
+  }
+
+  void removeStaff(int staffId) {
+    setState(() {
+      final staffIndex = staff.indexWhere((s) => s['id'] == staffId);
+      if (staffIndex == -1) return;
+      
+      final staffMember = staff[staffIndex];
+      final staffName = staffMember['name'];
+      
+      // Reassign all tasks assigned to this staff member to 'Unassigned'
+      for (var task in tasks) {
+        if (task['assignee'] == staffName) {
+          task['assignee'] = 'Unassigned';
+          task['status'] = 'pending'; // Reset status for reassignment
+        }
+      }
+      
+      // Remove staff member from the list
+      staff.removeAt(staffIndex);
+    });
+  }
+
+  void viewStaffSchedule(Map<String, dynamic> staffMember) {
+    // Get all tasks assigned to this staff member
+    final staffTasks = tasks.where((task) => task['assignee'] == staffMember['name']).toList();
+    
+    // Show the new enhanced schedule dialog
+    showDialog(
+      context: context,
+      builder: (context) => StaffScheduleDialog(
+        staffMember: staffMember,
+        staffTasks: staffTasks,
+      ),
+    );
   }
 
   @override
@@ -92,7 +225,7 @@ class _HousekeepingScreenState extends State<HousekeepingScreen> {
                 ),
                 const SizedBox(height: 24),
                 TabNavigation(
-                  tabs: const ['Tasks', 'Schedule'],
+                  tabs: const ['Tasks & Schedule', 'Staff Management'],
                   currentTab: _currentTab,
                   onTabChanged: (index) => setState(() => _currentTab = index),
                 ),
@@ -102,10 +235,19 @@ class _HousekeepingScreenState extends State<HousekeepingScreen> {
                 tasks: tasks,
                 todayTasks: todayTasks,
                 upcomingTasks: upcomingTasks,
+                staff: staff,
                 updateTaskStatus: updateTaskStatus,
+                addTask: addTask,
               ) 
             else 
-              StaffTab(staff: staff),
+              StaffTab(
+                staff: staff,
+                tasks: tasks,
+                assignTaskToStaff: assignTaskToStaff,
+                addStaff: addStaff,
+                removeStaff: removeStaff,
+                viewStaffSchedule: viewStaffSchedule,
+              ),
           ])),
         ),
       ]),

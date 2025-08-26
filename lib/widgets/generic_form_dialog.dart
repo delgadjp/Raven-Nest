@@ -7,6 +7,7 @@ class DialogField {
   final IconData icon;
   final TextInputType? keyboardType;
   final bool isRequired;
+  final List<String>? dropdownItems; // Add dropdown items support
 
   const DialogField({
     required this.key,
@@ -15,6 +16,7 @@ class DialogField {
     required this.icon,
     this.keyboardType,
     this.isRequired = true,
+    this.dropdownItems,
   });
 }
 
@@ -50,13 +52,16 @@ class GenericFormDialog extends StatefulWidget {
 
 class _GenericFormDialogState extends State<GenericFormDialog> {
   final Map<String, TextEditingController> _controllers = {};
+  final Map<String, String> _dropdownValues = {}; // Add dropdown values storage
 
   @override
   void initState() {
     super.initState();
     // Initialize controllers for each field
     for (final field in widget.config.fields) {
-      _controllers[field.key] = TextEditingController();
+      if (field.dropdownItems == null) {
+        _controllers[field.key] = TextEditingController();
+      }
     }
   }
 
@@ -74,7 +79,16 @@ class _GenericFormDialogState extends State<GenericFormDialog> {
     
     // Validate required fields and collect values
     for (final field in widget.config.fields) {
-      final value = _controllers[field.key]?.text ?? '';
+      String value = '';
+      
+      if (field.dropdownItems != null) {
+        // Get dropdown value
+        value = _dropdownValues[field.key] ?? '';
+      } else {
+        // Get text field value
+        value = _controllers[field.key]?.text ?? '';
+      }
+      
       if (field.isRequired && value.isEmpty) {
         return; // Don't submit if required field is empty
       }
@@ -84,132 +98,148 @@ class _GenericFormDialogState extends State<GenericFormDialog> {
     // Submit the form
     widget.config.onSubmit(values);
     
-    // Clear controllers and close dialog
+    // Clear controllers and dropdown values
     for (final controller in _controllers.values) {
       controller.clear();
     }
+    _dropdownValues.clear();
     Navigator.of(context).pop();
   }
 
   @override
   Widget build(BuildContext context) {
+    final screenHeight = MediaQuery.of(context).size.height;
+    final maxDialogHeight = screenHeight * 0.8; // 80% of screen height
+    
     return Dialog(
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(20),
       ),
       elevation: 0,
       backgroundColor: Colors.transparent,
-      child: Container(
-        padding: const EdgeInsets.all(24),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(20),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.1),
-              blurRadius: 20,
-              offset: const Offset(0, 10),
-            ),
-          ],
+      child: ConstrainedBox(
+        constraints: BoxConstraints(
+          maxHeight: maxDialogHeight,
+          maxWidth: 400,
         ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Header
-            Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: widget.config.accentColor.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Icon(
-                    widget.config.headerIcon,
-                    color: widget.config.accentColor,
-                    size: 20,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    widget.config.title,
-                    style: const TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black87,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 24),
-            
-            // Form Fields
-            ...widget.config.fields.asMap().entries.map((entry) {
-              final index = entry.key;
-              final field = entry.value;
-              return Column(
+        child: Container(
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.1),
+                blurRadius: 20,
+                offset: const Offset(0, 10),
+              ),
+            ],
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Header
+              Row(
                 children: [
-                  if (index > 0) const SizedBox(height: 16),
-                  _buildFieldWidget(field),
-                ],
-              );
-            }).toList(),
-            
-            const SizedBox(height: 32),
-            
-            // Actions
-            Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton(
-                    onPressed: () => Navigator.of(context).pop(),
-                    style: OutlinedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      side: BorderSide(
-                        color: Colors.grey.withValues(alpha: 0.3),
-                      ),
-                      foregroundColor: Colors.grey.shade700,
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: widget.config.accentColor.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(8),
                     ),
-                    child: const Text(
-                      'Cancel',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                      ),
+                    child: Icon(
+                      widget.config.headerIcon,
+                      color: widget.config.accentColor,
+                      size: 20,
                     ),
                   ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: ElevatedButton(
-                    onPressed: _handleSubmit,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: widget.config.accentColor,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      elevation: 0,
-                    ),
+                  const SizedBox(width: 12),
+                  Expanded(
                     child: Text(
-                      widget.config.actionButtonText,
+                      widget.config.title,
                       style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black87,
                       ),
                     ),
                   ),
+                ],
+              ),
+              const SizedBox(height: 24),
+              
+              // Scrollable Form Fields
+              Flexible(
+                child: SingleChildScrollView(
+                  child: Column(
+                    children: widget.config.fields.asMap().entries.map((entry) {
+                      final index = entry.key;
+                      final field = entry.value;
+                      return Column(
+                        children: [
+                          if (index > 0) const SizedBox(height: 16),
+                          _buildFieldWidget(field),
+                        ],
+                      );
+                    }).toList(),
+                  ),
                 ),
-              ],
-            ),
-          ],
+              ),
+              
+              const SizedBox(height: 24),
+              
+              // Actions
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () => Navigator.of(context).pop(),
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        side: BorderSide(
+                          color: Colors.grey.withValues(alpha: 0.3),
+                        ),
+                        foregroundColor: Colors.grey.shade700,
+                      ),
+                      child: const Text(
+                        'Cancel',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: _handleSubmit,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: widget.config.accentColor,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        elevation: 0,
+                      ),
+                      child: Text(
+                        widget.config.actionButtonText,
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -245,9 +275,101 @@ class _GenericFormDialogState extends State<GenericFormDialog> {
       );
     }
     
-    return _buildTextField(
-      controller: _controllers[field.key]!,
-      field: field,
+    return _buildInputWidget(field);
+  }
+
+  Widget _buildInputWidget(DialogField field) {
+    if (field.dropdownItems != null) {
+      return _buildDropdownField(field);
+    } else {
+      return _buildTextField(
+        controller: _controllers[field.key]!,
+        field: field,
+      );
+    }
+  }
+
+  Widget _buildDropdownField(DialogField field) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          field.label,
+          style: const TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+            color: Colors.black87,
+          ),
+        ),
+        const SizedBox(height: 8),
+        Container(
+          decoration: BoxDecoration(
+            color: Colors.grey.shade50,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: Colors.grey.withValues(alpha: 0.2),
+            ),
+          ),
+          child: DropdownButtonFormField<String>(
+            value: _dropdownValues[field.key],
+            hint: Row(
+              children: [
+                Icon(
+                  field.icon,
+                  color: Colors.grey.shade500,
+                  size: 20,
+                ),
+                const SizedBox(width: 12),
+                Text(
+                  field.hintText,
+                  style: TextStyle(
+                    color: Colors.grey.shade500,
+                    fontSize: 14,
+                  ),
+                ),
+              ],
+            ),
+            decoration: const InputDecoration(
+              border: InputBorder.none,
+              contentPadding: EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 14,
+              ),
+            ),
+            items: field.dropdownItems!.map((String item) {
+              return DropdownMenuItem<String>(
+                value: item,
+                child: Row(
+                  children: [
+                    Icon(
+                      field.icon,
+                      color: Colors.grey.shade600,
+                      size: 18,
+                    ),
+                    const SizedBox(width: 12),
+                    Text(
+                      item,
+                      style: const TextStyle(
+                        fontSize: 14,
+                        color: Colors.black87,
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            }).toList(),
+            onChanged: (String? newValue) {
+              setState(() {
+                _dropdownValues[field.key] = newValue ?? '';
+              });
+            },
+            style: const TextStyle(
+              fontSize: 14,
+              color: Colors.black87,
+            ),
+          ),
+        ),
+      ],
     );
   }
 

@@ -2,10 +2,20 @@ import '/constants/app_exports.dart';
 
 class StaffTab extends StatelessWidget {
   final List<Map<String,dynamic>> staff;
+  final List<Map<String,dynamic>>? tasks;
+  final void Function(int, String)? assignTaskToStaff;
+  final void Function(String, String, String, String)? addStaff;
+  final void Function(int)? removeStaff;
+  final void Function(Map<String, dynamic>)? viewStaffSchedule;
   
   const StaffTab({
     super.key,
     required this.staff,
+    this.tasks,
+    this.assignTaskToStaff,
+    this.addStaff,
+    this.removeStaff,
+    this.viewStaffSchedule,
   });
 
   @override
@@ -20,14 +30,35 @@ class StaffTab extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'Staff Overview',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 4),
-            const Text(
-              'Manage your housekeeping team',
-              style: TextStyle(color: Colors.grey),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Staff Management',
+                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 8),
+                ElevatedButton.icon(
+                  onPressed: () => _showAddStaffDialog(context),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.black,
+                    foregroundColor: Colors.white,
+                    elevation: 0,
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                  ),
+                  icon: const Icon(Icons.person_add, size: 14),
+                  label: const Text('Add Staff', style: TextStyle(fontSize: 14)),
+                ),
+              ],
             ),
             const SizedBox(height: 12),
             LayoutBuilder(
@@ -46,13 +77,14 @@ class StaffTab extends StatelessWidget {
                     crossAxisCount: cols,
                     crossAxisSpacing: 16,
                     mainAxisSpacing: 16,
-                    childAspectRatio: 1.1,
+                    childAspectRatio: 1.45,
                   ),
                   itemCount: staff.length,
                   itemBuilder: (context, index) => StaffCard(
                     staff: staff[index],
                     onViewSchedule: () => _handleViewSchedule(staff[index]),
-                    onAssignTask: () => _handleAssignTask(staff[index]),
+                    onAssignTask: () => _handleAssignTask(staff[index], context),
+                    onRemoveStaff: () => _handleRemoveStaff(staff[index], context),
                   ),
                 );
               },
@@ -63,13 +95,157 @@ class StaffTab extends StatelessWidget {
     );
   }
 
-  void _handleViewSchedule(Map<String, dynamic> staffMember) {
-    // Handle view schedule action
-    print('View schedule for: ${staffMember['name']}');
+  void _showAddStaffDialog(BuildContext context) {
+    if (addStaff == null) return;
+    
+    showDialog(
+      context: context,
+      builder: (context) => GenericFormDialog(
+        config: DialogConfigurations.addStaff(
+          onAdd: addStaff!,
+        ),
+      ),
+    );
   }
 
-  void _handleAssignTask(Map<String, dynamic> staffMember) {
-    // Handle assign task action
-    print('Assign task to: ${staffMember['name']}');
+  void _handleViewSchedule(Map<String, dynamic> staffMember) {
+    if (viewStaffSchedule != null) {
+      viewStaffSchedule!(staffMember);
+    } else {
+      // Fallback behavior
+      print('View schedule for: ${staffMember['name']}');
+    }
+  }
+
+  void _handleRemoveStaff(Map<String, dynamic> staffMember, BuildContext context) {
+    if (removeStaff == null) return;
+    
+    // Show confirmation dialog
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Remove Staff Member'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Are you sure you want to remove ${staffMember['name']} from the staff?'),
+            const SizedBox(height: 8),
+            if (staffMember['activeTasks'] > 0)
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.orange.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.orange.withOpacity(0.3)),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.warning, color: Colors.orange, size: 20),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'This staff member has ${staffMember['activeTasks']} active task(s). These will be reassigned as "Unassigned".',
+                        style: const TextStyle(fontSize: 13),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              removeStaff!(staffMember['id']);
+              Navigator.of(context).pop();
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('${staffMember['name']} has been removed from staff'),
+                  backgroundColor: Colors.red,
+                ),
+              );
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Remove'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _handleAssignTask(Map<String, dynamic> staffMember, BuildContext context) {
+    // Show available unassigned tasks or tasks that can be reassigned
+    if (tasks == null || tasks!.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('No tasks available to assign')),
+      );
+      return;
+    }
+    
+    // Get pending tasks that can be assigned to this staff member
+    final availableTasks = tasks!.where((task) => 
+      task['status'] == 'pending' || task['assignee'] != staffMember['name']
+    ).toList();
+    
+    if (availableTasks.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('No available tasks to assign to this staff member')),
+      );
+      return;
+    }
+    
+    // Show task selection dialog
+    _showTaskAssignmentDialog(context, staffMember, availableTasks);
+  }
+
+  void _showTaskAssignmentDialog(BuildContext context, Map<String, dynamic> staffMember, List<Map<String, dynamic>> availableTasks) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Assign Task to ${staffMember['name']}'),
+        content: SizedBox(
+          width: double.maxFinite,
+          child: ListView.builder(
+            shrinkWrap: true,
+            itemCount: availableTasks.length,
+            itemBuilder: (context, index) {
+              final task = availableTasks[index];
+              return ListTile(
+                title: Text('Room ${task['room']} - ${task['type']}'),
+                subtitle: Text('Priority: ${task['priority']} | Due: ${task['dueDate']}'),
+                trailing: ElevatedButton(
+                  onPressed: () {
+                    if (assignTaskToStaff != null) {
+                      assignTaskToStaff!(task['id'], staffMember['name']);
+                    }
+                    Navigator.of(context).pop();
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Task assigned to ${staffMember['name']}'),
+                      ),
+                    );
+                  },
+                  child: const Text('Assign'),
+                ),
+              );
+            },
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Cancel'),
+          ),
+        ],
+      ),
+    );
   }
 }

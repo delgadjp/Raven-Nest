@@ -1,18 +1,17 @@
-import 'package:flutter/material.dart';
-import '../../widgets/status_chip.dart';
-import '../../widgets/info_row.dart';
-import '../../constants/housekeeping_helpers.dart';
+import '/constants/app_exports.dart';
 
 class StaffCard extends StatelessWidget {
   final Map<String, dynamic> staff;
   final VoidCallback? onViewSchedule;
   final VoidCallback? onAssignTask;
+  final VoidCallback? onRemoveStaff;
 
   const StaffCard({
     super.key,
     required this.staff,
     this.onViewSchedule,
     this.onAssignTask,
+    this.onRemoveStaff,
   });
 
   @override
@@ -25,7 +24,7 @@ class StaffCard extends StatelessWidget {
         side: const BorderSide(color: Color(0xFFE5E7EB)),
       ),
       child: Padding(
-        padding: const EdgeInsets.all(12),
+        padding: const EdgeInsets.all(8),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -63,7 +62,7 @@ class StaffCard extends StatelessWidget {
                 ),
               ],
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 6),
 
             // Contact Information
             const Text(
@@ -90,7 +89,7 @@ class StaffCard extends StatelessWidget {
               ),
               overflow: TextOverflow.ellipsis,
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 6),
 
             // Stats Row
             Row(
@@ -115,36 +114,6 @@ class StaffCard extends StatelessWidget {
             ),
             const SizedBox(height: 8),
 
-            // Rating
-            Row(
-              children: [
-                const Text(
-                  'Rating: ',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Color(0xFF6B7280),
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-                Text(
-                  '${staff['rating']}',
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: Color(0xFFEAB308),
-                  ),
-                ),
-                const Text(
-                  '/5.0',
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Color(0xFF6B7280),
-                  ),
-                ),
-              ],
-            ),
-            const Spacer(),
-
             // Action Buttons
             Row(
               children: [
@@ -162,7 +131,7 @@ class StaffCard extends StatelessWidget {
                     onPressed: onViewSchedule,
                     child: const Text(
                       'View Schedule',
-                      style: TextStyle(
+                      style: TextStyle( 
                         fontSize: 12,
                         fontWeight: FontWeight.bold,
                       ),
@@ -188,6 +157,24 @@ class StaffCard extends StatelessWidget {
                         fontSize: 12,
                         fontWeight: FontWeight.w500,
                       ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 6),
+                IconButton(
+                  onPressed: onRemoveStaff,
+                  icon: const Icon(Icons.delete_outline),
+                  color: Colors.red,
+                  iconSize: 20,
+                  padding: const EdgeInsets.all(6),
+                  constraints: const BoxConstraints(
+                    minWidth: 32,
+                    minHeight: 32,
+                  ),
+                  style: IconButton.styleFrom(
+                    backgroundColor: Colors.red.withOpacity(0.1),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(6),
                     ),
                   ),
                 ),

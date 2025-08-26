@@ -4,14 +4,18 @@ class TasksTab extends StatelessWidget {
   final List<Map<String,dynamic>> tasks;
   final List<Map<String,dynamic>> todayTasks;
   final List<Map<String,dynamic>> upcomingTasks;
+  final List<Map<String,dynamic>> staff;
   final void Function(int,String) updateTaskStatus;
+  final void Function(String, String, String, DateTime, String, String?, String?, String?) addTask;
   
   const TasksTab({
     super.key,
     required this.tasks,
     required this.todayTasks,
     required this.upcomingTasks,
+    required this.staff,
     required this.updateTaskStatus,
+    required this.addTask,
   });
 
   @override
@@ -55,7 +59,7 @@ class TasksTab extends StatelessWidget {
                   ],
                 ),
                 ElevatedButton.icon(
-                  onPressed: () {},
+                  onPressed: () => _showAddTaskDialog(context),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.black,
                     foregroundColor: Colors.white,
@@ -147,5 +151,17 @@ class TasksTab extends StatelessWidget {
   void _handleViewDetails(Map<String, dynamic> task) {
     // Handle view details action
     print('View details for task: ${task['id']}');
+  }
+
+  void _showAddTaskDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => GenericFormDialog(
+        config: DialogConfigurations.addTask(
+          staff: staff,
+          onAdd: addTask,
+        ),
+      ),
+    );
   }
 }

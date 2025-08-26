@@ -63,13 +63,15 @@ export '/widgets/status_chip.dart'; //REUSABLE STATUS CHIP
 export '/widgets/info_row.dart'; //REUSABLE INFO ROW
 export '/widgets/task_card.dart'; //REUSABLE TASK CARD
 export '/widgets/staff_card.dart'; //REUSABLE STAFF CARD
+export '/widgets/staff_schedule_dialog.dart'; //STAFF SCHEDULE DIALOG
+export '/widgets/task_badges.dart'; //TASK TYPE BADGES
 
 export '/screens/housekeeping/tasks_tab.dart';
 export '/screens/housekeeping/staff_tab.dart';
 
 //CONSTANTS
 export '/constants/app_constants.dart';
-
+export '/constants/schedule_utils.dart'; //SCHEDULE UTILITIES
 
 //MODELS
 export '/models/notification_model.dart';
