@@ -28,26 +28,19 @@ class AnalyticsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Column(
+    return GradientBackground(
+      colors: const [
+        Color(0xFFF8FAFC),
+        Color(0xFFE0E7FF),
+        Color(0xFFC7D2FE),
+      ],
+      child: Column(
         children: [
           const NavigationWidget(),
           Expanded(
-            child: Container(
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    Color(0xFFF8FAFC),
-                    Color(0xFFE0E7FF),
-                    Color(0xFFC7D2FE),
-                  ],
-                ),
-              ),
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     // Header Section
@@ -105,7 +98,6 @@ class AnalyticsScreen extends StatelessWidget {
                 ),
               ),
             ),
-          ),
         ],
       ),
     );

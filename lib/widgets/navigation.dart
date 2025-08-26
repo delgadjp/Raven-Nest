@@ -73,16 +73,16 @@ class NavigationWidget extends StatelessWidget {
     final bool isDesktop = width > 1024; // closer to React lg breakpoint
 
     return Container(
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.9),
-        border: Border(
-          bottom: BorderSide(color: Colors.grey.withValues(alpha: 0.3), width: 0.5),
-        ),
+      decoration: const BoxDecoration(
+        color: Colors.transparent,
       ),
       child: SafeArea(
         child: Container(
           height: 64,
           padding: const EdgeInsets.symmetric(horizontal: 16),
+          decoration: const BoxDecoration(
+            color: Colors.transparent,
+          ),
           child: Row(
             children: [
               // Logo and Title
@@ -137,7 +137,7 @@ class NavigationWidget extends StatelessWidget {
                 )
               else
                 IconButton(
-                  icon: const Icon(Icons.menu),
+                  icon: const Icon(Icons.menu, color: Colors.black87),
                   onPressed: () => _showSideMenu(context, currentLocation),
                 ),
             ],
@@ -157,18 +157,18 @@ class NavigationWidget extends StatelessWidget {
         icon: Icon(
           icon,
           size: 18,
-          color: isActive ? const Color(0xFF2563EB) : Colors.grey[600],
+          color: isActive ? Colors.white : Colors.white.withValues(alpha: 0.7),
         ),
         label: Text(
           title,
           style: TextStyle(
             fontSize: 14,
-            color: isActive ? const Color(0xFF2563EB) : Colors.grey[600],
+            color: isActive ? Colors.white : Colors.white.withValues(alpha: 0.7),
             fontWeight: isActive ? FontWeight.w600 : FontWeight.normal,
           ),
         ),
         style: TextButton.styleFrom(
-          backgroundColor: isActive ? const Color(0xFF2563EB).withValues(alpha: 0.1) : Colors.transparent,
+          backgroundColor: isActive ? Colors.white.withValues(alpha: 0.2) : Colors.transparent,
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(6),
@@ -291,7 +291,7 @@ class _SideMenuContent extends StatelessWidget {
                   style: OutlinedButton.styleFrom(
                     minimumSize: const Size.fromHeight(48),
                     padding: const EdgeInsets.symmetric(horizontal: 12),
-                    side: BorderSide(color: Colors.grey.withValues(alpha: 0.3)),
+                    side: BorderSide(color: const Color.fromARGB(255, 175, 175, 175).withValues(alpha: 0.3)),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                     backgroundColor:
                         isActive ? const Color(0xFF2563EB).withValues(alpha: 0.08) : null,

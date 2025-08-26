@@ -2,13 +2,13 @@ export 'package:flutter/material.dart';
 
 
 //GENERAL WIDGETS
+export '/widgets/gradient_background.dart'; //REUSABLE GRADIENT BACKGROUND
 export '/widgets/responsive_card_grid.dart'; //CONTAINER FOR SUMMARY CARD
 export '/widgets/summary_card.dart'; //SUMMARY CARDS
 export '/widgets/navigation.dart'; //NAVIGATION BAR
 export '/widgets/reusable_card.dart'; //USED FOR UPCOMING BOOKINGS COULD BE GENERIC (CALENDAR)
 
 //FROM DASHBOARD
-export '/widgets/quick_action_card.dart'; //QUICK ACTION CARD
 export '/widgets/recent_activity_card.dart'; //RECENT ACTIVITY CARD
 export '/widgets/activity_item.dart'; //ACTIVITY ITEM FOR RECENT ACTIVITY CARD
 

@@ -37,27 +37,20 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Column(
+    return GradientBackground(
+      colors: const [
+        Color(0xFFF8FAFC), // slate-50
+        Color(0xFFECFDF5), // emerald-50
+        Color(0xFFD1FAE5), // green-100/50
+      ],
+      child: Column(
         children: [
           const NavigationWidget(),
           Expanded(
-            child: Container(
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    Color(0xFFF8FAFC), // slate-50
-                    Color(0xFFECFDF5), // emerald-50
-                    Color(0xFFD1FAE5), // green-100/50
-                  ],
-                ),
-              ),
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(16),
-                child: Center(
-                  child: ConstrainedBox(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(16),
+              child: Center(
+                child: ConstrainedBox(
                     constraints: const BoxConstraints(maxWidth: 1200),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -127,7 +120,6 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
                 ),
               ),
             ),
-          ),
         ],
       ),
     );

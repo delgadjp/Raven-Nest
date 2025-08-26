@@ -136,26 +136,19 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              Color(0xFFF8FAFC), // slate-50
-              Color(0xFFFEF2F2), // red-50
-              Color(0xFFFDF2F8), // pink-50
-            ],
-          ),
-        ),
-        child: Column(
-          children: [
-            const NavigationWidget(),
-            Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(16),
-                child: Column(
+    return GradientBackground(
+      colors: const [
+        Color(0xFFF8FAFC), // slate-50
+        Color(0xFFFEF2F2), // red-50
+        Color(0xFFFDF2F8), // pink-50
+      ],
+      child: Column(
+        children: [
+          const NavigationWidget(),
+          Expanded(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(16),
+              child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     // Summary Cards
@@ -235,8 +228,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                 ),
               ),
             ),
-          ],
-        ),
+        ],
       ),
     );
   }

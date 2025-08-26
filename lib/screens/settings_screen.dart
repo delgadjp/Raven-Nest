@@ -26,26 +26,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              Color(0xFFF8FAFC), // slate-50
-              Color(0xFFF9FAFB), // gray-50
-              Color(0xFFFAFAFA), // zinc-50
-            ],
-          ),
-        ),
-        child: Column(
-          children: [
-            const NavigationWidget(),
-            Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
+    return GradientBackground(
+      colors: const [
+        Color(0xFFF8FAFC), // slate-50
+        Color(0xFFF9FAFB), // gray-50
+        Color(0xFFFAFAFA), // zinc-50
+      ],
+      child: Column(
+        children: [
+          const NavigationWidget(),
+          Expanded(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     // Notification Preferences
@@ -66,8 +59,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ),
               ),
             ),
-          ],
-        ),
+        ],
       ),
     );
   }

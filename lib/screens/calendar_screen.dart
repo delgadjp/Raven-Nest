@@ -127,26 +127,14 @@ class _CalendarScreenState extends State<CalendarScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Column(
+    return GradientBackground(
+      child: Column(
         children: [
           const NavigationWidget(),
           Expanded(
-            child: Container(
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    Color(0xFFF8FAFC),
-                    Color(0xFFDDEAFF),
-                    Color(0xFFE0E7FF),
-                  ],
-                ),
-              ),
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(16),
-                child: Column(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(16),
+              child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     // Summary Cards using ResponsiveCardGrid
@@ -218,7 +206,6 @@ class _CalendarScreenState extends State<CalendarScreen> {
                 ),
               ),
             ),
-          ),
         ],
       ),
     );

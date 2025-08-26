@@ -5,159 +5,89 @@ class DashboardScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Column(
+    return GradientBackground(
+      child: Column(
         children: [
           const NavigationWidget(),
           Expanded(
-            child: Container(
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    Color(0xFFF8FAFC),
-                    Color(0xFFDDEAFF),
-                    Color(0xFFE0E7FF),
-                  ],
-                ),
-              ),
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(16),
-                child: Center(
-                  child: ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 1200),
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(16),
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 1200),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                    // Stats Cards
-                    ResponsiveCardGrid(
-                      children: [
-                        SummaryCard(
-                          title: 'Monthly Expenses',
-                          value: '\$2,450',
-                          subtitle: 'Fixed + Variable costs',
-                          icon: Icons.attach_money,
-                          iconColor: const Color(0xFF16A34A),
-                        ),
-                        SummaryCard(
-                          title: 'Active Bookings',
-                          value: '18',
-                          subtitle: 'This month',
-                          icon: Icons.calendar_today,
-                          iconColor: const Color(0xFF2563EB),
-                        ),
-                        SummaryCard(
-                          title: 'Inventory Items',
-                          value: '45',
-                          subtitle: 'Supplies & washables',
-                          icon: Icons.inventory,
-                          iconColor: const Color(0xFF7C3AED),
-                        ),
-                        SummaryCard(
-                          title: 'Pending Tasks',
-                          value: '3',
-                          subtitle: 'Housekeeping items',
-                          icon: Icons.check_circle,
-                          iconColor: const Color(0xFFEA580C),
-                        ),
-                      ],
-                    ),  
-                    const SizedBox(height: 32),
-                    // Quick Actions
-                    const Text(
-                      'Quick Actions',
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black87,
-                      ),
-                    ),
-                    const SizedBox(height: 0),
-                    LayoutBuilder(
-                      builder: (context, constraints) {
-                        int crossAxisCount = 1;
-                        if (constraints.maxWidth > 1024) {
-                          crossAxisCount = 4;
-                        } else if (constraints.maxWidth > 768) {
-                          crossAxisCount = 2;
-                        }
-                        
-                        return GridView.count(
-                          shrinkWrap: true,
-                          physics: const NeverScrollableScrollPhysics(),
-                          crossAxisCount: crossAxisCount,
-                          crossAxisSpacing: 16,
-                          mainAxisSpacing: 16,
-                          childAspectRatio: 4,
+                        // Stats Cards
+                        ResponsiveCardGrid(
                           children: [
-                            QuickActionCard(
-                              title: 'View Analytics',
-                              icon: Icons.bar_chart,
-                              gradient: const LinearGradient(
-                                colors: [Color(0xFF3B82F6), Color(0xFF7C3AED)],
-                              ),
-                              route: '/analytics',
+                            SummaryCard(
+                              title: 'Monthly Expenses',
+                              value: '\$2,450',
+                              subtitle: 'Fixed + Variable costs',
+                              icon: Icons.attach_money,
+                              iconColor: const Color(0xFF16A34A),
                             ),
-                            QuickActionCard(
-                              title: 'Housekeeping',
-                              icon: Icons.people_alt_rounded,
-                              gradient: const LinearGradient(
-                                colors: [Color(0xFF10B981), Color(0xFF0D9488)],
-                              ),
-                              route: '/housekeeping',
+                            SummaryCard(
+                              title: 'Active Bookings',
+                              value: '18',
+                              subtitle: 'This month',
+                              icon: Icons.calendar_today,
+                              iconColor: const Color(0xFF2563EB),
                             ),
-                            
-                            // QuickActionCard(
-                            //   title: 'Guest Logs',
-                            //   icon: Icons.description,
-                            //   gradient: const LinearGradient(
-                            //     colors: [Color(0xFF6366F1), Color(0xFF3B82F6)],
-                            //   ),
-                            //   route: '/guest-logs',
-                            // ),
+                            SummaryCard(
+                              title: 'Inventory Items',
+                              value: '45',
+                              subtitle: 'Supplies & washables',
+                              icon: Icons.inventory,
+                              iconColor: const Color(0xFF7C3AED),
+                            ),
+                            SummaryCard(
+                              title: 'Pending Tasks',
+                              value: '3',
+                              subtitle: 'Housekeeping items',
+                              icon: Icons.check_circle,
+                              iconColor: const Color(0xFFEA580C),
+                            ),
                           ],
-                        );
-                      },
-                    ),
-                    const SizedBox(height: 24),
-                    // Recent Activity
-                    RecentActivityCard(
-                      activities: const [
-                        ActivityData(
-                          dotColor: Color(0xFF3B82F6),
-                          backgroundColor: Color(0xFFEFF6FF),
-                          borderColor: Color(0xFFBFDBFE),
-                          title: 'New booking confirmed',
-                          subtitle: 'Room 201 • Check-in: Tomorrow',
-                          timeAgo: '2h ago',
-                        ),
-                        ActivityData(
-                          dotColor: Color(0xFF10B981),
-                          backgroundColor: Color(0xFFECFDF5),
-                          borderColor: Color(0xFFA7F3D0),
-                          title: 'Cleaning completed',
-                          subtitle: 'Room 305 • Ready for next guest',
-                          timeAgo: '4h ago',
-                        ),
-                        ActivityData(
-                          dotColor: Color(0xFFF59E0B),
-                          backgroundColor: Color(0xFFFFF7ED),
-                          borderColor: Color(0xFFFCD34D),
-                          title: 'Low inventory alert',
-                          subtitle: 'Towels need restocking',
-                          timeAgo: '6h ago',
+                        ),  
+                        const SizedBox(height: 32),
+                        // Recent Activity
+                        RecentActivityCard(
+                          activities: const [
+                            ActivityData(
+                              dotColor: Color(0xFF3B82F6),
+                              backgroundColor: Color(0xFFEFF6FF),
+                              borderColor: Color(0xFFBFDBFE),
+                              title: 'New booking confirmed',
+                              subtitle: 'Room 201 • Check-in: Tomorrow',
+                              timeAgo: '2h ago',
+                            ),
+                            ActivityData(
+                              dotColor: Color(0xFF10B981),
+                              backgroundColor: Color(0xFFECFDF5),
+                              borderColor: Color(0xFFA7F3D0),
+                              title: 'Cleaning completed',
+                              subtitle: 'Room 305 • Ready for next guest',
+                              timeAgo: '4h ago',
+                            ),
+                            ActivityData(
+                              dotColor: Color(0xFFF59E0B),
+                              backgroundColor: Color(0xFFFFF7ED),
+                              borderColor: Color(0xFFFCD34D),
+                              title: 'Low inventory alert',
+                              subtitle: 'Towels need restocking',
+                              timeAgo: '6h ago',
+                            ),
+                          ],
+                          viewAllRoute: '/notifications',
                         ),
                       ],
-                      viewAllRoute: '/notifications',
                     ),
-                  ],
-                ),
-              ),
+                  ),
                 ),
               ),
             ),
-          ),
         ],
       ),
     );

@@ -234,28 +234,21 @@ class _InventoryScreenState extends State<InventoryScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Column(
+    return GradientBackground(
+      colors: const [
+        Color(0xFFF8FAFC),
+        Color(0xFFF5F3FF),
+        Color(0xFFE0E7FF),
+      ],
+      child: Column(
         children: [
           const NavigationWidget(),
           Expanded(
-            child: Container(
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    Color(0xFFF8FAFC),
-                    Color(0xFFF5F3FF),
-                    Color(0xFFE0E7FF),
-                  ],
-                ),
-              ),
-              child: DefaultTabController(
-                length: 3,
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
+            child: DefaultTabController(
+              length: 3,
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(16),
+                child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       // Summary Cards using ResponsiveCardGrid
@@ -308,7 +301,6 @@ class _InventoryScreenState extends State<InventoryScreen> {
                 ),
               ),
             ),
-          ),
         ],
       ),
     );

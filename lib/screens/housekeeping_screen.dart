@@ -46,14 +46,17 @@ class _HousekeepingScreenState extends State<HousekeepingScreen> {
 
   @override
   Widget build(BuildContext context){
-    return Scaffold(
-      body: Column(children:[
+    return GradientBackground(
+      colors: const [
+        Color(0xFFF8FAFC),
+        Color(0xFFE0F2F1),
+        Color(0xFFB2DFDB),
+      ],
+      child: Column(children:[
         const NavigationWidget(),
-        Expanded(child: Container(
-          decoration: const BoxDecoration(gradient: LinearGradient(begin:Alignment.topLeft,end:Alignment.bottomRight,colors:[Color(0xFFF8FAFC),Color(0xFFE0F2F1),Color(0xFFB2DFDB)])),
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(16),
-            child: Column(
+        Expanded(child: SingleChildScrollView(
+          padding: const EdgeInsets.all(16),
+          child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 ResponsiveCardGrid(
@@ -104,7 +107,7 @@ class _HousekeepingScreenState extends State<HousekeepingScreen> {
             else 
               StaffTab(staff: staff),
           ])),
-        )),
+        ),
       ]),
     );
   }
