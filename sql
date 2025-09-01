@@ -6,7 +6,7 @@ CREATE TABLE public.bookings (
     guest_name    text,
     room_number   text,               -- optional
     check_in      date,
-    check_out    date,
+    check_out     date,
     status        text,               -- confirmed, cancelled, completed
     total_amount  numeric,
     created_at    timestamptz NOT NULL DEFAULT now()
@@ -79,15 +79,16 @@ CREATE TABLE public.housekeeping_staff (
 ALTER TABLE public.housekeeping_staff ENABLE ROW LEVEL SECURITY;
 
 CREATE TABLE public.housekeeping_tasks (
-    id            uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-    room_number   text,
-    task_type     text,                -- checkout cleaning, etc.
-    assigned_staff uuid NOT NULL,
-    due_date      date,
-    due_time      time,
-    priority      text,                -- low, medium, high
-    status        text,                -- pending, upcoming, completed
-    created_at    timestamptz NOT NULL DEFAULT now(),
+    id              uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+    room_number     text,
+    task_type       text,                -- checkout cleaning, etc.
+    assigned_staff  uuid NOT NULL,
+    due_date        date,
+    due_time        time,
+    priority        text,                -- low, medium, high
+    priority_weight integer DEFAULT 1 CHECK (priority_weight BETWEEN 1 AND 5), -- Added for Option 2
+    status          text,                -- pending, upcoming, completed
+    created_at      timestamptz NOT NULL DEFAULT now(),
     CONSTRAINT fk_task_staff
         FOREIGN KEY (assigned_staff)
         REFERENCES public.housekeeping_staff (id)
@@ -95,6 +96,7 @@ CREATE TABLE public.housekeeping_tasks (
 );
 ALTER TABLE public.housekeeping_tasks ENABLE ROW LEVEL SECURITY;
 CREATE INDEX idx_housekeeping_tasks_assigned_staff ON public.housekeeping_tasks (assigned_staff);
+CREATE INDEX idx_housekeeping_tasks_priority_weight ON public.housekeeping_tasks (priority_weight); -- Added index for sorting by priority
 
 CREATE TABLE public.notifications (
     id               uuid PRIMARY KEY DEFAULT gen_random_uuid(),
