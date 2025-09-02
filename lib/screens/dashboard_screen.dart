@@ -1,4 +1,5 @@
 import '../constants/app_exports.dart';
+import 'package:go_router/go_router.dart';
 
 class DashboardScreen extends StatelessWidget {
   const DashboardScreen({super.key});
@@ -51,6 +52,7 @@ class DashboardScreen extends StatelessWidget {
                                 subtitle: 'Fixed + Variable costs',
                                 icon: Icons.attach_money,
                                 iconColor: const Color(0xFF16A34A),
+                                onTap: () => context.go('/expenses'),
                               ),
                             ),
                             const SizedBox(width: 16),
@@ -61,6 +63,7 @@ class DashboardScreen extends StatelessWidget {
                                 subtitle: 'This month',
                                 icon: Icons.calendar_today,
                                 iconColor: const Color(0xFF2563EB),
+                                onTap: () => context.go('/calendar'),
                               ),
                             ),
                           ],
@@ -75,6 +78,7 @@ class DashboardScreen extends StatelessWidget {
                                 subtitle: 'Supplies & washables',
                                 icon: Icons.inventory,
                                 iconColor: const Color(0xFF7C3AED),
+                                onTap: () => context.go('/inventory'),
                               ),
                             ),
                             const SizedBox(width: 16),
@@ -85,6 +89,7 @@ class DashboardScreen extends StatelessWidget {
                                 subtitle: 'Housekeeping items',
                                 icon: Icons.check_circle,
                                 iconColor: const Color(0xFFEA580C),
+                                onTap: () => context.go('/housekeeping'),
                               ),
                             ),
                           ],
@@ -101,40 +106,18 @@ class DashboardScreen extends StatelessWidget {
                                 subtitle: '+12% from last year',
                                 icon: Icons.attach_money,
                                 iconColor: const Color(0xFF10B981),
+                                onTap: () => context.go('/'), // Navigate to dashboard (analytics view)
                               ),
                             ),
                             const SizedBox(width: 16),
                             Expanded(
                               child: SummaryCard(
-                                title: 'Avg Occupancy',
-                                value: '78%',
-                                subtitle: '+5% from last month',
-                                icon: Icons.people,
-                                iconColor: const Color(0xFF3B82F6),
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 16),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: SummaryCard(
-                                title: 'Total Bookings',
-                                value: '168',
-                                subtitle: '+8% from last year',
-                                icon: Icons.calendar_today,
-                                iconColor: const Color(0xFF7C3AED),
-                              ),
-                            ),
-                            const SizedBox(width: 16),
-                            Expanded(
-                              child: SummaryCard(
-                                title: 'Avg Daily Rate',
-                                value: '\$156',
-                                subtitle: '-3% from last month',
-                                icon: Icons.trending_down,
-                                iconColor: const Color(0xFFDC2626),
+                                title: 'Unread Notifications',
+                                value: '7',
+                                subtitle: 'Require attention',
+                                icon: Icons.notifications,
+                                iconColor: const Color(0xFFEF4444),
+                                onTap: () => context.go('/notifications'),
                               ),
                             ),
                           ],

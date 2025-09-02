@@ -81,7 +81,6 @@ class NavigationWidget extends StatelessWidget {
             children: [
               // Logo and Title
               GestureDetector(
-                onTap: () => context.go('/'),
                 child: Row(
                   children: [
                     Container(
