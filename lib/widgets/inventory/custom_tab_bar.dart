@@ -30,6 +30,7 @@ class CustomTabBar extends StatelessWidget {
       child: TabBar(
         controller: controller,
         isScrollable: tabs.length > 3,
+        tabAlignment: tabs.length > 3 ? TabAlignment.start : TabAlignment.fill,
         dividerColor: Colors.transparent,
         labelColor: selectedColor ?? const Color(0xFF0F172A),
         unselectedLabelColor: unselectedColor ?? const Color(0xFF64748B),
@@ -54,7 +55,9 @@ class CustomTabBar extends StatelessWidget {
         ),
         indicatorSize: TabBarIndicatorSize.tab,
         indicatorPadding: EdgeInsets.zero,
-        labelPadding: const EdgeInsets.symmetric(horizontal: 8),
+        labelPadding: tabs.length > 3 
+          ? const EdgeInsets.symmetric(horizontal: 16) 
+          : const EdgeInsets.symmetric(horizontal: 8),
         tabs: tabs.map((tab) => Tab(
           child: Text(
             tab,
