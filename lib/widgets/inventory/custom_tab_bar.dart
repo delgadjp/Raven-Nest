@@ -29,7 +29,7 @@ class CustomTabBar extends StatelessWidget {
       ),
       child: TabBar(
         controller: controller,
-        isScrollable: false,
+        isScrollable: tabs.length > 3,
         dividerColor: Colors.transparent,
         labelColor: selectedColor ?? const Color(0xFF0F172A),
         unselectedLabelColor: unselectedColor ?? const Color(0xFF64748B),

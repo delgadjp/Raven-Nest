@@ -92,7 +92,7 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
                                     iconColor: const Color(0xFFEA580C),
                                   ),
                                   SummaryCard(
-                                    title: 'Total Expenses',
+                                    title: 'Monthly Expenses',
                                     value: "\$${grandTotal.toInt()}",
                                     subtitle: 'Combined total',
                                     icon: Icons.attach_money,
@@ -130,9 +130,6 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
                                   );
                                 },
                               ),
-                              const SizedBox(height: 24),
-
-                              _grandTotalCard(),
                             ],
                           ),
                         ),
@@ -230,13 +227,5 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
       // Handle error - you might want to show a snackbar
       print('Error deleting expense: $e');
     }
-  }
-
-  Widget _grandTotalCard() {
-    return GradientTotalCard(
-      title: 'Monthly Total',
-      subtitle: 'Combined fixed and variable expenses',
-      amount: "\$${grandTotal.toInt()}",
-    );
   }
 }

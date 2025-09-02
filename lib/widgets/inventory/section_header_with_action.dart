@@ -7,6 +7,7 @@ class SectionHeaderWithAction extends StatelessWidget {
   final IconData actionIcon;
   final Color actionBackgroundColor;
   final Color actionTextColor;
+  final VoidCallback? onDelete;
 
   const SectionHeaderWithAction({
     super.key,
@@ -16,6 +17,7 @@ class SectionHeaderWithAction extends StatelessWidget {
     this.actionIcon = Icons.add,
     this.actionBackgroundColor = Colors.black,
     this.actionTextColor = Colors.white,
+    this.onDelete,
   });
 
   @override
@@ -26,12 +28,26 @@ class SectionHeaderWithAction extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Expanded(
-            child: Text(
-              title,
-              style: const TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
-              ),
+            child: Row(
+              children: [
+                Text(
+                  title,
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                if (onDelete != null) ...[
+                  const SizedBox(width: 8),
+                  IconButton(
+                    onPressed: onDelete,
+                    icon: const Icon(Icons.delete, color: Colors.red, size: 20),
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
+                    tooltip: 'Delete Category',
+                  ),
+                ],
+              ],
             ),
           ),
           const SizedBox(width: 16),

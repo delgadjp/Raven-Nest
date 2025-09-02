@@ -7,7 +7,6 @@ export '/widgets/general_widgets/responsive_card_grid.dart'; //CONTAINER FOR SUM
 export '/widgets/general_widgets/summary_card.dart'; //SUMMARY CARDS
 export '/widgets/general_widgets/navigation.dart'; //NAVIGATION BAR
 export '/widgets/general_widgets/reusable_card.dart'; //USED FOR UPCOMING BOOKINGS COULD BE GENERIC (CALENDAR)
-export '/widgets/general_widgets/gradient_total_card.dart'; //MONTHLY TOTAL CARD
 
 //FROM DASHBOARD
 export '/widgets/dashboard/recent_activity_card.dart'; //RECENT ACTIVITY CARD

@@ -393,7 +393,12 @@ class _InventoryScreenState extends State<InventoryScreen> {
                   categories[categoryIndex] = categories[categoryIndex].copyWith(items: updatedItems);
                 }
               });
-            }
+            },
+            () {
+              setState(() {
+                categories.removeWhere((cat) => cat.id == category.id);
+              });
+            },
           ),
         ).toList(),
       ),
@@ -405,6 +410,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
     String categoryId,
     List<InventoryItem> items,
     void Function(int id) onDelete,
+    VoidCallback? onDeleteCategory,
   ) {
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -416,6 +422,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
               SectionHeaderWithAction(
                 title: title,
                 onActionPressed: () => _showAddItemDialog(categoryId),
+                onDelete: onDeleteCategory,
               ),
               const SizedBox(height: 24),
 
