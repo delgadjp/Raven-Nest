@@ -1,4 +1,4 @@
-import '../constants/app_exports.dart';
+import '../../constants/app_exports.dart';
 
 class SettingsInputField extends StatelessWidget {
   final String label;

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'reusable_card.dart';
+import '../general_widgets/reusable_card.dart';
 
 class ChartContainer extends StatelessWidget {
   final String title;

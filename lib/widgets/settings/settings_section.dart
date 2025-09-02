@@ -1,4 +1,4 @@
-import '../constants/app_exports.dart';
+import '../../constants/app_exports.dart';
 
 /// A wrapper widget that provides consistent styling for settings sections
 /// with different types of content (switches, inputs, platforms, etc.)

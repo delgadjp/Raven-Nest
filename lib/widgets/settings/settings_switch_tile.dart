@@ -1,4 +1,4 @@
-import '../constants/app_exports.dart';
+import '../../constants/app_exports.dart';
 
 class SettingsSwitchTile extends StatelessWidget {
   final String title;

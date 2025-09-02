@@ -1,4 +1,4 @@
-import '../constants/app_exports.dart';
+import '../../constants/app_exports.dart';
 import 'package:intl/intl.dart';
 
 class BookingCard extends StatelessWidget {

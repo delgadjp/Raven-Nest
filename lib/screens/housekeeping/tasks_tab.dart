@@ -1,4 +1,4 @@
-import '/constants/app_exports.dart';
+import '../../constants/app_exports.dart';
 
 class TasksTab extends StatelessWidget {
   final List<Map<String,dynamic>> tasks;

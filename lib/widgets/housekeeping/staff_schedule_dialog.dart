@@ -1,4 +1,4 @@
-import '/constants/app_exports.dart';
+import '../../constants/app_exports.dart';
 
 class StaffScheduleDialog extends StatelessWidget {
   final Map<String, dynamic> staffMember;

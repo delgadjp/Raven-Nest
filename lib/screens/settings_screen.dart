@@ -1,4 +1,4 @@
-import '/constants/app_exports.dart';
+import '../constants/app_exports.dart';
 
 /// Settings screen with notification preferences, platform integrations, app preferences, and data management.
 class SettingsScreen extends StatefulWidget {
