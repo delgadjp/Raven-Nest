@@ -253,6 +253,238 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+CREATE OR REPLACE FUNCTION public.update_booking_revenue()
+RETURNS TRIGGER AS $$
+BEGIN
+    IF NEW.status = 'cancelled' THEN
+        DELETE FROM public.revenue
+        WHERE booking_id = NEW.id
+          AND expense_id IS NULL;
+    ELSE
+        UPDATE public.revenue
+        SET income = NEW.total_amount,
+            month = EXTRACT(MONTH FROM NEW.created_at)::int,
+            year = EXTRACT(YEAR FROM NEW.created_at)::int
+        WHERE booking_id = NEW.id
+          AND expense_id IS NULL;
+        -- If no row exists (e.g., revenue was never created), insert it
+        IF NOT FOUND THEN
+            INSERT INTO public.revenue (booking_id, income, month, year)
+            VALUES (NEW.id, NEW.total_amount,
+                EXTRACT(MONTH FROM NEW.created_at)::int,
+                EXTRACT(YEAR FROM NEW.created_at)::int);
+        END IF;
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Function that syncs revenue on booking UPDATE/DELETE
+CREATE OR REPLACE FUNCTION public.sync_booking_revenue()
+RETURNS TRIGGER AS $$
+BEGIN
+    ----------------------------------------------------------------
+    -- 1️⃣  UPDATE case (status not cancelled)
+    ----------------------------------------------------------------
+    IF TG_OP = 'UPDATE' THEN
+        IF NEW.status = 'cancelled' THEN
+            -- Cancelled → remove the revenue entry (only the booking‑only row)
+            DELETE FROM public.revenue
+            WHERE booking_id = NEW.id
+              AND expense_id IS NULL;
+        ELSE
+            -- Amount or date changed → upsert the revenue row
+            UPDATE public.revenue
+            SET income = NEW.total_amount,
+                month  = EXTRACT(MONTH FROM NEW.created_at)::int,
+                year   = EXTRACT(YEAR  FROM NEW.created_at)::int
+            WHERE booking_id = NEW.id
+              AND expense_id IS NULL;
+
+            IF NOT FOUND THEN
+                INSERT INTO public.revenue (booking_id, income, month, year)
+                VALUES (NEW.id,
+                        NEW.total_amount,
+                        EXTRACT(MONTH FROM NEW.created_at)::int,
+                        EXTRACT(YEAR  FROM NEW.created_at)::int);
+            END IF;
+        END IF;
+
+    ----------------------------------------------------------------
+    -- 2️⃣  DELETE case (booking removed)
+    ----------------------------------------------------------------
+    ELSIF TG_OP = 'DELETE' THEN
+        DELETE FROM public.revenue
+        WHERE booking_id = OLD.id
+          AND expense_id IS NULL;
+    END IF;
+
+    RETURN CASE WHEN TG_OP = 'DELETE' THEN OLD ELSE NEW END;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Function that syncs revenue on expense UPDATE/DELETE
+CREATE OR REPLACE FUNCTION public.sync_expense_revenue()
+RETURNS TRIGGER AS $$
+BEGIN
+    ----------------------------------------------------------------
+    -- 1️⃣  UPDATE case
+    ----------------------------------------------------------------
+    IF TG_OP = 'UPDATE' THEN
+        UPDATE public.revenue
+        SET booking_id = NEW.booking_id,
+            expense    = NEW.amount,
+            month      = EXTRACT(MONTH FROM NEW.date)::int,
+            year       = EXTRACT(YEAR  FROM NEW.date)::int
+        WHERE expense_id = NEW.id;
+
+        -- If the row does not exist (e.g., expense was added before the trigger existed)
+        IF NOT FOUND THEN
+            INSERT INTO public.revenue (booking_id, expense_id, expense, month, year)
+            VALUES (NEW.booking_id,
+                    NEW.id,
+                    NEW.amount,
+                    EXTRACT(MONTH FROM NEW.date)::int,
+                    EXTRACT(YEAR  FROM NEW.date)::int);
+        END IF;
+
+    ----------------------------------------------------------------
+    -- 2️⃣  DELETE case
+    ----------------------------------------------------------------
+    ELSIF TG_OP = 'DELETE' THEN
+        DELETE FROM public.revenue
+        WHERE expense_id = OLD.id;
+    END IF;
+
+    RETURN CASE WHEN TG_OP = 'DELETE' THEN OLD ELSE NEW END;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Auto-create notifications for overdue tasks
+CREATE OR REPLACE FUNCTION notify_overdue_tasks()
+RETURNS TRIGGER AS $$
+BEGIN
+    IF NEW.due_date < CURRENT_DATE OR 
+       (NEW.due_date = CURRENT_DATE AND NEW.due_time < CURRENT_TIME) THEN
+        INSERT INTO public.notifications (
+            type, title, message, priority, related_task
+        ) VALUES (
+            'housekeeping',
+            'Overdue Task',
+            format('Task "%s" in room %s is overdue', NEW.task_type, NEW.room_number),
+            'high',
+            NEW.id
+        );
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+-- 1) New booking insert notification
+CREATE OR REPLACE FUNCTION public.notify_booking_insert()
+RETURNS TRIGGER AS $$
+BEGIN
+  INSERT INTO public.notifications (
+    type, title, message, priority, related_booking, created_at
+  ) VALUES (
+    'booking',
+    'New Booking Confirmed',
+    format(
+      'Booking from %s to %s (amount: %s)',
+      COALESCE(TO_CHAR(NEW.check_in, 'YYYY-MM-DD'),'N/A'),
+      COALESCE(TO_CHAR(NEW.check_out,'YYYY-MM-DD'),'N/A'),
+      COALESCE(NEW.total_amount::text,'0')
+    ),
+    'medium',
+    NEW.id,
+    now()
+  );
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trg_notify_booking_insert
+AFTER INSERT ON public.bookings
+FOR EACH ROW
+EXECUTE FUNCTION public.notify_booking_insert();
+
+-- 2) Booking update notifications (status changes, date changes)
+CREATE OR REPLACE FUNCTION public.notify_booking_update()
+RETURNS TRIGGER AS $$
+BEGIN
+  -- Status change notifications
+  IF TG_OP = 'UPDATE' AND COALESCE(OLD.status,'') <> COALESCE(NEW.status,'') THEN
+    IF NEW.status = 'cancelled' THEN
+      INSERT INTO public.notifications (type, title, message, priority, related_booking, created_at)
+      VALUES (
+        'booking',
+        'Booking Cancelled',
+        format('Booking for %s → %s has been cancelled', COALESCE(TO_CHAR(NEW.check_in,'YYYY-MM-DD'),'N/A'), COALESCE(TO_CHAR(NEW.check_out,'YYYY-MM-DD'),'N/A')),
+        'medium',
+        NEW.id,
+        now()
+      );
+    ELSIF NEW.status = 'confirmed' THEN
+      INSERT INTO public.notifications (type, title, message, priority, related_booking, created_at)
+      VALUES (
+        'booking',
+        'Booking Confirmed',
+        format('Booking confirmed for %s → %s', COALESCE(TO_CHAR(NEW.check_in,'YYYY-MM-DD'),'N/A'), COALESCE(TO_CHAR(NEW.check_out,'YYYY-MM-DD'),'N/A')),
+        'medium',
+        NEW.id,
+        now()
+      );
+    END IF;
+  END IF;
+
+  -- Date change notification (check_in/check_out changed)
+  IF TG_OP = 'UPDATE' AND (COALESCE(OLD.check_in::text,'') <> COALESCE(NEW.check_in::text,'') OR COALESCE(OLD.check_out::text,'') <> COALESCE(NEW.check_out::text,'')) THEN
+    INSERT INTO public.notifications (type, title, message, priority, related_booking, created_at)
+    VALUES (
+      'booking',
+      'Booking Dates Updated',
+      format('Booking dates updated: %s → %s', COALESCE(TO_CHAR(NEW.check_in,'YYYY-MM-DD'),'N/A'), COALESCE(TO_CHAR(NEW.check_out,'YYYY-MM-DD'),'N/A')),
+      'medium',
+      NEW.id,
+      now()
+    );
+  END IF;
+
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trg_notify_booking_update
+AFTER UPDATE ON public.bookings
+FOR EACH ROW
+EXECUTE FUNCTION public.notify_booking_update();
+
+-- 3) Scheduled check-in reminders (create notifications for bookings that check in tomorrow)
+-- This function is intended to be called once per day (e.g., via pg_cron or external scheduler).
+CREATE OR REPLACE FUNCTION public.create_checkin_reminders()
+RETURNS void AS $$
+BEGIN
+  INSERT INTO public.notifications (type, title, message, priority, related_booking, created_at)
+  SELECT
+    'checkin'::text,
+    'Guest Check-in Tomorrow',
+    format('Guest scheduled to check in on %s', TO_CHAR(b.check_in,'YYYY-MM-DD')),
+    'medium'::notification_priority,
+    b.id,
+    now()
+  FROM public.bookings b
+  WHERE b.status = 'confirmed'
+    AND b.check_in = (CURRENT_DATE + INTERVAL '1 day')::date
+    -- avoid creating duplicates for the same booking within the same day
+    AND NOT EXISTS (
+      SELECT 1 FROM public.notifications n
+      WHERE n.related_booking = b.id
+        AND n.type = 'checkin'
+        AND DATE(n.created_at) = CURRENT_DATE
+    );
+END;
+$$ LANGUAGE plpgsql;
+
 
 /* -------------------------------------------------
    5️⃣  Triggers
@@ -286,3 +518,13 @@ CREATE TRIGGER trg_set_booking_created_at
 BEFORE INSERT ON public.bookings
 FOR EACH ROW
 EXECUTE FUNCTION public.set_booking_created_at();
+
+CREATE TRIGGER trg_sync_booking_revenue
+AFTER UPDATE OR DELETE ON public.bookings
+FOR EACH ROW
+EXECUTE FUNCTION public.sync_booking_revenue();
+
+CREATE TRIGGER trg_sync_expense_revenue
+AFTER UPDATE OR DELETE ON public.expenses
+FOR EACH ROW
+EXECUTE FUNCTION public.sync_expense_revenue();
