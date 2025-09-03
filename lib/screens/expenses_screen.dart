@@ -1,6 +1,4 @@
 import '../constants/app_exports.dart';
-import '../models/expense_model.dart';
-import '../services/expense_database.dart';
 
 class ExpensesScreen extends StatefulWidget {
   const ExpensesScreen({super.key});
@@ -10,46 +8,27 @@ class ExpensesScreen extends StatefulWidget {
 }
 
 class _ExpensesScreenState extends State<ExpensesScreen> {
-  final ExpenseDatabase _database = ExpenseDatabase();
-  List<Expense> fixedExpenses = [];
-  List<Expense> variableExpenses = [];
-  double fixedTotal = 0.0;
-  double variableTotal = 0.0;
-  bool isLoading = true;
+  // Mock data for demonstration
+  List<Map<String, dynamic>> fixedExpenses = [
+    {'name': 'Rent', 'category': 'Housing', 'amount': 1200.0},
+    {'name': 'Insurance', 'category': 'Protection', 'amount': 300.0},
+    {'name': 'Internet', 'category': 'Utilities', 'amount': 80.0},
+  ];
+  List<Map<String, dynamic>> variableExpenses = [
+    {'name': 'Groceries', 'category': 'Food', 'amount': 400.0},
+    {'name': 'Gas', 'category': 'Transportation', 'amount': 150.0},
+    {'name': 'Entertainment', 'category': 'Leisure', 'amount': 200.0},
+  ];
+  double fixedTotal = 1580.0;
+  double variableTotal = 750.0;
+  bool isLoading = false;
 
   double get grandTotal => fixedTotal + variableTotal;
 
   @override
   void initState() {
     super.initState();
-    _loadExpenses();
-  }
-
-  Future<void> _loadExpenses() async {
-    setState(() {
-      isLoading = true;
-    });
-
-    try {
-      final fixed = await _database.getFixedExpenses();
-      final variable = await _database.getVariableExpenses();
-      final fixedTotalAmount = await _database.getFixedTotal();
-      final variableTotalAmount = await _database.getVariableTotal();
-
-      setState(() {
-        fixedExpenses = fixed;
-        variableExpenses = variable;
-        fixedTotal = fixedTotalAmount;
-        variableTotal = variableTotalAmount;
-        isLoading = false;
-      });
-    } catch (e) {
-      setState(() {
-        isLoading = false;
-      });
-      // Handle error - you might want to show a snackbar or dialog
-      print('Error loading expenses: $e');
-    }
+    // Data is already initialized as mock data
   }
 
   @override
@@ -146,7 +125,7 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
     final String description = variable ? 'Monthly costs that can vary' : 'Monthly recurring costs that remain constant';
     final Color dotColor = variable ? const Color(0xFFEA580C) : const Color(0xFF2563EB);
     final Color amountColor = variable ? const Color(0xFFEA580C) : const Color(0xFF2563EB);
-    final List<Expense> expenses = variable ? variableExpenses : fixedExpenses;
+    final List<Map<String, dynamic>> expenses = variable ? variableExpenses : fixedExpenses;
     final double total = variable ? variableTotal : fixedTotal;
 
     return ExpenseSectionCard(
@@ -155,11 +134,11 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
       dotColor: dotColor,
       children: expenses.map((expense) => 
         ExpenseItemCard(
-          name: expense.name,
-          category: expense.category,
-          amount: expense.amount,
+          name: expense['name'] as String,
+          category: expense['category'] as String,
+          amount: expense['amount'] as double,
           showDeleteButton: true,
-          onDelete: () => _deleteExpense(expense.id!, variable),
+          onDelete: () => _deleteExpense(expense['name'] as String, variable),
           amountColor: amountColor,
         ),
       ).toList(),
@@ -198,34 +177,39 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
         config: DialogConfigurations.addExpense(
           title: title,
           onAdd: (name, amount, category) async {
-            try {
-              final newExpense = Expense(
-                name: name,
-                amount: amount,
-                category: category,
-                isVariable: isVariable,
-                createdAt: DateTime.now(),
-              );
-              
-              await _database.insertExpense(newExpense);
-              await _loadExpenses(); // Refresh the data
-            } catch (e) {
-              // Handle error - you might want to show a snackbar
-              print('Error adding expense: $e');
-            }
+            // Add to mock data
+            final newExpense = {
+              'name': name,
+              'amount': amount,
+              'category': category,
+            };
+            
+            setState(() {
+              if (isVariable) {
+                variableExpenses.add(newExpense);
+                variableTotal += amount;
+              } else {
+                fixedExpenses.add(newExpense);
+                fixedTotal += amount;
+              }
+            });
           },
         ),
       ),
     );
   }
 
-  void _deleteExpense(int id, bool isVariable) async {
-    try {
-      await _database.deleteExpense(id);
-      await _loadExpenses(); // Refresh the data
-    } catch (e) {
-      // Handle error - you might want to show a snackbar
-      print('Error deleting expense: $e');
-    }
+  void _deleteExpense(String name, bool isVariable) {
+    setState(() {
+      if (isVariable) {
+        final expense = variableExpenses.firstWhere((e) => e['name'] == name);
+        variableExpenses.removeWhere((e) => e['name'] == name);
+        variableTotal -= expense['amount'] as double;
+      } else {
+        final expense = fixedExpenses.firstWhere((e) => e['name'] == name);
+        fixedExpenses.removeWhere((e) => e['name'] == name);
+        fixedTotal -= expense['amount'] as double;
+      }
+    });
   }
 }
