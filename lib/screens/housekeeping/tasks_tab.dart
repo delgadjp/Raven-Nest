@@ -1,9 +1,8 @@
-import '../../constants/app_exports.dart';
+import '/constants/app_exports.dart';
 
 class TasksTab extends StatelessWidget {
   final List<Map<String,dynamic>> tasks;
   final List<Map<String,dynamic>> todayTasks;
-  final List<Map<String,dynamic>> upcomingTasks;
   final List<Map<String,dynamic>> staff;
   final void Function(int,String) updateTaskStatus;
   final void Function(String, String, String, DateTime, String?, String?, String?) addTask;
@@ -12,7 +11,6 @@ class TasksTab extends StatelessWidget {
     super.key,
     required this.tasks,
     required this.todayTasks,
-    required this.upcomingTasks,
     required this.staff,
     required this.updateTaskStatus,
     required this.addTask,
@@ -24,13 +22,24 @@ class TasksTab extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _todaySection(context),
-        const SizedBox(height: 14),
-        _upcomingSection(context),
       ],
     );
   }
 
   Widget _todaySection(BuildContext context) {
+    // Filter tasks for today's date
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    
+    final todaysFilteredTasks = tasks.where((task) {
+      if (task['dueDate'] is DateTime) {
+        final taskDate = task['dueDate'] as DateTime;
+        final taskDay = DateTime(taskDate.year, taskDate.month, taskDate.day);
+        return taskDay == today;
+      }
+      return false;
+    }).toList();
+
     return Card(
       color: Colors.white.withOpacity(0.85),
       surfaceTintColor: Colors.transparent,
@@ -73,58 +82,58 @@ class TasksTab extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 16),
-            Column(
-              children: todayTasks.map((task) => TaskCard(
-                task: task,
-                isDetailed: true,
-                onStatusUpdate: () => _handleStatusUpdate(task),
-                onViewDetails: () => _handleViewDetails(task),
-              )).toList(),
-            ),
+            todaysFilteredTasks.isEmpty
+                ? _buildEmptyState()
+                : Column(
+                    children: todaysFilteredTasks.map((task) => TaskCard(
+                      task: task,
+                      isDetailed: true,
+                      onStatusUpdate: () => _handleStatusUpdate(task),
+                      onViewDetails: () => _handleViewDetails(task),
+                    )).toList(),
+                  ),
           ],
         ),
       ),
     );
   }
 
-  Widget _upcomingSection(BuildContext context) {
-    return Card(
-      color: Colors.white.withOpacity(0.85),
-      surfaceTintColor: Colors.transparent,
-      elevation: 0,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
+  Widget _buildEmptyState() {
+    return Container(
+      padding: const EdgeInsets.all(32),
+      child: Center(
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Upcoming Tasks',
-                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                    ),
-                    SizedBox(height: 2),
-                    Text(
-                      'Tasks scheduled for the next few days',
-                      style: TextStyle(color: Colors.grey),
-                    ),
-                  ],
-                ),
-              ],
+            Container(
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: Colors.grey.withOpacity(0.1),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                Icons.today,
+                size: 48,
+                color: Colors.grey[400],
+              ),
             ),
             const SizedBox(height: 16),
-            Column(
-              children: upcomingTasks.map((task) => TaskCard(
-                task: task,
-                isDetailed: true,
-                onStatusUpdate: () => _handleStatusUpdate(task),
-                onViewDetails: () => _handleViewDetails(task),
-              )).toList(),
+            Text(
+              'No Tasks for Today',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+                color: Colors.grey[600],
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'There are no tasks scheduled for today.',
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.grey[500],
+              ),
+              textAlign: TextAlign.center,
             ),
           ],
         ),

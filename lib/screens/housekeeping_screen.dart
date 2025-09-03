@@ -12,9 +12,10 @@ class _HousekeepingScreenState extends State<HousekeepingScreen> {
   late Timer _priorityUpdateTimer;
 
   final List<Map<String, dynamic>> tasks = [
-    {'id': 1,'room': '201','type': 'checkout_cleaning','assignee': 'Maria Santos','dueDate': DateTime(2025,8,19,14,0),'status': 'completed','checkoutTime': '11:00 AM','checkinTime': '3:00 PM','notes': 'Deep clean bathroom, replace towels'},
-    {'id': 2,'room': '305','type': 'maintenance','assignee': 'John Smith','dueDate': DateTime(2025,8,20,10,0),'status': 'in_progress','notes': 'Fix leaky faucet in kitchen'},
-    {'id': 3,'room': '412','type': 'room_service','assignee': 'Lisa Chen','dueDate': DateTime(2025,8,20,15,30),'status': 'pending','notes': 'Guest requested extra towels and coffee pods'},
+    {'id': 1,'room': '201','type': 'checkout_cleaning','assignee': 'Maria Santos','dueDate': DateTime(2025,9,3,14,0),'status': 'completed','checkoutTime': '11:00 AM','checkinTime': '3:00 PM','notes': 'Deep clean bathroom, replace towels'},
+    {'id': 2,'room': '305','type': 'maintenance','assignee': 'John Smith','dueDate': DateTime(2025,9,3,10,0),'status': 'in_progress','notes': 'Fix leaky faucet in kitchen'},
+    {'id': 3,'room': '412','type': 'room_service','assignee': 'Lisa Chen','dueDate': DateTime(2025,9,3,15,30),'status': 'pending','notes': 'Guest requested extra towels and coffee pods'},
+    {'id': 4,'room': '508','type': 'checkout_cleaning','assignee': 'Maria Santos','dueDate': DateTime(2025,9,4,11,0),'status': 'pending','notes': 'Standard checkout cleaning'},
   ];
 
   @override
@@ -49,11 +50,6 @@ class _HousekeepingScreenState extends State<HousekeepingScreen> {
       final d = task['dueDate'] as DateTime; 
       return d.year == t.year && d.month == t.month && d.day == t.day; 
     }).toList(); 
-  }
-  
-  List<Map<String, dynamic>> get upcomingTasks { 
-    final now = DateTime.now(); 
-    return tasks.where((task) => (task['dueDate'] as DateTime).isAfter(now)).toList(); 
   }
   
   int get completedTasks => tasks.where((t) => t['status'] == 'completed').length;
@@ -258,10 +254,10 @@ class _HousekeepingScreenState extends State<HousekeepingScreen> {
                       iconColor: Colors.indigo,
                     ),
                     SummaryCard(
-                      title: 'Upcoming',
-                      value: upcomingTasks.length.toString(),
-                      subtitle: 'next few days',
-                      icon: Icons.upcoming,
+                      title: 'Total Tasks',
+                      value: tasks.length.toString(),
+                      subtitle: 'all tasks',
+                      icon: Icons.assignment,
                       iconColor: Colors.deepPurple,
                     ),
                     SummaryGradientCard(
@@ -283,7 +279,6 @@ class _HousekeepingScreenState extends State<HousekeepingScreen> {
               TasksTab(
                 tasks: tasks,
                 todayTasks: todayTasks,
-                upcomingTasks: upcomingTasks,
                 staff: staff,
                 updateTaskStatus: updateTaskStatus,
                 addTask: addTask,

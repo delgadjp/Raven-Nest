@@ -45,10 +45,6 @@ class StaffScheduleDialog extends StatelessWidget {
             _buildHeader(),
             const SizedBox(height: 20),
             
-            // Staff Info Summary
-            _buildStaffSummary(),
-            const SizedBox(height: 24),
-            
             // Schedule Content
             Expanded(
               child: staffTasks.isEmpty
@@ -103,107 +99,6 @@ class StaffScheduleDialog extends StatelessWidget {
                 ),
               ),
             ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildStaffSummary() {
-    final totalTasks = staffTasks.length;
-    final completedTasks = ScheduleUtils.getTaskCountByStatus(staffTasks, 'completed');
-    final pendingTasks = ScheduleUtils.getTaskCountByStatus(staffTasks, 'pending');
-    final inProgressTasks = ScheduleUtils.getTaskCountByStatus(staffTasks, 'in_progress');
-
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            const Color(0xFF6366F1).withOpacity(0.1),
-            const Color(0xFF8B5CF6).withOpacity(0.1),
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: const Color(0xFF6366F1).withOpacity(0.2),
-        ),
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: _buildSummaryItem(
-              'Total',
-              totalTasks.toString(),
-              Colors.blue,
-              Icons.assignment,
-            ),
-          ),
-          Container(
-            height: 40,
-            width: 1,
-            color: Colors.grey.withOpacity(0.3),
-          ),
-          Expanded(
-            child: _buildSummaryItem(
-              'Completed',
-              completedTasks.toString(),
-              Colors.green,
-              Icons.check_circle,
-            ),
-          ),
-          Container(
-            height: 40,
-            width: 1,
-            color: Colors.grey.withOpacity(0.3),
-          ),
-          Expanded(
-            child: _buildSummaryItem(
-              'In Progress',
-              inProgressTasks.toString(),
-              Colors.orange,
-              Icons.refresh,
-            ),
-          ),
-          Container(
-            height: 40,
-            width: 1,
-            color: Colors.grey.withOpacity(0.3),
-          ),
-          Expanded(
-            child: _buildSummaryItem(
-              'Pending',
-              pendingTasks.toString(),
-              Colors.red,
-              Icons.pending,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSummaryItem(String label, String value, Color color, IconData icon) {
-    return Column(
-      children: [
-        Icon(icon, color: color, size: 20),
-        const SizedBox(height: 4),
-        Text(
-          value,
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-            color: color,
-          ),
-        ),
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 12,
-            color: Colors.grey[600],
-            fontWeight: FontWeight.w500,
           ),
         ),
       ],
@@ -397,10 +292,11 @@ class StaffScheduleDialog extends StatelessWidget {
                   fontSize: 14,
                   color: Colors.grey[600],
                   fontWeight: FontWeight.w500,
-                  ),
                 ),
-              ],
-            ),          if (task['notes'] != null && task['notes'].toString().isNotEmpty) ...[
+              ),
+            ],
+          ),
+          if (task['notes'] != null && task['notes'].toString().isNotEmpty) ...[
             const SizedBox(height: 8),
             Container(
               padding: const EdgeInsets.all(8),

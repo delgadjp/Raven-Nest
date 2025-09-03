@@ -1,4 +1,4 @@
-import '../../constants/app_exports.dart';
+import '/constants/app_exports.dart';
 
 class StaffTab extends StatelessWidget {
   final List<Map<String,dynamic>> staff;
