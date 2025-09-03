@@ -253,6 +253,18 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+CREATE OR REPLACE FUNCTION update_inventory_status()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.status := CASE 
+        WHEN NEW.current_stock >= NEW.min_stock THEN 'good'
+        WHEN NEW.current_stock <= (NEW.min_stock * 0.3) THEN 'critical'
+        ELSE 'low'
+    END;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
 
 /* -------------------------------------------------
    5️⃣  Triggers

@@ -109,13 +109,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
     return null;
   }
 
-  List<Booking> get upcomingBookings {
-    final now = DateTime.now();
-    return bookings
-        .where((booking) => booking.checkIn.isAfter(now))
-        .toList()
-      ..sort((a, b) => a.checkIn.compareTo(b.checkIn));
-  }
+
 
   double get totalRevenue {
     return bookings.fold(0, (sum, booking) => sum + booking.amount);
@@ -474,86 +468,18 @@ class _CalendarScreenState extends State<CalendarScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Card Header
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Upcoming Bookings',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.grey.shade900,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  'Next reservations and check-ins',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.grey.shade600,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          
           // Card Content
           Padding(
             padding: const EdgeInsets.all(16),
             child: Column(
               children: [
-                if (upcomingBookings.isEmpty)
-                  Container(
-                    padding: const EdgeInsets.all(32),
-                    child: Column(
-                      children: [
-                        Icon(
-                          Icons.calendar_today,
-                          size: 48,
-                          color: Colors.grey.shade300,
-                        ),
-                        const SizedBox(height: 12),
-                        Text(
-                          'No upcoming bookings',
-                          style: TextStyle(color: Colors.grey.shade500),
-                        ),
-                      ],
-                    ),
-                  )
-                else
-                  Column(
-                    children: upcomingBookings.take(3).map((booking) => BookingCard(
-                      guestName: booking.guestName,
-                      checkIn: booking.checkIn,
-                      checkOut: booking.checkOut,
-                      room: booking.room,
-                      source: booking.source,
-                      status: booking.status,
-                      nights: booking.nights,
-                      amount: booking.amount,
-                    )).toList(),
-                  ),
-                
-                const SizedBox(height: 16),
-                
-                // Sync button with border-t equivalent
-                Container(
-                  padding: const EdgeInsets.only(top: 16),
-                  decoration: BoxDecoration(
-                    border: Border(
-                      top: BorderSide(color: Colors.grey.shade200),
-                    ),
-                  ),
-                  child: ActionButton(
-                    text: 'Sync with Airbnb & Booking.com',
-                    icon: Icons.sync,
-                    onPressed: () {
-                      // Handle sync functionality
-                    },
-                  ),
+                // Sync button
+                ActionButton(
+                  text: 'Sync with Airbnb & Booking.com',
+                  icon: Icons.sync,
+                  onPressed: () {
+                    // Handle sync functionality
+                  },
                 ),
               ],
             ),
