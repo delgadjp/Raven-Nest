@@ -2,8 +2,6 @@ import '../../constants/app_exports.dart';
 
 class StaffTab extends StatelessWidget {
   final List<Map<String,dynamic>> staff;
-  final List<Map<String,dynamic>>? tasks;
-  final void Function(int, String)? assignTaskToStaff;
   final void Function(String, String, String, String)? addStaff;
   final void Function(int)? removeStaff;
   final void Function(Map<String, dynamic>)? viewStaffSchedule;
@@ -11,8 +9,6 @@ class StaffTab extends StatelessWidget {
   const StaffTab({
     super.key,
     required this.staff,
-    this.tasks,
-    this.assignTaskToStaff,
     this.addStaff,
     this.removeStaff,
     this.viewStaffSchedule,
@@ -83,7 +79,6 @@ class StaffTab extends StatelessWidget {
                   itemBuilder: (context, index) => StaffCard(
                     staff: staff[index],
                     onViewSchedule: () => _handleViewSchedule(staff[index]),
-                    onAssignTask: () => _handleAssignTask(staff[index], context),
                     onRemoveStaff: () => _handleRemoveStaff(staff[index], context),
                   ),
                 );
@@ -175,74 +170,6 @@ class StaffTab extends StatelessWidget {
               foregroundColor: Colors.white,
             ),
             child: const Text('Remove'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _handleAssignTask(Map<String, dynamic> staffMember, BuildContext context) {
-    // Show available unassigned tasks or tasks that can be reassigned
-    if (tasks == null || tasks!.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('No tasks available to assign')),
-      );
-      return;
-    }
-    
-    // Get pending tasks that can be assigned to this staff member
-    final availableTasks = tasks!.where((task) => 
-      task['status'] == 'pending' || task['assignee'] != staffMember['name']
-    ).toList();
-    
-    if (availableTasks.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('No available tasks to assign to this staff member')),
-      );
-      return;
-    }
-    
-    // Show task selection dialog
-    _showTaskAssignmentDialog(context, staffMember, availableTasks);
-  }
-
-  void _showTaskAssignmentDialog(BuildContext context, Map<String, dynamic> staffMember, List<Map<String, dynamic>> availableTasks) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text('Assign Task to ${staffMember['name']}'),
-        content: SizedBox(
-          width: double.maxFinite,
-          child: ListView.builder(
-            shrinkWrap: true,
-            itemCount: availableTasks.length,
-            itemBuilder: (context, index) {
-              final task = availableTasks[index];
-              return ListTile(
-                title: Text('Room ${task['room']} - ${task['type']}'),
-                subtitle: Text('Priority: ${task['priority']} | Due: ${task['dueDate']}'),
-                trailing: ElevatedButton(
-                  onPressed: () {
-                    if (assignTaskToStaff != null) {
-                      assignTaskToStaff!(task['id'], staffMember['name']);
-                    }
-                    Navigator.of(context).pop();
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text('Task assigned to ${staffMember['name']}'),
-                      ),
-                    );
-                  },
-                  child: const Text('Assign'),
-                ),
-              );
-            },
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Cancel'),
           ),
         ],
       ),

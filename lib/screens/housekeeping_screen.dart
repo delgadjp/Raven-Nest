@@ -57,7 +57,6 @@ class _HousekeepingScreenState extends State<HousekeepingScreen> {
   }
   
   int get completedTasks => tasks.where((t) => t['status'] == 'completed').length;
-  int get availableStaff => staff.where((m) => m['status'] == 'available').length;
 
   void updateTaskStatus(int id, String newStatus) {
     setState(() {
@@ -271,13 +270,6 @@ class _HousekeepingScreenState extends State<HousekeepingScreen> {
                       subtitle: 'total done',
                       gradientColors: const [Color(0xFF22C55E), Color(0xFF16A34A)],
                     ),
-                    SummaryCard(
-                      title: 'Available Staff',
-                      value: availableStaff.toString(),
-                      subtitle: 'ready now',
-                      icon: Icons.people_alt,
-                      iconColor: Colors.teal,
-                    ),
                   ],
                 ),
                 const SizedBox(height: 24),
@@ -299,8 +291,6 @@ class _HousekeepingScreenState extends State<HousekeepingScreen> {
             else 
               StaffTab(
                 staff: staff,
-                tasks: tasks,
-                assignTaskToStaff: assignTaskToStaff,
                 addStaff: addStaff,
                 removeStaff: removeStaff,
                 viewStaffSchedule: viewStaffSchedule,

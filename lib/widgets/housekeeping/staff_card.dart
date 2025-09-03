@@ -3,14 +3,12 @@ import '../../constants/app_exports.dart';
 class StaffCard extends StatelessWidget {
   final Map<String, dynamic> staff;
   final VoidCallback? onViewSchedule;
-  final VoidCallback? onAssignTask;
   final VoidCallback? onRemoveStaff;
 
   const StaffCard({
     super.key,
     required this.staff,
     this.onViewSchedule,
-    this.onAssignTask,
     this.onRemoveStaff,
   });
 
@@ -134,28 +132,6 @@ class StaffCard extends StatelessWidget {
                       style: TextStyle( 
                         fontSize: 12,
                         fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 6),
-                Expanded(
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF111827),
-                      foregroundColor: Colors.white,
-                      elevation: 0,
-                      padding: const EdgeInsets.symmetric(vertical: 6),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(6),
-                      ),
-                    ),
-                    onPressed: onAssignTask,
-                    child: const Text(
-                      'Assign Task',
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
                       ),
                     ),
                   ),
