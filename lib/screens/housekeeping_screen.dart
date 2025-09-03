@@ -1,3 +1,4 @@
+import 'dart:async';
 import '../constants/app_exports.dart';
 
 class HousekeepingScreen extends StatefulWidget {
@@ -8,12 +9,33 @@ class HousekeepingScreen extends StatefulWidget {
 
 class _HousekeepingScreenState extends State<HousekeepingScreen> {
   int _currentTab = 0;
+  late Timer _priorityUpdateTimer;
 
   final List<Map<String, dynamic>> tasks = [
-    {'id': 1,'room': '201','type': 'checkout_cleaning','assignee': 'Maria Santos','dueDate': DateTime(2025,8,19,14,0),'status': 'completed','priority': 'high','checkoutTime': '11:00 AM','checkinTime': '3:00 PM','notes': 'Deep clean bathroom, replace towels'},
-    {'id': 2,'room': '305','type': 'maintenance','assignee': 'John Smith','dueDate': DateTime(2025,8,20,10,0),'status': 'in_progress','priority': 'medium','notes': 'Fix leaky faucet in kitchen'},
-    {'id': 3,'room': '412','type': 'room_service','assignee': 'Lisa Chen','dueDate': DateTime(2025,8,20,15,30),'status': 'pending','priority': 'low','notes': 'Guest requested extra towels and coffee pods'},
+    {'id': 1,'room': '201','type': 'checkout_cleaning','assignee': 'Maria Santos','dueDate': DateTime(2025,8,19,14,0),'status': 'completed','checkoutTime': '11:00 AM','checkinTime': '3:00 PM','notes': 'Deep clean bathroom, replace towels'},
+    {'id': 2,'room': '305','type': 'maintenance','assignee': 'John Smith','dueDate': DateTime(2025,8,20,10,0),'status': 'in_progress','notes': 'Fix leaky faucet in kitchen'},
+    {'id': 3,'room': '412','type': 'room_service','assignee': 'Lisa Chen','dueDate': DateTime(2025,8,20,15,30),'status': 'pending','notes': 'Guest requested extra towels and coffee pods'},
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    // Update existing tasks with calculated priorities
+    for (var task in tasks) {
+      task['priority'] = _calculatePriority(task['dueDate'] as DateTime);
+    }
+    
+    // Set up periodic priority updates (every 30 minutes)
+    _priorityUpdateTimer = Timer.periodic(const Duration(minutes: 30), (timer) {
+      _updateAllTaskPriorities();
+    });
+  }
+
+  @override
+  void dispose() {
+    _priorityUpdateTimer.cancel();
+    super.dispose();
+  }
 
   final List<Map<String, dynamic>> staff = [
     {'id': 1,'name': 'Maria Santos','role': 'Head Housekeeper','phone': '(555) 123-4567','email': 'maria@email.com','activeTasks': 3,'completedToday': 2,'status': 'available'},
@@ -45,6 +67,11 @@ class _HousekeepingScreenState extends State<HousekeepingScreen> {
         final oldStatus = task['status'];
         task['status'] = newStatus;
         
+        // Update priority for non-completed tasks
+        if (newStatus != 'completed') {
+          task['priority'] = _calculatePriority(task['dueDate'] as DateTime);
+        }
+        
         // Update staff statistics when task status changes
         _updateStaffStatistics(task['assignee'], oldStatus, newStatus);
       }
@@ -72,9 +99,38 @@ class _HousekeepingScreenState extends State<HousekeepingScreen> {
     }
   }
 
-  void addTask(String room, String type, String assignee, DateTime dueDate, String priority, String? checkoutTime, String? checkinTime, String? notes) {
+  // Calculate priority based on due date
+  String _calculatePriority(DateTime dueDate) {
+    final now = DateTime.now();
+    final difference = dueDate.difference(now).inHours;
+    
+    if (difference <= 2) {
+      return 'critical';
+    } else if (difference <= 6) {
+      return 'high';
+    } else if (difference <= 24) {
+      return 'medium';
+    } else {
+      return 'low';
+    }
+  }
+
+  // Update all task priorities based on current time
+  void _updateAllTaskPriorities() {
+    setState(() {
+      for (var task in tasks) {
+        if (task['status'] != 'completed') {
+          task['priority'] = _calculatePriority(task['dueDate'] as DateTime);
+        }
+      }
+    });
+  }
+
+  void addTask(String room, String type, String assignee, DateTime dueDate, String? checkoutTime, String? checkinTime, String? notes) {
     setState(() {
       final newId = tasks.isNotEmpty ? tasks.map((t) => t['id'] as int).reduce((a, b) => a > b ? a : b) + 1 : 1;
+      final priority = _calculatePriority(dueDate);
+      
       tasks.add({
         'id': newId,
         'room': room,
@@ -106,6 +162,7 @@ class _HousekeepingScreenState extends State<HousekeepingScreen> {
         // Update task assignment
         tasks[taskIndex]['assignee'] = staffName;
         tasks[taskIndex]['status'] = 'pending'; // Reset status when reassigning
+        tasks[taskIndex]['priority'] = _calculatePriority(tasks[taskIndex]['dueDate'] as DateTime); // Update priority
         
         // Update old assignee statistics (decrease active tasks)
         final oldStaffIndex = staff.indexWhere((s) => s['name'] == oldAssignee);

@@ -6,7 +6,7 @@ class TasksTab extends StatelessWidget {
   final List<Map<String,dynamic>> upcomingTasks;
   final List<Map<String,dynamic>> staff;
   final void Function(int,String) updateTaskStatus;
-  final void Function(String, String, String, DateTime, String, String?, String?, String?) addTask;
+  final void Function(String, String, String, DateTime, String?, String?, String?) addTask;
   
   const TasksTab({
     super.key,

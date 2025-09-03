@@ -110,7 +110,7 @@ class DialogConfigurations {
 
   // Add Task Dialog Configuration
   static DialogConfig addTask({
-    required Function(String room, String type, String assignee, DateTime dueDate, String priority, String? checkoutTime, String? checkinTime, String? notes) onAdd,
+    required Function(String room, String type, String assignee, DateTime dueDate, String? checkoutTime, String? checkinTime, String? notes) onAdd,
     required List<Map<String, dynamic>> staff,
   }) {
     // Extract staff names for dropdown
@@ -154,12 +154,6 @@ class DialogConfigurations {
           icon: Icons.access_time,
         ),
         const DialogField(
-          key: 'priority',
-          label: 'Priority',
-          hintText: 'high, medium, low',
-          icon: Icons.priority_high,
-        ),
-        const DialogField(
           key: 'checkoutTime',
           label: 'Checkout Time (Optional)',
           hintText: 'HH:MM AM/PM',
@@ -198,7 +192,6 @@ class DialogConfigurations {
           values['type']!,
           values['assignee']!,
           dueDate,
-          values['priority']!,
           values['checkoutTime']!.isEmpty ? null : values['checkoutTime'],
           values['checkinTime']!.isEmpty ? null : values['checkinTime'],
           values['notes']!.isEmpty ? null : values['notes'],
