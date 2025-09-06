@@ -449,7 +449,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
                         borderRadius: BorderRadius.circular(4),
                       ),
                       child: Text(
-                        'Check-in: ${checkInBooking['booking_sources']?['name'] ?? 'Guest'}',
+                        'Check-in: ${checkInBooking['source']?['name'] ?? 'Guest'}',
                         style: TextStyle(
                           fontSize: 10,
                           color: Colors.blue.shade800,

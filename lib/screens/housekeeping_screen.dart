@@ -177,7 +177,7 @@ class _HousekeepingScreenState extends State<HousekeepingScreen> {
   void addStaff(String name, String role, String phone, String email) async {
     final staffData = {
       'name': name,
-      'role': role, // Note: this might need to be stored in a separate field or handled differently
+      // Note: 'role' is not stored in database schema, only used for UI display
       'contact': phone,
       'email': email,
     };
