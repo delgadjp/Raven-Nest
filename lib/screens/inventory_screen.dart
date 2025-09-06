@@ -25,12 +25,13 @@ class InventoryCategory {
 }
 
 class InventoryItem {
-  final int id;
+  final String id;
   final String name;
   final int quantity;
   final int minQuantity;
   final String unit;
   final String status; // 'good' | 'low' | 'critical'
+  final String categoryId;
 
   const InventoryItem({
     required this.id,
@@ -39,15 +40,17 @@ class InventoryItem {
     required this.minQuantity,
     required this.unit,
     required this.status,
+    required this.categoryId,
   });
 
   InventoryItem copyWith({
-    int? id,
+    String? id,
     String? name,
     int? quantity,
     int? minQuantity,
     String? unit,
     String? status,
+    String? categoryId,
   }) {
     return InventoryItem(
       id: id ?? this.id,
@@ -56,6 +59,7 @@ class InventoryItem {
       minQuantity: minQuantity ?? this.minQuantity,
       unit: unit ?? this.unit,
       status: status ?? this.status,
+      categoryId: categoryId ?? this.categoryId,
     );
   }
 }
@@ -68,44 +72,21 @@ class InventoryScreen extends StatefulWidget {
 }
 
 class _InventoryScreenState extends State<InventoryScreen> {
-  // Data organized by categories
-  List<InventoryCategory> categories = [
-    InventoryCategory(
-      id: 'cleaning',
-      name: 'Cleaning Supplies',
-      items: [
-        const InventoryItem(id: 1, name: 'All-Purpose Cleaner', quantity: 12, minQuantity: 5, unit: 'bottles', status: 'good'),
-        const InventoryItem(id: 2, name: 'Toilet Paper', quantity: 3, minQuantity: 8, unit: 'rolls', status: 'low'),
-        const InventoryItem(id: 3, name: 'Paper Towels', quantity: 15, minQuantity: 6, unit: 'rolls', status: 'good'),
-        const InventoryItem(id: 4, name: 'Disinfectant', quantity: 8, minQuantity: 4, unit: 'bottles', status: 'good'),
-        const InventoryItem(id: 5, name: 'Vacuum Bags', quantity: 1, minQuantity: 3, unit: 'pcs', status: 'critical'),
-      ],
-    ),
-    InventoryCategory(
-      id: 'washables',
-      name: 'Washables',
-      items: [
-        const InventoryItem(id: 1, name: 'Bath Towels', quantity: 20, minQuantity: 15, unit: 'pcs', status: 'good'),
-        const InventoryItem(id: 2, name: 'Hand Towels', quantity: 8, minQuantity: 12, unit: 'pcs', status: 'low'),
-        const InventoryItem(id: 3, name: 'Bed Sheets (Queen)', quantity: 16, minQuantity: 10, unit: 'sets', status: 'good'),
-        const InventoryItem(id: 4, name: 'Pillowcases', quantity: 25, minQuantity: 20, unit: 'pcs', status: 'good'),
-        const InventoryItem(id: 5, name: 'Blankets', quantity: 5, minQuantity: 8, unit: 'pcs', status: 'low'),
-      ],
-    ),
-    InventoryCategory(
-      id: 'toiletries',
-      name: 'Toiletries',
-      items: [
-        const InventoryItem(id: 1, name: 'Shampoo', quantity: 8, minQuantity: 5, unit: 'bottles', status: 'good'),
-        const InventoryItem(id: 2, name: 'Body Soap', quantity: 12, minQuantity: 8, unit: 'bars', status: 'good'),
-        const InventoryItem(id: 3, name: 'Toothbrushes', quantity: 2, minQuantity: 6, unit: 'pcs', status: 'critical'),
-        const InventoryItem(id: 4, name: 'Towel Freshener', quantity: 4, minQuantity: 3, unit: 'bottles', status: 'good'),
-      ],
-    ),
-  ];
+  List<InventoryCategory> categories = [];
+  int totalItems = 0;
+  int lowStockItems = 0;
+  int criticalItems = 0;
+  bool isLoading = true;
+  String? errorMessage;
 
   // Dialog inputs
   final TextEditingController _categoryNameCtrl = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    _loadInventoryData();
+  }
 
   @override
   void dispose() {
@@ -113,40 +94,96 @@ class _InventoryScreenState extends State<InventoryScreen> {
     super.dispose();
   }
 
-  int get _totalItems => categories.fold(0, (sum, category) => sum + category.items.length);
+  Future<void> _loadInventoryData() async {
+    setState(() {
+      isLoading = true;
+      errorMessage = null;
+    });
 
-  int get _lowStockItems => categories
-      .expand((category) => category.items)
-      .where((item) => item.status == 'low' || item.status == 'critical')
-      .length;
+    try {
+      // Load inventory data concurrently
+      final results = await Future.wait([
+        InventoryService.getInventoryCategories(),
+        InventoryService.getInventoryItems(),
+        InventoryService.getInventorySummary(),
+      ]);
 
-  int get _criticalItems => categories
-      .expand((category) => category.items)
-      .where((item) => item.status == 'critical')
-      .length;
+      final categoriesData = results[0] as List<Map<String, dynamic>>;
+      final itemsData = results[1] as List<Map<String, dynamic>>;
+      final summaryData = results[2] as Map<String, int>;
 
-  String _statusFrom(int quantity, int minQuantity) {
-    if (quantity >= minQuantity) return 'good';
-    if (quantity <= (minQuantity * 0.3).floor()) return 'critical';
-    return 'low';
+      // Group items by category
+      final Map<String, List<InventoryItem>> itemsByCategory = {};
+      
+      for (final item in itemsData) {
+        final formattedItem = InventoryService.formatInventoryItemForUI(item);
+        final categoryId = formattedItem['category_id'] as String;
+        
+        if (!itemsByCategory.containsKey(categoryId)) {
+          itemsByCategory[categoryId] = [];
+        }
+        
+        itemsByCategory[categoryId]!.add(InventoryItem(
+          id: formattedItem['id'],
+          name: formattedItem['name'],
+          quantity: formattedItem['current_stock'],
+          minQuantity: formattedItem['min_stock'],
+          unit: formattedItem['unit'],
+          status: formattedItem['status'],
+          categoryId: categoryId,
+        ));
+      }
+
+      setState(() {
+        categories = categoriesData.map((cat) {
+          final formattedCategory = InventoryService.formatInventoryCategoryForUI(cat);
+          return InventoryCategory(
+            id: formattedCategory['id'],
+            name: formattedCategory['name'],
+            items: itemsByCategory[formattedCategory['id']] ?? [],
+          );
+        }).toList();
+        
+        totalItems = summaryData['totalItems'] ?? 0;
+        lowStockItems = summaryData['lowStockItems'] ?? 0;
+        criticalItems = summaryData['criticalItems'] ?? 0;
+        isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        errorMessage = 'Error loading inventory data: $e';
+        isLoading = false;
+      });
+    }
   }
-
-  int _newIdFor(List<InventoryItem> list) =>
-      (list.isEmpty ? 0 : list.map((e) => e.id).reduce((a, b) => a > b ? a : b)) + 1;
 
   void _showAddCategoryDialog() {
     showDialog(
       context: context,
       builder: (context) => GenericFormDialog(
         config: DialogConfigurations.addCategory(
-          onAdd: (name) {
-            setState(() {
-              categories.add(InventoryCategory(
-                id: DateTime.now().millisecondsSinceEpoch.toString(),
-                name: name,
-                items: [],
-              ));
-            });
+          onAdd: (name) async {
+            final success = await InventoryService.addInventoryCategory(name);
+            if (success) {
+              _loadInventoryData(); // Reload data
+              if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Category added successfully'),
+                    backgroundColor: Colors.green,
+                  ),
+                );
+              }
+            } else {
+              if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Failed to add category'),
+                    backgroundColor: Colors.red,
+                  ),
+                );
+              }
+            }
           },
         ),
       ),
@@ -161,25 +198,35 @@ class _InventoryScreenState extends State<InventoryScreen> {
       builder: (context) => GenericFormDialog(
         config: DialogConfigurations.addItem(
           categoryName: category.name,
-          onAdd: (name, quantity, minQuantity, unit) {
-            final status = _statusFrom(quantity, minQuantity);
-            setState(() {
-              final categoryIndex = categories.indexWhere((cat) => cat.id == categoryId);
-              if (categoryIndex != -1) {
-                final updatedItems = [
-                  ...categories[categoryIndex].items,
-                  InventoryItem(
-                    id: _newIdFor(categories[categoryIndex].items),
-                    name: name,
-                    quantity: quantity,
-                    minQuantity: minQuantity,
-                    unit: unit,
-                    status: status,
+          onAdd: (name, quantity, minQuantity, unit) async {
+            final success = await InventoryService.addInventoryItem(
+              categoryId: categoryId,
+              name: name,
+              unit: unit,
+              currentStock: quantity,
+              minStock: minQuantity,
+            );
+            
+            if (success) {
+              _loadInventoryData(); // Reload data
+              if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Item added successfully'),
+                    backgroundColor: Colors.green,
                   ),
-                ];
-                categories[categoryIndex] = categories[categoryIndex].copyWith(items: updatedItems);
+                );
               }
-            });
+            } else {
+              if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Failed to add item'),
+                    backgroundColor: Colors.red,
+                  ),
+                );
+              }
+            }
           },
         ),
       ),
@@ -188,6 +235,77 @@ class _InventoryScreenState extends State<InventoryScreen> {
 
   @override
   Widget build(BuildContext context) {
+    if (isLoading) {
+      return GradientBackground(
+        colors: const [
+          Color(0xFFF8FAFC),
+          Color(0xFFF5F3FF),
+          Color(0xFFE0E7FF),
+        ],
+        child: Column(
+          children: [
+            const NavigationWidget(),
+            const Expanded(
+              child: Center(
+                child: CircularProgressIndicator(),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    if (errorMessage != null) {
+      return GradientBackground(
+        colors: const [
+          Color(0xFFF8FAFC),
+          Color(0xFFF5F3FF),
+          Color(0xFFE0E7FF),
+        ],
+        child: Column(
+          children: [
+            const NavigationWidget(),
+            Expanded(
+              child: Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.error_outline,
+                      size: 64,
+                      color: Colors.red.shade400,
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      'Error loading inventory data',
+                      style: TextStyle(
+                        fontSize: 18,
+                        color: Colors.grey.shade600,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      errorMessage!,
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.grey.shade500,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 16),
+                    ElevatedButton(
+                      onPressed: _loadInventoryData,
+                      child: const Text('Retry'),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
     return GradientBackground(
       colors: const [
         Color(0xFFF8FAFC),
@@ -210,30 +328,30 @@ class _InventoryScreenState extends State<InventoryScreen> {
                         children: [
                           SummaryCard(
                             title: 'Total Items',
-                            value: '$_totalItems',
+                            value: '$totalItems',
                             subtitle: 'All categories',
                             icon: Icons.inventory_2,
                             iconColor: Colors.blue.shade600,
                           ),
                           SummaryCard(
                             title: 'Low Stock',
-                            value: '$_lowStockItems',
+                            value: '$lowStockItems',
                             subtitle: 'Need attention',
                             icon: Icons.warning_amber_rounded,
                             iconColor: Colors.orange.shade600,
                           ),
                           SummaryCard(
                             title: 'Critical',
-                            value: '$_criticalItems',
+                            value: '$criticalItems',
                             subtitle: 'Urgent restock',
                             icon: Icons.report_rounded,
                             iconColor: Colors.red.shade600,
                           ),
                           SummaryGradientCard(
                             title: 'Stock Health',
-                            value: _totalItems == 0
+                            value: totalItems == 0
                               ? '0%'
-                              : '${(((_totalItems - _lowStockItems) / _totalItems) * 100).round()}%',
+                              : '${(((totalItems - lowStockItems) / totalItems) * 100).round()}%',
                             subtitle: 'Well stocked',
                           ),
                         ],
@@ -383,22 +501,8 @@ class _InventoryScreenState extends State<InventoryScreen> {
             category.name, 
             category.id, 
             category.items, 
-            (itemId) {
-              setState(() {
-                final categoryIndex = categories.indexWhere((cat) => cat.id == category.id);
-                if (categoryIndex != -1) {
-                  final updatedItems = categories[categoryIndex].items
-                      .where((item) => item.id != itemId)
-                      .toList();
-                  categories[categoryIndex] = categories[categoryIndex].copyWith(items: updatedItems);
-                }
-              });
-            },
-            () {
-              setState(() {
-                categories.removeWhere((cat) => cat.id == category.id);
-              });
-            },
+            (itemId) => _deleteInventoryItem(itemId, category.id),
+            () => _deleteInventoryCategory(category.id),
           ),
         ).toList(),
       ),
@@ -409,7 +513,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
     String title,
     String categoryId,
     List<InventoryItem> items,
-    void Function(int id) onDelete,
+    void Function(String id) onDelete,
     VoidCallback? onDeleteCategory,
   ) {
     return LayoutBuilder(
@@ -442,5 +546,55 @@ class _InventoryScreenState extends State<InventoryScreen> {
         );
       },
     );
+  }
+
+  Future<void> _deleteInventoryItem(String itemId, String categoryId) async {
+    final success = await InventoryService.deleteInventoryItem(itemId);
+    
+    if (success) {
+      _loadInventoryData(); // Reload data
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Item deleted successfully'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } else {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Failed to delete item'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _deleteInventoryCategory(String categoryId) async {
+    final success = await InventoryService.deleteInventoryCategory(categoryId);
+    
+    if (success) {
+      _loadInventoryData(); // Reload data
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Category deleted successfully'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } else {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Failed to delete category. Make sure it has no items.'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 }
