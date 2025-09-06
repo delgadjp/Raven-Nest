@@ -6,7 +6,7 @@ class CalendarService {
   // Get all bookings
   static Future<List<Map<String, dynamic>>> getAllBookings() async {
     try {
-      final response = await _supabase
+      final bookings = await _supabase
           .from('bookings')
           .select('''
             id,
@@ -15,16 +15,36 @@ class CalendarService {
             status,
             total_amount,
             created_at,
-            source_id,
-            booking_sources!inner(
-              id,
-              name,
-              color
-            )
+            source_id
           ''')
           .order('check_in', ascending: true);
 
-      return List<Map<String, dynamic>>.from(response);
+      // Get booking sources separately
+      List<Map<String, dynamic>> enrichedBookings = [];
+      for (var booking in bookings) {
+        Map<String, dynamic> enrichedBooking = Map<String, dynamic>.from(booking);
+        
+        // Get source information if exists
+        if (booking['source_id'] != null) {
+          try {
+            final source = await _supabase
+                .from('booking_sources')
+                .select('id, name, color')
+                .eq('id', booking['source_id'])
+                .single();
+            enrichedBooking['source'] = source;
+          } catch (e) {
+            print('Error fetching source for booking ${booking['id']}: $e');
+            enrichedBooking['source'] = {'name': 'Unknown Source', 'color': '#000000'};
+          }
+        } else {
+          enrichedBooking['source'] = {'name': 'Direct Booking', 'color': '#6B7280'};
+        }
+        
+        enrichedBookings.add(enrichedBooking);
+      }
+
+      return enrichedBookings;
     } catch (e) {
       print('Error fetching bookings: $e');
       return [];
@@ -35,7 +55,7 @@ class CalendarService {
   static Future<List<Map<String, dynamic>>> getBookingsForDateRange(
       DateTime startDate, DateTime endDate) async {
     try {
-      final response = await _supabase
+      final bookings = await _supabase
           .from('bookings')
           .select('''
             id,
@@ -44,18 +64,38 @@ class CalendarService {
             status,
             total_amount,
             created_at,
-            source_id,
-            booking_sources!inner(
-              id,
-              name,
-              color
-            )
+            source_id
           ''')
           .gte('check_in', startDate.toIso8601String().split('T')[0])
           .lte('check_out', endDate.toIso8601String().split('T')[0])
           .order('check_in', ascending: true);
 
-      return List<Map<String, dynamic>>.from(response);
+      // Get booking sources separately
+      List<Map<String, dynamic>> enrichedBookings = [];
+      for (var booking in bookings) {
+        Map<String, dynamic> enrichedBooking = Map<String, dynamic>.from(booking);
+        
+        // Get source information if exists
+        if (booking['source_id'] != null) {
+          try {
+            final source = await _supabase
+                .from('booking_sources')
+                .select('id, name, color')
+                .eq('id', booking['source_id'])
+                .single();
+            enrichedBooking['source'] = source;
+          } catch (e) {
+            print('Error fetching source for booking ${booking['id']}: $e');
+            enrichedBooking['source'] = {'name': 'Unknown Source', 'color': '#000000'};
+          }
+        } else {
+          enrichedBooking['source'] = {'name': 'Direct Booking', 'color': '#6B7280'};
+        }
+        
+        enrichedBookings.add(enrichedBooking);
+      }
+
+      return enrichedBookings;
     } catch (e) {
       print('Error fetching bookings for date range: $e');
       return [];
@@ -67,7 +107,7 @@ class CalendarService {
     try {
       final dayString = day.toIso8601String().split('T')[0];
       
-      final response = await _supabase
+      final bookings = await _supabase
           .from('bookings')
           .select('''
             id,
@@ -76,18 +116,38 @@ class CalendarService {
             status,
             total_amount,
             created_at,
-            source_id,
-            booking_sources!inner(
-              id,
-              name,
-              color
-            )
+            source_id
           ''')
           .lte('check_in', dayString)
           .gte('check_out', dayString)
           .order('check_in', ascending: true);
 
-      return List<Map<String, dynamic>>.from(response);
+      // Get booking sources separately
+      List<Map<String, dynamic>> enrichedBookings = [];
+      for (var booking in bookings) {
+        Map<String, dynamic> enrichedBooking = Map<String, dynamic>.from(booking);
+        
+        // Get source information if exists
+        if (booking['source_id'] != null) {
+          try {
+            final source = await _supabase
+                .from('booking_sources')
+                .select('id, name, color')
+                .eq('id', booking['source_id'])
+                .single();
+            enrichedBooking['source'] = source;
+          } catch (e) {
+            print('Error fetching source for booking ${booking['id']}: $e');
+            enrichedBooking['source'] = {'name': 'Unknown Source', 'color': '#000000'};
+          }
+        } else {
+          enrichedBooking['source'] = {'name': 'Direct Booking', 'color': '#6B7280'};
+        }
+        
+        enrichedBookings.add(enrichedBooking);
+      }
+
+      return enrichedBookings;
     } catch (e) {
       print('Error fetching bookings for day: $e');
       return [];
@@ -99,7 +159,7 @@ class CalendarService {
     try {
       final dayString = day.toIso8601String().split('T')[0];
       
-      final response = await _supabase
+      final bookings = await _supabase
           .from('bookings')
           .select('''
             id,
@@ -108,17 +168,37 @@ class CalendarService {
             status,
             total_amount,
             created_at,
-            source_id,
-            booking_sources!inner(
-              id,
-              name,
-              color
-            )
+            source_id
           ''')
           .eq('check_in', dayString)
           .order('created_at', ascending: true);
 
-      return List<Map<String, dynamic>>.from(response);
+      // Get booking sources separately
+      List<Map<String, dynamic>> enrichedBookings = [];
+      for (var booking in bookings) {
+        Map<String, dynamic> enrichedBooking = Map<String, dynamic>.from(booking);
+        
+        // Get source information if exists
+        if (booking['source_id'] != null) {
+          try {
+            final source = await _supabase
+                .from('booking_sources')
+                .select('id, name, color')
+                .eq('id', booking['source_id'])
+                .single();
+            enrichedBooking['source'] = source;
+          } catch (e) {
+            print('Error fetching source for booking ${booking['id']}: $e');
+            enrichedBooking['source'] = {'name': 'Unknown Source', 'color': '#000000'};
+          }
+        } else {
+          enrichedBooking['source'] = {'name': 'Direct Booking', 'color': '#6B7280'};
+        }
+        
+        enrichedBookings.add(enrichedBooking);
+      }
+
+      return enrichedBookings;
     } catch (e) {
       print('Error fetching check-ins for day: $e');
       return [];

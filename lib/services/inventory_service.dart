@@ -20,18 +20,37 @@ class InventoryService {
   // Get all inventory items with category information
   static Future<List<Map<String, dynamic>>> getInventoryItems() async {
     try {
-      final response = await _client
+      final items = await _client
           .from('inventory_items')
-          .select('''
-            *,
-            category:inventory_categories(
-              id,
-              name
-            )
-          ''')
+          .select('*')
           .order('name');
       
-      return List<Map<String, dynamic>>.from(response);
+      // Get category information separately
+      List<Map<String, dynamic>> enrichedItems = [];
+      for (var item in items) {
+        Map<String, dynamic> enrichedItem = Map<String, dynamic>.from(item);
+        
+        // Get category information
+        if (item['category_id'] != null) {
+          try {
+            final category = await _client
+                .from('inventory_categories')
+                .select('id, name')
+                .eq('id', item['category_id'])
+                .single();
+            enrichedItem['category'] = category;
+          } catch (e) {
+            print('Error fetching category for item ${item['id']}: $e');
+            enrichedItem['category'] = {'name': 'Unknown Category'};
+          }
+        } else {
+          enrichedItem['category'] = {'name': 'No Category'};
+        }
+        
+        enrichedItems.add(enrichedItem);
+      }
+      
+      return enrichedItems;
     } catch (e) {
       throw Exception('Failed to fetch inventory items: $e');
     }

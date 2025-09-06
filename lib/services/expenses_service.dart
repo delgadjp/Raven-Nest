@@ -292,7 +292,7 @@ class ExpensesService {
       'id': expense['id'],
       'name': expense['name'] ?? 'Unknown',
       'amount': expense['amount'] ?? 0.0,
-      'category': expense['expense_categories']?['name'] ?? 'Uncategorized',
+      'category': expense['category']?['name'] ?? 'Uncategorized',
       'date': expense['date'],
       'created_at': expense['created_at'],
     };
