@@ -21,20 +21,37 @@ class ExpensesService {
   // Get fixed expenses (categories where is_variable = false)
   static Future<List<Map<String, dynamic>>> getFixedExpenses() async {
     try {
-      final response = await _supabase
+      // First get fixed expense categories
+      final categories = await _supabase
+          .from('expense_categories')
+          .select('id, name')
+          .eq('is_variable', false);
+      
+      if (categories.isEmpty) return [];
+      
+      final categoryIds = categories.map((cat) => cat['id']).toList();
+      
+      // Then get expenses for those categories
+      final expenses = await _supabase
           .from('expenses')
-          .select('''
-            *,
-            expense_categories!inner(
-              id,
-              name,
-              is_variable
-            )
-          ''')
-          .eq('expense_categories.is_variable', false)
+          .select('*')
+          .inFilter('category_id', categoryIds)
           .order('created_at', ascending: false);
       
-      return List<Map<String, dynamic>>.from(response);
+      // Enrich expenses with category information
+      List<Map<String, dynamic>> enrichedExpenses = [];
+      for (var expense in expenses) {
+        final category = categories.firstWhere(
+          (cat) => cat['id'] == expense['category_id'],
+          orElse: () => {'name': 'Unknown Category'},
+        );
+        
+        Map<String, dynamic> enrichedExpense = Map<String, dynamic>.from(expense);
+        enrichedExpense['category'] = category;
+        enrichedExpenses.add(enrichedExpense);
+      }
+      
+      return enrichedExpenses;
     } catch (e) {
       print('Error fetching fixed expenses: $e');
       return [];
@@ -44,20 +61,37 @@ class ExpensesService {
   // Get variable expenses (categories where is_variable = true)
   static Future<List<Map<String, dynamic>>> getVariableExpenses() async {
     try {
-      final response = await _supabase
+      // First get variable expense categories
+      final categories = await _supabase
+          .from('expense_categories')
+          .select('id, name')
+          .eq('is_variable', true);
+      
+      if (categories.isEmpty) return [];
+      
+      final categoryIds = categories.map((cat) => cat['id']).toList();
+      
+      // Then get expenses for those categories
+      final expenses = await _supabase
           .from('expenses')
-          .select('''
-            *,
-            expense_categories!inner(
-              id,
-              name,
-              is_variable
-            )
-          ''')
-          .eq('expense_categories.is_variable', true)
+          .select('*')
+          .inFilter('category_id', categoryIds)
           .order('created_at', ascending: false);
       
-      return List<Map<String, dynamic>>.from(response);
+      // Enrich expenses with category information
+      List<Map<String, dynamic>> enrichedExpenses = [];
+      for (var expense in expenses) {
+        final category = categories.firstWhere(
+          (cat) => cat['id'] == expense['category_id'],
+          orElse: () => {'name': 'Unknown Category'},
+        );
+        
+        Map<String, dynamic> enrichedExpense = Map<String, dynamic>.from(expense);
+        enrichedExpense['category'] = category;
+        enrichedExpenses.add(enrichedExpense);
+      }
+      
+      return enrichedExpenses;
     } catch (e) {
       print('Error fetching variable expenses: $e');
       return [];
@@ -70,13 +104,21 @@ class ExpensesService {
       final currentMonth = month ?? DateTime.now().month;
       final currentYear = year ?? DateTime.now().year;
       
+      // First get fixed expense categories
+      final categories = await _supabase
+          .from('expense_categories')
+          .select('id')
+          .eq('is_variable', false);
+      
+      if (categories.isEmpty) return 0.0;
+      
+      final categoryIds = categories.map((cat) => cat['id']).toList();
+      
+      // Then get expenses for those categories for the specified month/year
       final response = await _supabase
           .from('expenses')
-          .select('''
-            amount,
-            expense_categories!inner(is_variable)
-          ''')
-          .eq('expense_categories.is_variable', false)
+          .select('amount')
+          .inFilter('category_id', categoryIds)
           .eq('month', currentMonth)
           .eq('year', currentYear);
       
@@ -101,13 +143,21 @@ class ExpensesService {
       final currentMonth = month ?? DateTime.now().month;
       final currentYear = year ?? DateTime.now().year;
       
+      // First get variable expense categories
+      final categories = await _supabase
+          .from('expense_categories')
+          .select('id')
+          .eq('is_variable', true);
+      
+      if (categories.isEmpty) return 0.0;
+      
+      final categoryIds = categories.map((cat) => cat['id']).toList();
+      
+      // Then get expenses for those categories for the specified month/year
       final response = await _supabase
           .from('expenses')
-          .select('''
-            amount,
-            expense_categories!inner(is_variable)
-          ''')
-          .eq('expense_categories.is_variable', true)
+          .select('amount')
+          .inFilter('category_id', categoryIds)
           .eq('month', currentMonth)
           .eq('year', currentYear);
       

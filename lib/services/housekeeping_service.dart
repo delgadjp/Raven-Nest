@@ -6,7 +6,7 @@ class HousekeepingService {
   // Get all housekeeping tasks
   static Future<List<Map<String, dynamic>>> getAllTasks() async {
     try {
-      final response = await _supabase
+      final tasks = await _supabase
           .from('housekeeping_tasks')
           .select('''
             id,
@@ -18,36 +18,55 @@ class HousekeepingService {
             priority_weight,
             status,
             created_at,
-            assigned_staff,
-            housekeeping_staff!inner(
-              id,
-              name,
-              contact,
-              email
-            )
+            assigned_staff
           ''')
           .order('due_date', ascending: true)
           .order('due_time', ascending: true);
 
-      // Transform data to match expected format
-      return response.map<Map<String, dynamic>>((task) {
+      // Get staff information separately
+      List<Map<String, dynamic>> enrichedTasks = [];
+      
+      for (var task in tasks) {
+        Map<String, dynamic> enrichedTask = Map<String, dynamic>.from(task);
+        
+        // Get staff information if assigned
+        if (task['assigned_staff'] != null) {
+          try {
+            final staff = await _supabase
+                .from('housekeeping_staff')
+                .select('id, name, contact, email')
+                .eq('id', task['assigned_staff'])
+                .single();
+            enrichedTask['staff'] = staff;
+          } catch (e) {
+            print('Error fetching staff for task ${task['id']}: $e');
+            enrichedTask['staff'] = {'name': 'Unassigned'};
+          }
+        } else {
+          enrichedTask['staff'] = {'name': 'Unassigned'};
+        }
+        
+        // Transform data to match expected format
         final dueDate = DateTime.parse(task['due_date']);
         final dueTime = task['due_time'] != null 
             ? DateTime.parse('${task['due_date']} ${task['due_time']}')
             : dueDate;
         
-        return {
-          'id': task['id'],
+        enrichedTask.addAll({
           'room': task['room_number'],
           'type': task['task_type'],
-          'assignee': task['housekeeping_staff']['name'],
+          'assignee': enrichedTask['staff']['name'],
           'dueDate': dueTime,
           'status': task['status'] == 'done' ? 'completed' : 
                    task['status'] == 'in-progress' ? 'in_progress' : 'pending',
           'priority': task['priority'],
           'notes': '', // Add notes field if available in your schema
-        };
-      }).toList();
+        });
+        
+        enrichedTasks.add(enrichedTask);
+      }
+
+      return enrichedTasks;
     } catch (e) {
       print('Error fetching housekeeping tasks: $e');
       return [];
@@ -59,7 +78,7 @@ class HousekeepingService {
     try {
       final today = DateTime.now().toIso8601String().split('T')[0];
       
-      final response = await _supabase
+      final tasks = await _supabase
           .from('housekeeping_tasks')
           .select('''
             id,
@@ -71,36 +90,55 @@ class HousekeepingService {
             priority_weight,
             status,
             created_at,
-            assigned_staff,
-            housekeeping_staff!inner(
-              id,
-              name,
-              contact,
-              email
-            )
+            assigned_staff
           ''')
           .eq('due_date', today)
           .order('due_time', ascending: true);
 
-      // Transform data to match expected format
-      return response.map<Map<String, dynamic>>((task) {
+      // Get staff information separately
+      List<Map<String, dynamic>> enrichedTasks = [];
+      
+      for (var task in tasks) {
+        Map<String, dynamic> enrichedTask = Map<String, dynamic>.from(task);
+        
+        // Get staff information if assigned
+        if (task['assigned_staff'] != null) {
+          try {
+            final staff = await _supabase
+                .from('housekeeping_staff')
+                .select('id, name, contact, email')
+                .eq('id', task['assigned_staff'])
+                .single();
+            enrichedTask['staff'] = staff;
+          } catch (e) {
+            print('Error fetching staff for task ${task['id']}: $e');
+            enrichedTask['staff'] = {'name': 'Unassigned'};
+          }
+        } else {
+          enrichedTask['staff'] = {'name': 'Unassigned'};
+        }
+        
+        // Transform data to match expected format
         final dueDate = DateTime.parse(task['due_date']);
         final dueTime = task['due_time'] != null 
             ? DateTime.parse('${task['due_date']} ${task['due_time']}')
             : dueDate;
         
-        return {
-          'id': task['id'],
+        enrichedTask.addAll({
           'room': task['room_number'],
           'type': task['task_type'],
-          'assignee': task['housekeeping_staff']['name'],
+          'assignee': enrichedTask['staff']['name'],
           'dueDate': dueTime,
           'status': task['status'] == 'done' ? 'completed' : 
                    task['status'] == 'in-progress' ? 'in_progress' : 'pending',
           'priority': task['priority'],
           'notes': '', // Add notes field if available in your schema
-        };
-      }).toList();
+        });
+        
+        enrichedTasks.add(enrichedTask);
+      }
+
+      return enrichedTasks;
     } catch (e) {
       print('Error fetching today tasks: $e');
       return [];

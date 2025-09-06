@@ -26,7 +26,7 @@ class NotificationsService {
 
       return response.map<NotificationModel>((notification) {
         return NotificationModel(
-          id: notification['id'].hashCode, // Convert UUID to int for compatibility
+          id: notification['id'].toString().hashCode, // Convert UUID to int for compatibility
           type: notification['type'] ?? 'system',
           title: notification['title'] ?? 'Notification',
           message: notification['message'] ?? '',
@@ -65,7 +65,7 @@ class NotificationsService {
 
       return response.map<NotificationModel>((notification) {
         return NotificationModel(
-          id: notification['id'].hashCode,
+          id: notification['id'].toString().hashCode,
           type: notification['type'] ?? 'system',
           title: notification['title'] ?? 'Notification',
           message: notification['message'] ?? '',
@@ -107,7 +107,7 @@ class NotificationsService {
 
       return response.map<NotificationModel>((notification) {
         return NotificationModel(
-          id: notification['id'].hashCode,
+          id: notification['id'].toString().hashCode,
           type: notification['type'] ?? 'system',
           title: notification['title'] ?? 'Notification',
           message: notification['message'] ?? '',
@@ -146,7 +146,7 @@ class NotificationsService {
 
       return response.map<NotificationModel>((notification) {
         return NotificationModel(
-          id: notification['id'].hashCode,
+          id: notification['id'].toString().hashCode,
           type: notification['type'] ?? 'system',
           title: notification['title'] ?? 'Notification',
           message: notification['message'] ?? '',
@@ -311,17 +311,63 @@ class NotificationsService {
   // Get notifications with related data (bookings, tasks, items)
   static Future<List<Map<String, dynamic>>> getNotificationsWithRelatedData() async {
     try {
-      final response = await _supabase
+      final notifications = await _supabase
           .from('notifications')
-          .select('''
-            *,
-            bookings(id, check_in, check_out, status, total_amount),
-            housekeeping_tasks(id, room_number, task_type, status),
-            inventory_items(id, name, current_stock, min_stock)
-          ''')
+          .select('*')
           .order('created_at', ascending: false);
 
-      return List<Map<String, dynamic>>.from(response);
+      // Fetch related data separately for each notification
+      List<Map<String, dynamic>> enrichedNotifications = [];
+      
+      for (var notification in notifications) {
+        Map<String, dynamic> enriched = Map<String, dynamic>.from(notification);
+        
+        // Get related booking if exists
+        if (notification['related_booking'] != null) {
+          try {
+            final booking = await _supabase
+                .from('bookings')
+                .select('id, check_in, check_out, status, total_amount')
+                .eq('id', notification['related_booking'])
+                .single();
+            enriched['booking'] = booking;
+          } catch (e) {
+            print('Error fetching related booking: $e');
+          }
+        }
+        
+        // Get related task if exists
+        if (notification['related_task'] != null) {
+          try {
+            final task = await _supabase
+                .from('housekeeping_tasks')
+                .select('id, room_number, task_type, status')
+                .eq('id', notification['related_task'])
+                .single();
+            enriched['task'] = task;
+          } catch (e) {
+            print('Error fetching related task: $e');
+          }
+        }
+        
+        // Get related item if exists
+        if (notification['related_item'] != null) {
+          try {
+            final item = await _supabase
+                .from('inventory_items')
+                .select('id, name, current_stock, min_stock')
+                .eq('id', notification['related_item'])
+                .single();
+            enriched['item'] = item;
+          } catch (e) {
+            print('Error fetching related item: $e');
+          }
+        }
+        
+        enrichedNotifications.add(enriched);
+      }
+
+      return enrichedNotifications;
     } catch (e) {
       print('Error fetching notifications with related data: $e');
       return [];

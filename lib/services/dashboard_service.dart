@@ -132,22 +132,23 @@ class DashboardService {
   // Booking Sources Pie Chart Data
   Future<List<Map<String, dynamic>>> getBookingSourcesData() async {
     try {
-      final sourcesData = await _client
+      // Get booking sources with their booking counts
+      final sourcesResponse = await _client
           .from('booking_sources')
-          .select('''
-            id,
-            name,
-            color,
-            bookings!inner(id)
-          ''');
+          .select('id, name, color');
 
       final result = <Map<String, dynamic>>[];
       
-      for (var source in sourcesData) {
-        final bookings = source['bookings'] as List;
+      for (var source in sourcesResponse) {
+        // Count bookings for each source
+        final bookingsCount = await _client
+            .from('bookings')
+            .select('id')
+            .eq('source_id', source['id']);
+
         result.add({
           'name': source['name'],
-          'value': bookings.length,
+          'value': (bookingsCount as List).length,
           'color': _parseColor(source['color']),
         });
       }
@@ -174,29 +175,65 @@ class DashboardService {
             created_at,
             related_booking,
             related_task,
-            related_item,
-            bookings(check_in, check_out),
-            housekeeping_tasks(room_number, task_type),
-            inventory_items(name)
+            related_item
           ''')
           .order('created_at', ascending: false)
           .limit(limit);
 
-      return notificationsData.map<Map<String, dynamic>>((item) {
-        return {
-          'type': item['type'],
-          'title': item['title'],
-          'message': item['message'],
-          'priority': item['priority'],
-          'created_at': item['created_at'],
-          'related_booking': item['related_booking'],
-          'related_task': item['related_task'],
-          'related_item': item['related_item'],
-          'booking_data': item['bookings'],
-          'task_data': item['housekeeping_tasks'],
-          'item_data': item['inventory_items'],
-        };
-      }).toList();
+      // For each notification, get related data if needed
+      final enrichedData = <Map<String, dynamic>>[];
+      
+      for (var notification in notificationsData) {
+        Map<String, dynamic>? bookingData;
+        Map<String, dynamic>? taskData;
+        Map<String, dynamic>? itemData;
+
+        // Get related booking data if exists
+        if (notification['related_booking'] != null) {
+          final bookingResponse = await _client
+              .from('bookings')
+              .select('check_in, check_out, status, total_amount')
+              .eq('id', notification['related_booking'])
+              .single();
+          bookingData = bookingResponse;
+        }
+
+        // Get related task data if exists
+        if (notification['related_task'] != null) {
+          final taskResponse = await _client
+              .from('housekeeping_tasks')
+              .select('room_number, task_type, status')
+              .eq('id', notification['related_task'])
+              .single();
+          taskData = taskResponse;
+        }
+
+        // Get related item data if exists
+        if (notification['related_item'] != null) {
+          final itemResponse = await _client
+              .from('inventory_items')
+              .select('name, current_stock, min_stock')
+              .eq('id', notification['related_item'])
+              .single();
+          itemData = itemResponse;
+        }
+
+        enrichedData.add({
+          'type': notification['type'],
+          'title': notification['title'],
+          'message': notification['message'],
+          'priority': notification['priority'],
+          'created_at': notification['created_at'],
+          'related_booking': notification['related_booking'],
+          'related_task': notification['related_task'],
+          'related_item': notification['related_item'],
+          'booking_data': bookingData,
+          'task_data': taskData,
+          'item_data': itemData,
+        });
+      }
+
+      return enrichedData;
     } catch (e) {
       throw Exception('Failed to fetch recent activity data: $e');
     }
