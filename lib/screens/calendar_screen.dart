@@ -6,30 +6,6 @@ bool isSameDay(DateTime a, DateTime b) {
   return a.year == b.year && a.month == b.month && a.day == b.day;
 }
 
-class Booking {
-  final int id;
-  final String guestName;
-  final DateTime checkIn;
-  final DateTime checkOut;
-  final String room;
-  final String source;
-  final String status;
-  final int nights;
-  final double amount;
-
-  Booking({
-    required this.id,
-    required this.guestName,
-    required this.checkIn,
-    required this.checkOut,
-    required this.room,
-    required this.source,
-    required this.status,
-    required this.nights,
-    required this.amount,
-  });
-}
-
 class CalendarScreen extends StatefulWidget {
   const CalendarScreen({super.key});
 
@@ -39,84 +15,89 @@ class CalendarScreen extends StatefulWidget {
 
 class _CalendarScreenState extends State<CalendarScreen> {
   late DateTime _focusedDay;
-
-  final List<Booking> bookings = [
-    Booking(
-      id: 1,
-      guestName: "John Smith",
-      checkIn: DateTime(2024, 12, 15),
-      checkOut: DateTime(2024, 12, 18),
-      room: "201",
-      source: "Airbnb",
-      status: "confirmed",
-      nights: 3,
-      amount: 450,
-    ),
-    Booking(
-      id: 2,
-      guestName: "Sarah Johnson",
-      checkIn: DateTime(2024, 12, 20),
-      checkOut: DateTime(2024, 12, 25),
-      room: "305",
-      source: "Booking.com",
-      status: "confirmed",
-      nights: 5,
-      amount: 750,
-    ),
-    Booking(
-      id: 3,
-      guestName: "Mike Davis",
-      checkIn: DateTime(2024, 12, 28),
-      checkOut: DateTime(2024, 12, 30),
-      room: "201",
-      source: "Airbnb",
-      status: "pending",
-      nights: 2,
-      amount: 300,
-    ),
-    Booking(
-      id: 4,
-      guestName: "Emma Wilson",
-      checkIn: DateTime(2025, 1, 5),
-      checkOut: DateTime(2025, 1, 12),
-      room: "305",
-      source: "Direct",
-      status: "confirmed",
-      nights: 7,
-      amount: 1050,
-    ),
-  ];
+  List<Map<String, dynamic>> bookings = [];
+  Map<String, dynamic> summaryData = {};
+  bool isLoading = true;
+  String? errorMessage;
 
   @override
   void initState() {
     super.initState();
     _focusedDay = DateTime.now();
+    _loadCalendarData();
   }
 
-  List<Booking> _getBookingsForDay(DateTime day) {
+  Future<void> _loadCalendarData() async {
+    setState(() {
+      isLoading = true;
+      errorMessage = null;
+    });
+
+    try {
+      final results = await Future.wait([
+        CalendarService.getAllBookings(),
+        CalendarService.getCalendarSummary(),
+      ]);
+
+      setState(() {
+        bookings = results[0] as List<Map<String, dynamic>>;
+        summaryData = results[1] as Map<String, dynamic>;
+        isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        isLoading = false;
+        errorMessage = 'Failed to load calendar data: $e';
+      });
+    }
+  }
+
+  List<Map<String, dynamic>> _getBookingsForDay(DateTime day) {
     return bookings.where((booking) {
-      return day.isAfter(booking.checkIn.subtract(const Duration(days: 1))) &&
-          day.isBefore(booking.checkOut);
+      final checkIn = DateTime.parse(booking['check_in']);
+      final checkOut = DateTime.parse(booking['check_out']);
+      return day.isAfter(checkIn.subtract(const Duration(days: 1))) &&
+          day.isBefore(checkOut);
     }).toList();
   }
 
-  Booking? _getCheckInForDay(DateTime day) {
+  Map<String, dynamic>? _getCheckInForDay(DateTime day) {
     for (var booking in bookings) {
-      if (isSameDay(booking.checkIn, day)) {
+      final checkIn = DateTime.parse(booking['check_in']);
+      if (isSameDay(checkIn, day)) {
         return booking;
       }
     }
     return null;
   }
 
+  double get totalRevenue => summaryData['totalRevenue']?.toDouble() ?? 0.0;
+  int get totalBookings => summaryData['totalBookings'] ?? 0;
+  int get confirmedBookings => summaryData['confirmedBookings'] ?? 0;
+  int get occupancyRate => summaryData['occupancyRate'] ?? 0;
 
-
-  double get totalRevenue {
-    return bookings.fold(0, (sum, booking) => sum + booking.amount);
-  }
-
-  int get confirmedBookings {
-    return bookings.where((booking) => booking.status == 'confirmed').length;
+  Future<void> _syncWithPlatforms() async {
+    try {
+      final success = await CalendarService.syncWithPlatforms();
+      if (success && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Successfully synced with platforms'),
+            backgroundColor: Colors.green,
+          ),
+        );
+        _loadCalendarData(); // Reload data after sync
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Sync failed: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 
   @override
@@ -125,10 +106,54 @@ class _CalendarScreenState extends State<CalendarScreen> {
       child: Column(
         children: [
           const NavigationWidget(),
-          Expanded(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(16),
-              child: Column(
+          if (isLoading)
+            const Expanded(
+              child: Center(
+                child: CircularProgressIndicator(),
+              ),
+            )
+          else if (errorMessage != null)
+            Expanded(
+              child: Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.error_outline,
+                      size: 64,
+                      color: Colors.red.shade400,
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      'Error loading calendar data',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.red.shade700,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      errorMessage!,
+                      style: TextStyle(
+                        color: Colors.grey.shade600,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 16),
+                    ElevatedButton(
+                      onPressed: _loadCalendarData,
+                      child: const Text('Retry'),
+                    ),
+                  ],
+                ),
+              ),
+            )
+          else
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(16),
+                child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     // Summary Cards using ResponsiveCardGrid
@@ -136,7 +161,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
                       children: [
                         SummaryCard(
                           title: 'Total Bookings',
-                          value: '${bookings.length}',
+                          value: '$totalBookings',
                           subtitle: 'All time',
                           icon: Icons.calendar_today,
                           iconColor: const Color(0xFF2563EB),
@@ -152,12 +177,12 @@ class _CalendarScreenState extends State<CalendarScreen> {
                           title: 'Total Revenue',
                           value: '\$${totalRevenue.toStringAsFixed(0)}',
                           subtitle: 'Expected income',
-                          icon: Icons.access_time,
+                          icon: Icons.attach_money,
                           iconColor: Colors.purple.shade600,
                         ),
                         SummaryGradientCard(
                           title: 'Occupancy',
-                          value: '78%',
+                          value: '$occupancyRate%',
                           subtitle: 'This month',
                           gradientColors: const [Color(0xFF2563EB), Color(0xFF0EA5E9)],
                         ),
@@ -424,7 +449,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
                         borderRadius: BorderRadius.circular(4),
                       ),
                       child: Text(
-                        'Check-in: ${checkInBooking.guestName}',
+                        'Check-in: ${checkInBooking['booking_sources']?['name'] ?? 'Guest'}',
                         style: TextStyle(
                           fontSize: 10,
                           color: Colors.blue.shade800,
@@ -477,9 +502,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
                 ActionButton(
                   text: 'Sync with Airbnb & Booking.com',
                   icon: Icons.sync,
-                  onPressed: () {
-                    // Handle sync functionality
-                  },
+                  onPressed: _syncWithPlatforms,
                 ),
               ],
             ),

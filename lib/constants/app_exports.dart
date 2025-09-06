@@ -90,3 +90,4 @@ export '/services/supabase_service.dart';
 export '/services/dashboard_service.dart';
 export '/services/expenses_service.dart';
 export '/services/inventory_service.dart';
+export '/services/calendar_service.dart';
