@@ -26,14 +26,16 @@ class NotificationsService {
 
       return response.map<NotificationModel>((notification) {
         return NotificationModel(
-          id: notification['id'].toString().hashCode, // Convert UUID to int for compatibility
+          id: notification['id'], // Keep as string UUID
           type: notification['type'] ?? 'system',
           title: notification['title'] ?? 'Notification',
           message: notification['message'] ?? '',
           timestamp: DateTime.parse(notification['created_at']),
           read: notification['is_read'] ?? false,
           priority: notification['priority'] ?? 'medium',
-          source: _getSourceFromType(notification['type']),
+          relatedBooking: notification['related_booking'],
+          relatedTask: notification['related_task'],
+          relatedItem: notification['related_item'],
           icon: _getIconFromType(notification['type']),
         );
       }).toList();
@@ -65,14 +67,16 @@ class NotificationsService {
 
       return response.map<NotificationModel>((notification) {
         return NotificationModel(
-          id: notification['id'].toString().hashCode,
+          id: notification['id'],
           type: notification['type'] ?? 'system',
           title: notification['title'] ?? 'Notification',
           message: notification['message'] ?? '',
           timestamp: DateTime.parse(notification['created_at']),
           read: notification['is_read'] ?? false,
           priority: notification['priority'] ?? 'medium',
-          source: _getSourceFromType(notification['type']),
+          relatedBooking: notification['related_booking'],
+          relatedTask: notification['related_task'],
+          relatedItem: notification['related_item'],
           icon: _getIconFromType(notification['type']),
         );
       }).toList();
@@ -107,14 +111,16 @@ class NotificationsService {
 
       return response.map<NotificationModel>((notification) {
         return NotificationModel(
-          id: notification['id'].toString().hashCode,
+          id: notification['id'],
           type: notification['type'] ?? 'system',
           title: notification['title'] ?? 'Notification',
           message: notification['message'] ?? '',
           timestamp: DateTime.parse(notification['created_at']),
           read: notification['is_read'] ?? false,
           priority: notification['priority'] ?? 'medium',
-          source: _getSourceFromType(notification['type']),
+          relatedBooking: notification['related_booking'],
+          relatedTask: notification['related_task'],
+          relatedItem: notification['related_item'],
           icon: _getIconFromType(notification['type']),
         );
       }).toList();
@@ -146,14 +152,16 @@ class NotificationsService {
 
       return response.map<NotificationModel>((notification) {
         return NotificationModel(
-          id: notification['id'].toString().hashCode,
+          id: notification['id'],
           type: notification['type'] ?? 'system',
           title: notification['title'] ?? 'Notification',
           message: notification['message'] ?? '',
           timestamp: DateTime.parse(notification['created_at']),
           read: notification['is_read'] ?? false,
           priority: notification['priority'] ?? 'medium',
-          source: _getSourceFromType(notification['type']),
+          relatedBooking: notification['related_booking'],
+          relatedTask: notification['related_task'],
+          relatedItem: notification['related_item'],
           icon: _getIconFromType(notification['type']),
         );
       }).toList();
@@ -258,29 +266,6 @@ class NotificationsService {
     } catch (e) {
       print('Error creating notification: $e');
       return false;
-    }
-  }
-
-  // Helper method to get source from notification type
-  static String _getSourceFromType(String? type) {
-    switch (type?.toLowerCase()) {
-      case 'booking':
-        return 'Booking System';
-      case 'checkin':
-        return 'System';
-      case 'maintenance':
-      case 'housekeeping':
-        return 'Housekeeping';
-      case 'inventory':
-        return 'Inventory';
-      case 'checkout':
-        return 'System';
-      case 'payment':
-        return 'Payment System';
-      case 'review':
-        return 'Review System';
-      default:
-        return 'System';
     }
   }
 

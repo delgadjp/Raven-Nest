@@ -1,16 +1,16 @@
 import 'package:flutter/material.dart';
 
 class NotificationModel {
-  final int id;
+  final String id;
   final String type;
   final String title;
   final String message;
   final DateTime timestamp;
   final bool read;
   final String priority;
-  final String source;
-  final double? amount;
-  final int? rating;
+  final String? relatedBooking;
+  final String? relatedTask;
+  final String? relatedItem;
   final IconData icon;
 
   NotificationModel({
@@ -21,9 +21,9 @@ class NotificationModel {
     required this.timestamp,
     required this.read,
     required this.priority,
-    required this.source,
-    this.amount,
-    this.rating,
+    this.relatedBooking,
+    this.relatedTask,
+    this.relatedItem,
     required this.icon,
   });
 
@@ -38,9 +38,9 @@ class NotificationModel {
       timestamp: timestamp,
       read: read ?? this.read,
       priority: priority,
-      source: source,
-      amount: amount,
-      rating: rating,
+      relatedBooking: relatedBooking,
+      relatedTask: relatedTask,
+      relatedItem: relatedItem,
       icon: icon,
     );
   }

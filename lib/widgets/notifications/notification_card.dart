@@ -1,16 +1,16 @@
 import '../../constants/app_exports.dart';
 
 class NotificationCard extends StatelessWidget {
-  final int id;
+  final String id;
   final String type;
   final String title;
   final String message;
   final DateTime timestamp;
   final bool read;
   final String priority;
-  final String source;
-  final double? amount;
-  final int? rating;
+  final String? relatedBooking;
+  final String? relatedTask;
+  final String? relatedItem;
   final IconData icon;
   final VoidCallback? onMarkAsRead;
   final VoidCallback? onDelete;
@@ -24,9 +24,9 @@ class NotificationCard extends StatelessWidget {
     required this.timestamp,
     required this.read,
     required this.priority,
-    required this.source,
-    this.amount,
-    this.rating,
+    this.relatedBooking,
+    this.relatedTask,
+    this.relatedItem,
     required this.icon,
     this.onMarkAsRead,
     this.onDelete,
@@ -143,29 +143,40 @@ class NotificationCard extends StatelessWidget {
         ),
         const Text(' • ', style: TextStyle(color: Colors.black38)),
         Text(
-          source,
+          type,
           style: const TextStyle(
             color: Colors.black38,
             fontSize: 12,
           ),
         ),
-        if (amount != null) ...[
+        if (relatedBooking != null) ...[
           const Text(' • ', style: TextStyle(color: Colors.black38)),
           Text(
-            '\$${amount!.toInt()}',
+            'Booking Related',
             style: const TextStyle(
-              color: Colors.green,
+              color: Colors.blue,
               fontSize: 12,
               fontWeight: FontWeight.w500,
             ),
           ),
         ],
-        if (rating != null) ...[
+        if (relatedTask != null) ...[
           const Text(' • ', style: TextStyle(color: Colors.black38)),
           Text(
-            '$rating stars',
+            'Task Related',
             style: const TextStyle(
-              color: Colors.amber,
+              color: Colors.orange,
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
+        if (relatedItem != null) ...[
+          const Text(' • ', style: TextStyle(color: Colors.black38)),
+          Text(
+            'Inventory Related',
+            style: const TextStyle(
+              color: Colors.green,
               fontSize: 12,
               fontWeight: FontWeight.w500,
             ),

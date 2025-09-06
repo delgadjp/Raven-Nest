@@ -44,10 +44,8 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     }
   }
 
-  void markAsRead(int id) async {
-    // Find the notification and get its UUID
-    final notification = notifications.firstWhere((n) => n.id == id);
-    final success = await NotificationsService.markAsRead(notification.id.toString());
+  void markAsRead(String id) async {
+    final success = await NotificationsService.markAsRead(id);
     
     if (success) {
       setState(() {
@@ -92,10 +90,8 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     }
   }
 
-  void deleteNotification(int id) async {
-    // Find the notification and get its UUID
-    final notification = notifications.firstWhere((n) => n.id == id);
-    final success = await NotificationsService.deleteNotification(notification.id.toString());
+  void deleteNotification(String id) async {
+    final success = await NotificationsService.deleteNotification(id);
     
     if (success) {
       _loadNotificationsData(); // Reload all data
@@ -277,9 +273,9 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                                     timestamp: notification.timestamp,
                                     read: notification.read,
                                     priority: notification.priority,
-                                    source: notification.source,
-                                    amount: notification.amount,
-                                    rating: notification.rating,
+                                    relatedBooking: notification.relatedBooking,
+                                    relatedTask: notification.relatedTask,
+                                    relatedItem: notification.relatedItem,
                                     icon: notification.icon,
                                     onMarkAsRead: () => markAsRead(notification.id),
                                     onDelete: () => deleteNotification(notification.id),
