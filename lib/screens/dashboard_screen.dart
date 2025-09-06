@@ -1,31 +1,124 @@
-import '../constants/app_exports.dart';
-import 'package:go_router/go_router.dart';
+import '/constants/app_exports.dart';
 
-class DashboardScreen extends StatelessWidget {
+class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
 
-  // Analytics data for charts
-  final List<Map<String, dynamic>> monthlyRevenue = const [
-    {'month': 'Jan', 'revenue': 2400, 'bookings': 8},
-    {'month': 'Feb', 'revenue': 2800, 'bookings': 10},
-    {'month': 'Mar', 'revenue': 3200, 'bookings': 12},
-    {'month': 'Apr', 'revenue': 2900, 'bookings': 11},
-    {'month': 'May', 'revenue': 3500, 'bookings': 14},
-    {'month': 'Jun', 'revenue': 4200, 'bookings': 16},
-    {'month': 'Jul', 'revenue': 4800, 'bookings': 18},
-    {'month': 'Aug', 'revenue': 4600, 'bookings': 17},
-    {'month': 'Sep', 'revenue': 3800, 'bookings': 15},
-    {'month': 'Oct', 'revenue': 3400, 'bookings': 13},
-    {'month': 'Nov', 'revenue': 3100, 'bookings': 12},
-    {'month': 'Dec', 'revenue': 3600, 'bookings': 14},
-  ];
+  @override
+  State<DashboardScreen> createState() => _DashboardScreenState();
+}
 
-  final List<Map<String, dynamic>> bookingSources = const [
-    {'name': 'Airbnb', 'value': 45, 'color': Color(0xFFFF5A5F)},
-    {'name': 'Booking.com', 'value': 35, 'color': Color(0xFF003580)},
-    {'name': 'Direct', 'value': 15, 'color': Color(0xFF10B981)},
-    {'name': 'Other', 'value': 5, 'color': Color(0xFF6B7280)},
-  ];
+class _DashboardScreenState extends State<DashboardScreen> {
+  final DashboardService _dashboardService = DashboardService();
+  
+  // Data state
+  Map<String, dynamic>? summaryData;
+  List<Map<String, dynamic>> monthlyRevenueData = [];
+  List<Map<String, dynamic>> bookingSourcesData = [];
+  List<Map<String, dynamic>> recentActivityData = [];
+  
+  // Loading states
+  bool isLoadingSummary = true;
+  bool isLoadingCharts = true;
+  bool isLoadingActivity = true;
+  
+  // Error states
+  String? summaryError;
+  String? chartsError;
+  String? activityError;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadDashboardData();
+  }
+
+  Future<void> _loadDashboardData() async {
+    // Load all dashboard data concurrently
+    await Future.wait([
+      _loadSummaryData(),
+      _loadChartsData(),
+      _loadActivityData(),
+    ]);
+  }
+
+  Future<void> _loadSummaryData() async {
+    try {
+      setState(() {
+        isLoadingSummary = true;
+        summaryError = null;
+      });
+      
+      final data = await _dashboardService.getSummaryData();
+      
+      if (mounted) {
+        setState(() {
+          summaryData = data;
+          isLoadingSummary = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          summaryError = e.toString();
+          isLoadingSummary = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _loadChartsData() async {
+    try {
+      setState(() {
+        isLoadingCharts = true;
+        chartsError = null;
+      });
+      
+      final results = await Future.wait([
+        _dashboardService.getMonthlyRevenueData(),
+        _dashboardService.getBookingSourcesData(),
+      ]);
+      
+      if (mounted) {
+        setState(() {
+          monthlyRevenueData = results[0];
+          bookingSourcesData = results[1];
+          isLoadingCharts = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          chartsError = e.toString();
+          isLoadingCharts = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _loadActivityData() async {
+    try {
+      setState(() {
+        isLoadingActivity = true;
+        activityError = null;
+      });
+      
+      final data = await _dashboardService.getRecentActivityData(limit: 3);
+      
+      if (mounted) {
+        setState(() {
+          recentActivityData = data;
+          isLoadingActivity = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          activityError = e.toString();
+          isLoadingActivity = false;
+        });
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -39,145 +132,352 @@ class DashboardScreen extends StatelessWidget {
               child: Center(
                 child: ConstrainedBox(
                   constraints: const BoxConstraints(maxWidth: 1200),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // Quick Stats Cards
-                        Row(
-                          children: [
-                            Expanded(
-                              child: SummaryCard(
-                                title: 'Monthly Expenses',
-                                value: '\$2,450',
-                                subtitle: 'Fixed + Variable costs',
-                                icon: Icons.attach_money,
-                                iconColor: const Color(0xFF16A34A),
-                                onTap: () => context.go('/expenses'),
-                              ),
-                            ),
-                            const SizedBox(width: 16),
-                            Expanded(
-                              child: SummaryCard(
-                                title: 'Active Bookings',
-                                value: '18',
-                                subtitle: 'This month',
-                                icon: Icons.calendar_today,
-                                iconColor: const Color(0xFF2563EB),
-                                onTap: () => context.go('/calendar'),
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 16),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: SummaryCard(
-                                title: 'Inventory Items',
-                                value: '45',
-                                subtitle: 'Supplies & washables',
-                                icon: Icons.inventory,
-                                iconColor: const Color(0xFF7C3AED),
-                                onTap: () => context.go('/inventory'),
-                              ),
-                            ),
-                            const SizedBox(width: 16),
-                            Expanded(
-                              child: SummaryCard(
-                                title: 'Pending Tasks',
-                                value: '3',
-                                subtitle: 'Housekeeping items',
-                                icon: Icons.check_circle,
-                                iconColor: const Color(0xFFEA580C),
-                                onTap: () => context.go('/housekeeping'),
-                              ),
-                            ),
-                          ],
-                        ),  
-                        const SizedBox(height: 10),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Summary Cards Section
+                      _buildSummaryCards(),
+                      const SizedBox(height: 32),
 
-                        // Analytics KPI Cards
-                        Row(
-                          children: [
-                            Expanded(
-                              child: SummaryCard(
-                                title: 'Total Revenue',
-                                value: '\$42,300',
-                                subtitle: '+12% from last year',
-                                icon: Icons.attach_money,
-                                iconColor: const Color(0xFF10B981),
-                                onTap: () => context.go('/'), // Navigate to dashboard (analytics view)
-                              ),
-                            ),
-                            const SizedBox(width: 16),
-                            Expanded(
-                              child: SummaryCard(
-                                title: 'Unread Notifications',
-                                value: '7',
-                                subtitle: 'Require attention',
-                                icon: Icons.notifications,
-                                iconColor: const Color(0xFFEF4444),
-                                onTap: () => context.go('/notifications'),
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 32),
+                      // Analytics Charts Section
+                      _buildChartsSection(),
+                      const SizedBox(height: 32),
 
-                        // Analytics Charts Section
-                        ResponsiveChartsLayout(
-                          charts: [
-                            ChartContainer(
-                              title: 'Monthly Revenue',
-                              subtitle: 'Revenue and booking trends over the year',
-                              chart: RevenueLineChart(data: monthlyRevenue),
-                            ),
-                            ChartContainer(
-                              title: 'Booking Sources',
-                              subtitle: 'Distribution of bookings by platform',
-                              chart: BookingSourcesPieChart(data: bookingSources),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 32),
-
-                        // Recent Activity
-                        RecentActivityCard(
-                          activities: const [
-                            ActivityData(
-                              dotColor: Color(0xFF3B82F6),
-                              backgroundColor: Color(0xFFEFF6FF),
-                              borderColor: Color(0xFFBFDBFE),
-                              title: 'New booking confirmed',
-                              subtitle: 'Room 201 • Check-in: Tomorrow',
-                              timeAgo: '2h ago',
-                            ),
-                            ActivityData(
-                              dotColor: Color(0xFF10B981),
-                              backgroundColor: Color(0xFFECFDF5),
-                              borderColor: Color(0xFFA7F3D0),
-                              title: 'Cleaning completed',
-                              subtitle: 'Room 305 • Ready for next guest',
-                              timeAgo: '4h ago',
-                            ),
-                            ActivityData(
-                              dotColor: Color(0xFFF59E0B),
-                              backgroundColor: Color(0xFFFFF7ED),
-                              borderColor: Color(0xFFFCD34D),
-                              title: 'Low inventory alert',
-                              subtitle: 'Towels need restocking',
-                              timeAgo: '6h ago',
-                            ),
-                          ],
-                          viewAllRoute: '/notifications',
-                        ),
-                      ],
-                    ),
+                      // Recent Activity Section
+                      _buildRecentActivitySection(),
+                    ],
                   ),
                 ),
               ),
             ),
+          ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildSummaryCards() {
+    if (isLoadingSummary) {
+      return _buildLoadingSummaryCards();
+    }
+
+    if (summaryError != null) {
+      return _buildErrorCard('Failed to load summary data: $summaryError');
+    }
+
+    if (summaryData == null) {
+      return _buildErrorCard('No summary data available');
+    }
+
+    final data = summaryData!;
+    
+    return Column(
+      children: [
+        // First row of cards
+        Row(
+          children: [
+            Expanded(
+              child: SummaryCard(
+                title: 'Monthly Expenses',
+                value: '\$${(data['monthlyExpenses'] ?? 0.0).toStringAsFixed(0)}',
+                subtitle: 'Fixed + Variable costs',
+                icon: Icons.attach_money,
+                iconColor: const Color(0xFF16A34A),
+                onTap: () => context.go('/expenses'),
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: SummaryCard(
+                title: 'Active Bookings',
+                value: '${data['activeBookings'] ?? 0}',
+                subtitle: 'This month',
+                icon: Icons.calendar_today,
+                iconColor: const Color(0xFF2563EB),
+                onTap: () => context.go('/calendar'),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
+        
+        // Second row of cards
+        Row(
+          children: [
+            Expanded(
+              child: SummaryCard(
+                title: 'Inventory Items',
+                value: '${data['inventoryItems'] ?? 0}',
+                subtitle: 'Supplies & washables',
+                icon: Icons.inventory,
+                iconColor: const Color(0xFF7C3AED),
+                onTap: () => context.go('/inventory'),
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: SummaryCard(
+                title: 'Pending Tasks',
+                value: '${data['pendingTasks'] ?? 0}',
+                subtitle: 'Housekeeping items',
+                icon: Icons.check_circle,
+                iconColor: const Color(0xFFEA580C),
+                onTap: () => context.go('/housekeeping'),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
+
+        // Third row of cards
+        Row(
+          children: [
+            Expanded(
+              child: SummaryCard(
+                title: 'Total Revenue',
+                value: '\$${(data['totalRevenue'] ?? 0.0).toStringAsFixed(0)}',
+                subtitle: 'This year',
+                icon: Icons.attach_money,
+                iconColor: const Color(0xFF10B981),
+                onTap: () => context.go('/'),
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: SummaryCard(
+                title: 'Unread Notifications',
+                value: '${data['unreadNotifications'] ?? 0}',
+                subtitle: 'Require attention',
+                icon: Icons.notifications,
+                iconColor: const Color(0xFFEF4444),
+                onTap: () => context.go('/notifications'),
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildLoadingSummaryCards() {
+    return Column(
+      children: [
+        Row(
+          children: [
+            Expanded(child: _buildLoadingCard()),
+            const SizedBox(width: 16),
+            Expanded(child: _buildLoadingCard()),
+          ],
+        ),
+        const SizedBox(height: 16),
+        Row(
+          children: [
+            Expanded(child: _buildLoadingCard()),
+            const SizedBox(width: 16),
+            Expanded(child: _buildLoadingCard()),
+          ],
+        ),
+        const SizedBox(height: 16),
+        Row(
+          children: [
+            Expanded(child: _buildLoadingCard()),
+            const SizedBox(width: 16),
+            Expanded(child: _buildLoadingCard()),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildLoadingCard() {
+    return Card(
+      elevation: 0,
+      color: Colors.white.withValues(alpha: 0.8),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: Container(
+        height: 120,
+        padding: const EdgeInsets.all(16),
+        child: const Center(
+          child: CircularProgressIndicator(),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildChartsSection() {
+    if (isLoadingCharts) {
+      return _buildLoadingChartsSection();
+    }
+
+    if (chartsError != null) {
+      return _buildErrorCard('Failed to load charts: $chartsError');
+    }
+
+    return ResponsiveChartsLayout(
+      charts: [
+        ChartContainer(
+          title: 'Monthly Revenue',
+          subtitle: 'Revenue and booking trends over the year',
+          chart: monthlyRevenueData.isEmpty 
+            ? _buildEmptyChart('No revenue data available')
+            : RevenueLineChart(data: monthlyRevenueData),
+        ),
+        ChartContainer(
+          title: 'Booking Sources',
+          subtitle: 'Distribution of bookings by platform',
+          chart: bookingSourcesData.isEmpty
+            ? _buildEmptyChart('No booking sources data available')
+            : BookingSourcesPieChart(data: bookingSourcesData),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildLoadingChartsSection() {
+    return ResponsiveChartsLayout(
+      charts: [
+        ChartContainer(
+          title: 'Monthly Revenue',
+          subtitle: 'Loading...',
+          chart: const Center(
+            child: CircularProgressIndicator(),
+          ),
+        ),
+        ChartContainer(
+          title: 'Booking Sources',
+          subtitle: 'Loading...',
+          chart: const Center(
+            child: CircularProgressIndicator(),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildEmptyChart(String message) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.bar_chart,
+            size: 48,
+            color: Colors.grey.shade400,
+          ),
+          const SizedBox(height: 16),
+          Text(
+            message,
+            style: TextStyle(
+              color: Colors.grey.shade600,
+              fontSize: 14,
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildRecentActivitySection() {
+    if (isLoadingActivity) {
+      return _buildLoadingActivityCard();
+    }
+
+    if (activityError != null) {
+      return _buildErrorCard('Failed to load recent activity: $activityError');
+    }
+
+    if (recentActivityData.isEmpty) {
+      return _buildEmptyActivityCard();
+    }
+
+    // Convert data to ActivityData objects
+    final activities = recentActivityData.map((item) {
+      final style = _dashboardService.getActivityStyle(item['type'] ?? '');
+      return ActivityData(
+        dotColor: style['dotColor'],
+        backgroundColor: style['backgroundColor'],
+        borderColor: style['borderColor'],
+        title: item['title'] ?? 'Unknown Activity',
+        subtitle: item['message'] ?? '',
+        timeAgo: item['created_at'] != null 
+          ? _dashboardService.formatTimeAgo(DateTime.parse(item['created_at']))
+          : 'Unknown time',
+      );
+    }).toList();
+
+    return RecentActivityCard(
+      activities: activities,
+      viewAllRoute: '/notifications',
+    );
+  }
+
+  Widget _buildLoadingActivityCard() {
+    return Card(
+      elevation: 0,
+      color: Colors.white.withValues(alpha: 0.8),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: Container(
+        height: 200,
+        padding: const EdgeInsets.all(16),
+        child: const Center(
+          child: CircularProgressIndicator(),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildEmptyActivityCard() {
+    return RecentActivityCard(
+      activities: const [],
+      viewAllRoute: '/notifications',
+    );
+  }
+
+  Widget _buildErrorCard(String message) {
+    return Card(
+      elevation: 0,
+      color: Colors.red.shade50,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          children: [
+            Icon(
+              Icons.error_outline,
+              color: Colors.red.shade600,
+              size: 48,
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Error',
+              style: TextStyle(
+                color: Colors.red.shade800,
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              message,
+              style: TextStyle(
+                color: Colors.red.shade600,
+                fontSize: 14,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: _loadDashboardData,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red.shade600,
+                foregroundColor: Colors.white,
+              ),
+              child: const Text('Retry'),
+            ),
+          ],
+        ),
       ),
     );
   }

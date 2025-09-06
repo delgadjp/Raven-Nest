@@ -1,5 +1,15 @@
 export 'package:flutter/material.dart';
+export 'package:go_router/go_router.dart';
+export 'package:google_fonts/google_fonts.dart';
 
+//SCREENS
+export '/screens/dashboard_screen.dart';
+export '/screens/expenses_screen.dart';
+export '/screens/inventory_screen.dart';
+export '/screens/calendar_screen.dart';
+export '/screens/housekeeping_screen.dart';
+export '/screens/notifications_screen.dart';
+export '/screens/settings_screen.dart';
 
 //GENERAL WIDGETS
 export '/widgets/general_widgets/gradient_background.dart'; //REUSABLE GRADIENT BACKGROUND
@@ -74,3 +84,7 @@ export '/constants/schedule_utils.dart'; //SCHEDULE UTILITIES
 
 //MODELS
 export '/models/notification_model.dart';
+
+//SERVICES
+export '/services/supabase_service.dart';
+export '/services/dashboard_service.dart';

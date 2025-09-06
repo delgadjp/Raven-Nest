@@ -1,16 +1,12 @@
-import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
-import 'screens/dashboard_screen.dart';
-import 'screens/expenses_screen.dart';
-import 'screens/inventory_screen.dart';
-import 'screens/calendar_screen.dart';
-import 'screens/housekeeping_screen.dart';
-import 'screens/notifications_screen.dart';
-import 'screens/settings_screen.dart';
-// import 'screens/guest_logs_screen.dart';
 
-void main() {
+import '/constants/app_exports.dart';
+
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  
+  // Initialize Supabase
+  await SupabaseService.initialize();
+  
   runApp(CondoManagerApp());
 }
 
@@ -48,10 +44,6 @@ class CondoManagerApp extends StatelessWidget {
         path: '/settings',
         builder: (context, state) => const SettingsScreen(),
       ),
-      // GoRoute(
-      //   path: '/guest-logs',
-      //   builder: (context, state) => const GuestLogsScreen(),
-      // ),
     ],
   );
 
