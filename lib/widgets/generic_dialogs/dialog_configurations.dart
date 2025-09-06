@@ -73,8 +73,25 @@ class DialogConfigurations {
   // Add Expense Dialog Configuration
   static DialogConfig addExpense({
     required String title,
-    required Function(String name, double amount, String category) onAdd,
+    required Function(String name, double amount, String categoryId) onAdd,
+    List<Map<String, dynamic>>? categories,
   }) {
+    // If categories are provided, use dropdown, otherwise use text field
+    final categoryField = categories != null && categories.isNotEmpty
+        ? DialogField(
+            key: 'category',
+            label: 'Category',
+            hintText: 'Select a category',
+            icon: Icons.category,
+            dropdownItems: categories.map((cat) => cat['name'] as String).toList(),
+          )
+        : const DialogField(
+            key: 'category',
+            label: 'Category',
+            hintText: 'e.g., Bills, Maintenance',
+            icon: Icons.category,
+          );
+
     return DialogConfig(
       title: title,
       headerIcon: Icons.add,
@@ -94,16 +111,22 @@ class DialogConfigurations {
           icon: Icons.attach_money,
           keyboardType: TextInputType.number,
         ),
-        const DialogField(
-          key: 'category',
-          label: 'Category',
-          hintText: 'e.g., Bills, Maintenance',
-          icon: Icons.category,
-        ),
+        categoryField,
       ],
       onSubmit: (values) {
         final amount = double.tryParse(values['amount']!) ?? 0;
-        onAdd(values['name']!, amount, values['category']!);
+        
+        // If categories are provided, find the ID of the selected category
+        String categoryId = values['category']!;
+        if (categories != null && categories.isNotEmpty) {
+          final selectedCategory = categories.firstWhere(
+            (cat) => cat['name'] == values['category'],
+            orElse: () => {'id': values['category']!},
+          );
+          categoryId = selectedCategory['id'] as String;
+        }
+        
+        onAdd(values['name']!, amount, categoryId);
       },
     );
   }

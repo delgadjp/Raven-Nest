@@ -8,27 +8,59 @@ class ExpensesScreen extends StatefulWidget {
 }
 
 class _ExpensesScreenState extends State<ExpensesScreen> {
-  // Mock data for demonstration
-  List<Map<String, dynamic>> fixedExpenses = [
-    {'name': 'Rent', 'category': 'Housing', 'amount': 1200.0},
-    {'name': 'Insurance', 'category': 'Protection', 'amount': 300.0},
-    {'name': 'Internet', 'category': 'Utilities', 'amount': 80.0},
-  ];
-  List<Map<String, dynamic>> variableExpenses = [
-    {'name': 'Groceries', 'category': 'Food', 'amount': 400.0},
-    {'name': 'Gas', 'category': 'Transportation', 'amount': 150.0},
-    {'name': 'Entertainment', 'category': 'Leisure', 'amount': 200.0},
-  ];
-  double fixedTotal = 1580.0;
-  double variableTotal = 750.0;
-  bool isLoading = false;
+  List<Map<String, dynamic>> fixedExpenses = [];
+  List<Map<String, dynamic>> variableExpenses = [];
+  List<Map<String, dynamic>> expenseCategories = [];
+  double fixedTotal = 0.0;
+  double variableTotal = 0.0;
+  double budgetUtilization = 0.0;
+  bool isLoading = true;
+  String? errorMessage;
 
   double get grandTotal => fixedTotal + variableTotal;
 
   @override
   void initState() {
     super.initState();
-    // Data is already initialized as mock data
+    _loadExpensesData();
+  }
+
+  Future<void> _loadExpensesData() async {
+    setState(() {
+      isLoading = true;
+      errorMessage = null;
+    });
+
+    try {
+      // Load all data concurrently
+      final results = await Future.wait([
+        ExpensesService.getExpenseCategories(),
+        ExpensesService.getFixedExpenses(),
+        ExpensesService.getVariableExpenses(),
+        ExpensesService.getFixedExpensesTotal(),
+        ExpensesService.getVariableExpensesTotal(),
+        ExpensesService.getBudgetUtilization(),
+      ]);
+
+      setState(() {
+        expenseCategories = results[0] as List<Map<String, dynamic>>;
+        fixedExpenses = (results[1] as List<Map<String, dynamic>>)
+            .map((e) => ExpensesService.formatExpenseForUI(e))
+            .toList();
+        variableExpenses = (results[2] as List<Map<String, dynamic>>)
+            .map((e) => ExpensesService.formatExpenseForUI(e))
+            .toList();
+        fixedTotal = results[3] as double;
+        variableTotal = results[4] as double;
+        budgetUtilization = results[5] as double;
+        isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        errorMessage = 'Error loading expenses data: $e';
+        isLoading = false;
+      });
+    }
   }
 
   @override
@@ -45,7 +77,33 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
           Expanded(
             child: isLoading
                 ? const Center(child: CircularProgressIndicator())
-                : SingleChildScrollView(
+                : errorMessage != null
+                    ? Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.error_outline, size: 64, color: Colors.red.shade400),
+                            const SizedBox(height: 16),
+                            Text(
+                              'Failed to load expenses',
+                              style: Theme.of(context).textTheme.headlineSmall,
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              errorMessage!,
+                              style: Theme.of(context).textTheme.bodyMedium,
+                              textAlign: TextAlign.center,
+                            ),
+                            const SizedBox(height: 16),
+                            ElevatedButton.icon(
+                              onPressed: _loadExpensesData,
+                              icon: const Icon(Icons.refresh),
+                              label: const Text('Retry'),
+                            ),
+                          ],
+                        ),
+                      )
+                    : SingleChildScrollView(
                     padding: const EdgeInsets.all(16),
                     child: Center(
                       child: ConstrainedBox(
@@ -79,8 +137,8 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
                                   ),
                                   SummaryGradientCard(
                                     title: 'Budget Status',
-                                    value: '89%',
-                                    subtitle: 'Within budget',
+                                    value: '${budgetUtilization.toStringAsFixed(0)}%',
+                                    subtitle: budgetUtilization <= 100 ? 'Within budget' : 'Over budget',
                                   ),
                                 ],
                               ),
@@ -138,7 +196,7 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
           category: expense['category'] as String,
           amount: expense['amount'] as double,
           showDeleteButton: true,
-          onDelete: () => _deleteExpense(expense['name'] as String, variable),
+          onDelete: () => _deleteExpense(expense['id'] as String, variable),
           amountColor: amountColor,
         ),
       ).toList(),
@@ -171,45 +229,77 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
 
   void _showAddExpenseDialog(bool isVariable) {
     final String title = isVariable ? 'Add New Variable Expense' : 'Add New Fixed Expense';
+    
+    // Filter categories based on expense type
+    final filteredCategories = expenseCategories
+        .where((category) => category['is_variable'] == isVariable)
+        .toList();
+    
     showDialog(
       context: context,
       builder: (context) => GenericFormDialog(
         config: DialogConfigurations.addExpense(
           title: title,
-          onAdd: (name, amount, category) async {
-            // Add to mock data
-            final newExpense = {
-              'name': name,
-              'amount': amount,
-              'category': category,
-            };
+          categories: filteredCategories,
+          onAdd: (name, amount, categoryId) async {
+            final success = await ExpensesService.addExpense(
+              name: name,
+              amount: amount,
+              categoryId: categoryId,
+            );
             
-            setState(() {
-              if (isVariable) {
-                variableExpenses.add(newExpense);
-                variableTotal += amount;
-              } else {
-                fixedExpenses.add(newExpense);
-                fixedTotal += amount;
+            if (success) {
+              // Reload data to reflect changes
+              _loadExpensesData();
+              
+              if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('Expense "$name" added successfully'),
+                    backgroundColor: Colors.green,
+                  ),
+                );
               }
-            });
+            } else {
+              if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Failed to add expense'),
+                    backgroundColor: Colors.red,
+                  ),
+                );
+              }
+            }
           },
         ),
       ),
     );
   }
 
-  void _deleteExpense(String name, bool isVariable) {
-    setState(() {
-      if (isVariable) {
-        final expense = variableExpenses.firstWhere((e) => e['name'] == name);
-        variableExpenses.removeWhere((e) => e['name'] == name);
-        variableTotal -= expense['amount'] as double;
-      } else {
-        final expense = fixedExpenses.firstWhere((e) => e['name'] == name);
-        fixedExpenses.removeWhere((e) => e['name'] == name);
-        fixedTotal -= expense['amount'] as double;
+  void _deleteExpense(String expenseId, bool isVariable) async {
+    final success = await ExpensesService.deleteExpense(expenseId);
+    
+    if (success) {
+      // Reload data to reflect changes
+      _loadExpensesData();
+      
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Expense deleted successfully'),
+            backgroundColor: Colors.green,
+          ),
+        );
       }
-    });
+    } else {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Failed to delete expense'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 }

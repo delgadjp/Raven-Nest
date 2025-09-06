@@ -88,3 +88,4 @@ export '/models/notification_model.dart';
 //SERVICES
 export '/services/supabase_service.dart';
 export '/services/dashboard_service.dart';
+export '/services/expenses_service.dart';
