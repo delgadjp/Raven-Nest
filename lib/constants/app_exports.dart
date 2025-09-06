@@ -91,3 +91,4 @@ export '/services/dashboard_service.dart';
 export '/services/expenses_service.dart';
 export '/services/inventory_service.dart';
 export '/services/calendar_service.dart';
+export '/services/housekeeping_service.dart';
