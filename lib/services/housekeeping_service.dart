@@ -13,15 +13,15 @@ class HousekeepingService {
             room_number,
             task_type,
             due_date,
-            due_time,
             priority,
             priority_weight,
             status,
             created_at,
-            assigned_staff
+            assigned_staff,
+            notes
           ''')
           .order('due_date', ascending: true)
-          .order('due_time', ascending: true);
+          .order('created_at', ascending: true);
 
       // Get staff information separately
       List<Map<String, dynamic>> enrichedTasks = [];
@@ -48,19 +48,16 @@ class HousekeepingService {
         
         // Transform data to match expected format
         final dueDate = DateTime.parse(task['due_date']);
-        final dueTime = task['due_time'] != null 
-            ? DateTime.parse('${task['due_date']} ${task['due_time']}')
-            : dueDate;
         
         enrichedTask.addAll({
           'room': task['room_number'],
           'type': task['task_type'],
           'assignee': enrichedTask['staff']['name'],
-          'dueDate': dueTime,
+          'dueDate': dueDate,
           'status': task['status'] == 'done' ? 'completed' : 
                    task['status'] == 'in-progress' ? 'in_progress' : 'pending',
           'priority': task['priority'],
-          'notes': '', // Add notes field if available in your schema
+          'notes': task['notes'] ?? '',
         });
         
         enrichedTasks.add(enrichedTask);
@@ -85,15 +82,15 @@ class HousekeepingService {
             room_number,
             task_type,
             due_date,
-            due_time,
             priority,
             priority_weight,
             status,
             created_at,
-            assigned_staff
+            assigned_staff,
+            notes
           ''')
           .eq('due_date', today)
-          .order('due_time', ascending: true);
+          .order('created_at', ascending: true);
 
       // Get staff information separately
       List<Map<String, dynamic>> enrichedTasks = [];
@@ -120,19 +117,16 @@ class HousekeepingService {
         
         // Transform data to match expected format
         final dueDate = DateTime.parse(task['due_date']);
-        final dueTime = task['due_time'] != null 
-            ? DateTime.parse('${task['due_date']} ${task['due_time']}')
-            : dueDate;
         
         enrichedTask.addAll({
           'room': task['room_number'],
           'type': task['task_type'],
           'assignee': enrichedTask['staff']['name'],
-          'dueDate': dueTime,
+          'dueDate': dueDate,
           'status': task['status'] == 'done' ? 'completed' : 
                    task['status'] == 'in-progress' ? 'in_progress' : 'pending',
           'priority': task['priority'],
-          'notes': '', // Add notes field if available in your schema
+          'notes': task['notes'] ?? '',
         });
         
         enrichedTasks.add(enrichedTask);
@@ -363,17 +357,44 @@ class HousekeepingService {
             room_number,
             task_type,
             due_date,
-            due_time,
             priority,
             priority_weight,
             status,
-            created_at
+            created_at,
+            notes
           ''')
           .eq('assigned_staff', staffId)
           .order('due_date', ascending: true)
-          .order('due_time', ascending: true);
+          .order('created_at', ascending: true);
 
-      return List<Map<String, dynamic>>.from(response);
+      // Transform data to match expected format like in getAllTasks
+      List<Map<String, dynamic>> transformedTasks = [];
+      
+      for (var task in response) {
+        // Transform data to match expected format
+        final dueDate = DateTime.parse(task['due_date']);
+        
+        final transformedTask = {
+          'id': task['id'],
+          'room': task['room_number'],
+          'type': task['task_type'],
+          'dueDate': dueDate,
+          'status': task['status'] == 'done' ? 'completed' : 
+                   task['status'] == 'in-progress' ? 'in_progress' : 'pending',
+          'priority': task['priority'],
+          'notes': task['notes'] ?? '',
+          // Keep original fields for backwards compatibility
+          'room_number': task['room_number'],
+          'task_type': task['task_type'],
+          'due_date': task['due_date'],
+          'priority_weight': task['priority_weight'],
+          'created_at': task['created_at'],
+        };
+        
+        transformedTasks.add(transformedTask);
+      }
+
+      return transformedTasks;
     } catch (e) {
       print('Error fetching tasks for staff: $e');
       return [];
@@ -419,12 +440,9 @@ class HousekeepingService {
       
       for (var task in tasks) {
         if (task['status'] != 'done') {
-          final dueDate = DateTime.parse(task['due_date']);
-          final dueTime = task['due_time'] != null 
-              ? DateTime.parse('${task['due_date']} ${task['due_time']}')
-              : dueDate;
+          final dueDate = task['dueDate'] as DateTime; // Use the transformed dueDate
           
-          final newPriority = calculatePriority(dueTime);
+          final newPriority = calculatePriority(dueDate);
           final newPriorityWeight = getPriorityWeight(newPriority);
           
           await _supabase

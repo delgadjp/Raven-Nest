@@ -351,7 +351,7 @@ class _HousekeepingScreenState extends State<HousekeepingScreen> {
                   tasks: tasks,
                   todayTasks: todayTasks,
                   staff: staff,
-                  updateTaskStatus: (int id, String status) => updateTaskStatus(id.toString(), status),
+                  updateTaskStatus: (String id, String status) => updateTaskStatus(id, status),
                   addTask: (String room, String type, String assignee, DateTime dueDate, String? checkoutTime, String? checkinTime, String? notes) {
                     // Find staff ID from name
                     final staffMember = staff.firstWhere(

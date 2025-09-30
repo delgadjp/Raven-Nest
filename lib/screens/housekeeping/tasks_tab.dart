@@ -4,7 +4,7 @@ class TasksTab extends StatelessWidget {
   final List<Map<String,dynamic>> tasks;
   final List<Map<String,dynamic>> todayTasks;
   final List<Map<String,dynamic>> staff;
-  final void Function(int,String) updateTaskStatus;
+  final void Function(String,String) updateTaskStatus;
   final void Function(String, String, String, DateTime, String?, String?, String?) addTask;
   
   const TasksTab({
@@ -142,7 +142,7 @@ class TasksTab extends StatelessWidget {
   }
 
   void _handleStatusUpdate(Map<String, dynamic> task) {
-    final int taskId = task['id'] as int;
+    final String taskId = task['id'].toString(); // Convert to string
     final String currentStatus = task['status'] as String;
     
     String newStatus;
