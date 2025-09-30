@@ -10,7 +10,6 @@ class ExpensesScreen extends StatefulWidget {
 class _ExpensesScreenState extends State<ExpensesScreen> {
   List<Map<String, dynamic>> fixedExpenses = [];
   List<Map<String, dynamic>> variableExpenses = [];
-  List<Map<String, dynamic>> expenseCategories = [];
   double fixedTotal = 0.0;
   double variableTotal = 0.0;
   double budgetUtilization = 0.0;
@@ -34,7 +33,6 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
     try {
       // Load all data concurrently
       final results = await Future.wait([
-        ExpensesService.getExpenseCategories(),
         ExpensesService.getFixedExpenses(),
         ExpensesService.getVariableExpenses(),
         ExpensesService.getFixedExpensesTotal(),
@@ -43,16 +41,15 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
       ]);
 
       setState(() {
-        expenseCategories = results[0] as List<Map<String, dynamic>>;
-        fixedExpenses = (results[1] as List<Map<String, dynamic>>)
+        fixedExpenses = (results[0] as List<Map<String, dynamic>>)
             .map((e) => ExpensesService.formatExpenseForUI(e))
             .toList();
-        variableExpenses = (results[2] as List<Map<String, dynamic>>)
+        variableExpenses = (results[1] as List<Map<String, dynamic>>)
             .map((e) => ExpensesService.formatExpenseForUI(e))
             .toList();
-        fixedTotal = results[3] as double;
-        variableTotal = results[4] as double;
-        budgetUtilization = results[5] as double;
+        fixedTotal = results[2] as double;
+        variableTotal = results[3] as double;
+        budgetUtilization = results[4] as double;
         isLoading = false;
       });
     } catch (e) {
@@ -230,22 +227,16 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
   void _showAddExpenseDialog(bool isVariable) {
     final String title = isVariable ? 'Add New Variable Expense' : 'Add New Fixed Expense';
     
-    // Filter categories based on expense type
-    final filteredCategories = expenseCategories
-        .where((category) => category['is_variable'] == isVariable)
-        .toList();
-    
     showDialog(
       context: context,
       builder: (context) => GenericFormDialog(
         config: DialogConfigurations.addExpense(
           title: title,
-          categories: filteredCategories,
-          onAdd: (name, amount, categoryId) async {
+          onAdd: (name, amount) async {
             final success = await ExpensesService.addExpense(
               name: name,
               amount: amount,
-              categoryId: categoryId,
+              isVariable: isVariable,
             );
             
             if (success) {
@@ -263,9 +254,10 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
             } else {
               if (mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Failed to add expense'),
+                  SnackBar(
+                    content: Text('Failed to add expense. Please ensure expense categories exist in the database.'),
                     backgroundColor: Colors.red,
+                    duration: const Duration(seconds: 4),
                   ),
                 );
               }

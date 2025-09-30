@@ -20,16 +20,6 @@ CREATE TABLE public.bookings (
   CONSTRAINT bookings_pkey PRIMARY KEY (id),
   CONSTRAINT bookings_source_id_fkey FOREIGN KEY (source_id) REFERENCES public.booking_sources(id)
 );
-CREATE TABLE public.expense_categories (
-  id uuid NOT NULL DEFAULT gen_random_uuid(),
-  name text NOT NULL UNIQUE,
-  is_variable boolean NOT NULL DEFAULT false,
-  budget numeric,
-  description text,
-  created_at timestamp with time zone NOT NULL DEFAULT now(),
-  updated_at timestamp with time zone NOT NULL DEFAULT now(),
-  CONSTRAINT expense_categories_pkey PRIMARY KEY (id)
-);
 CREATE TABLE public.expenses (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
   booking_id uuid,
@@ -39,10 +29,9 @@ CREATE TABLE public.expenses (
   month integer,
   year integer,
   created_at timestamp with time zone DEFAULT now(),
-  category_id uuid,
+  is_variable boolean NOT NULL DEFAULT false,
   CONSTRAINT expenses_pkey PRIMARY KEY (id),
-  CONSTRAINT expenses_booking_id_fkey FOREIGN KEY (booking_id) REFERENCES public.bookings(id),
-  CONSTRAINT fk_expenses_category_id FOREIGN KEY (category_id) REFERENCES public.expense_categories(id)
+  CONSTRAINT expenses_booking_id_fkey FOREIGN KEY (booking_id) REFERENCES public.bookings(id)
 );
 CREATE TABLE public.housekeeping_staff (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
@@ -95,9 +84,9 @@ CREATE TABLE public.notifications (
   related_item uuid,
   created_at timestamp with time zone NOT NULL DEFAULT now(),
   CONSTRAINT notifications_pkey PRIMARY KEY (id),
-  CONSTRAINT notifications_related_item_fkey FOREIGN KEY (related_item) REFERENCES public.inventory_items(id),
+  CONSTRAINT notifications_related_booking_fkey FOREIGN KEY (related_booking) REFERENCES public.bookings(id),
   CONSTRAINT notifications_related_task_fkey FOREIGN KEY (related_task) REFERENCES public.housekeeping_tasks(id),
-  CONSTRAINT notifications_related_booking_fkey FOREIGN KEY (related_booking) REFERENCES public.bookings(id)
+  CONSTRAINT notifications_related_item_fkey FOREIGN KEY (related_item) REFERENCES public.inventory_items(id)
 );
 CREATE TABLE public.revenue (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
@@ -110,8 +99,8 @@ CREATE TABLE public.revenue (
   year integer,
   created_at timestamp with time zone NOT NULL DEFAULT now(),
   CONSTRAINT revenue_pkey PRIMARY KEY (id),
-  CONSTRAINT revenue_expense_id_fkey FOREIGN KEY (expense_id) REFERENCES public.expenses(id),
-  CONSTRAINT revenue_booking_id_fkey FOREIGN KEY (booking_id) REFERENCES public.bookings(id)
+  CONSTRAINT revenue_booking_id_fkey FOREIGN KEY (booking_id) REFERENCES public.bookings(id),
+  CONSTRAINT revenue_expense_id_fkey FOREIGN KEY (expense_id) REFERENCES public.expenses(id)
 );
 
 -- ==========================================================

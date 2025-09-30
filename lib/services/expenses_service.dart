@@ -3,95 +3,32 @@ import '../constants/app_exports.dart';
 class ExpensesService {
   static final _supabase = SupabaseService.client;
 
-  // Get all expense categories
-  static Future<List<Map<String, dynamic>>> getExpenseCategories() async {
-    try {
-      final response = await _supabase
-          .from('expense_categories')
-          .select('*')
-          .order('name');
-      
-      return List<Map<String, dynamic>>.from(response);
-    } catch (e) {
-      print('Error fetching expense categories: $e');
-      return [];
-    }
-  }
-
-  // Get fixed expenses (categories where is_variable = false)
+  // Get fixed expenses (where is_variable = false)
   static Future<List<Map<String, dynamic>>> getFixedExpenses() async {
     try {
-      // First get fixed expense categories
-      final categories = await _supabase
-          .from('expense_categories')
-          .select('id, name')
-          .eq('is_variable', false);
-      
-      if (categories.isEmpty) return [];
-      
-      final categoryIds = categories.map((cat) => cat['id']).toList();
-      
-      // Then get expenses for those categories
       final expenses = await _supabase
           .from('expenses')
           .select('*')
-          .inFilter('category_id', categoryIds)
+          .eq('is_variable', false)
           .order('created_at', ascending: false);
       
-      // Enrich expenses with category information
-      List<Map<String, dynamic>> enrichedExpenses = [];
-      for (var expense in expenses) {
-        final category = categories.firstWhere(
-          (cat) => cat['id'] == expense['category_id'],
-          orElse: () => {'name': 'Unknown Category'},
-        );
-        
-        Map<String, dynamic> enrichedExpense = Map<String, dynamic>.from(expense);
-        enrichedExpense['category'] = category;
-        enrichedExpenses.add(enrichedExpense);
-      }
-      
-      return enrichedExpenses;
+      return List<Map<String, dynamic>>.from(expenses);
     } catch (e) {
       print('Error fetching fixed expenses: $e');
       return [];
     }
   }
 
-  // Get variable expenses (categories where is_variable = true)
+  // Get variable expenses (where is_variable = true)
   static Future<List<Map<String, dynamic>>> getVariableExpenses() async {
     try {
-      // First get variable expense categories
-      final categories = await _supabase
-          .from('expense_categories')
-          .select('id, name')
-          .eq('is_variable', true);
-      
-      if (categories.isEmpty) return [];
-      
-      final categoryIds = categories.map((cat) => cat['id']).toList();
-      
-      // Then get expenses for those categories
       final expenses = await _supabase
           .from('expenses')
           .select('*')
-          .inFilter('category_id', categoryIds)
+          .eq('is_variable', true)
           .order('created_at', ascending: false);
       
-      // Enrich expenses with category information
-      List<Map<String, dynamic>> enrichedExpenses = [];
-      for (var expense in expenses) {
-        final category = categories.firstWhere(
-          (cat) => cat['id'] == expense['category_id'],
-          orElse: () => {'name': 'Unknown Category'},
-        );
-        
-        Map<String, dynamic> enrichedExpense = Map<String, dynamic>.from(expense);
-        enrichedExpense['category'] = category;
-        enrichedExpenses.add(enrichedExpense);
-      }
-      
-      return enrichedExpenses;
+      return List<Map<String, dynamic>>.from(expenses);
     } catch (e) {
       print('Error fetching variable expenses: $e');
       return [];
@@ -104,21 +41,10 @@ class ExpensesService {
       final currentMonth = month ?? DateTime.now().month;
       final currentYear = year ?? DateTime.now().year;
       
-      // First get fixed expense categories
-      final categories = await _supabase
-          .from('expense_categories')
-          .select('id')
-          .eq('is_variable', false);
-      
-      if (categories.isEmpty) return 0.0;
-      
-      final categoryIds = categories.map((cat) => cat['id']).toList();
-      
-      // Then get expenses for those categories for the specified month/year
       final response = await _supabase
           .from('expenses')
           .select('amount')
-          .inFilter('category_id', categoryIds)
+          .eq('is_variable', false)
           .eq('month', currentMonth)
           .eq('year', currentYear);
       
@@ -143,21 +69,10 @@ class ExpensesService {
       final currentMonth = month ?? DateTime.now().month;
       final currentYear = year ?? DateTime.now().year;
       
-      // First get variable expense categories
-      final categories = await _supabase
-          .from('expense_categories')
-          .select('id')
-          .eq('is_variable', true);
-      
-      if (categories.isEmpty) return 0.0;
-      
-      final categoryIds = categories.map((cat) => cat['id']).toList();
-      
-      // Then get expenses for those categories for the specified month/year
       final response = await _supabase
           .from('expenses')
           .select('amount')
-          .inFilter('category_id', categoryIds)
+          .eq('is_variable', true)
           .eq('month', currentMonth)
           .eq('year', currentYear);
       
@@ -180,7 +95,7 @@ class ExpensesService {
   static Future<bool> addExpense({
     required String name,
     required double amount,
-    required String categoryId,
+    required bool isVariable,
     String? bookingId,
     DateTime? date,
   }) async {
@@ -190,7 +105,7 @@ class ExpensesService {
       await _supabase.from('expenses').insert({
         'name': name,
         'amount': amount,
-        'category_id': categoryId,
+        'is_variable': isVariable,
         'booking_id': bookingId,
         'date': expenseDate.toIso8601String().split('T')[0], // YYYY-MM-DD format
         'month': expenseDate.month,
@@ -254,32 +169,12 @@ class ExpensesService {
   }
 
   // Get budget utilization percentage
+  // Note: Budget functionality temporarily disabled as budget_amount column doesn't exist
   static Future<double> getBudgetUtilization([int? month, int? year]) async {
     try {
-      final currentMonth = month ?? DateTime.now().month;
-      final currentYear = year ?? DateTime.now().year;
-      
-      // Get total budget from categories
-      final categoriesResponse = await _supabase
-          .from('expense_categories')
-          .select('budget');
-      
-      double totalBudget = 0.0;
-      for (final category in categoriesResponse) {
-        final budget = category['budget'];
-        if (budget != null) {
-          totalBudget += (budget is int) ? budget.toDouble() : (budget as num).toDouble();
-        }
-      }
-      
-      if (totalBudget == 0) return 0.0;
-      
-      // Get total expenses for the month
-      final fixedTotal = await getFixedExpensesTotal(currentMonth, currentYear);
-      final variableTotal = await getVariableExpensesTotal(currentMonth, currentYear);
-      final totalExpenses = fixedTotal + variableTotal;
-      
-      return (totalExpenses / totalBudget) * 100;
+      // For now, return 0% utilization since there's no budget column in the schema
+      // You can implement budget logic later if needed
+      return 0.0;
     } catch (e) {
       print('Error calculating budget utilization: $e');
       return 0.0;

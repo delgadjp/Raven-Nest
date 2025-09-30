@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 class DialogField {
   final String key;
@@ -8,6 +9,7 @@ class DialogField {
   final TextInputType? keyboardType;
   final bool isRequired;
   final List<String>? dropdownItems; // Add dropdown items support
+  final List<TextInputFormatter>? inputFormatters; // Add input formatters support
 
   const DialogField({
     required this.key,
@@ -17,6 +19,7 @@ class DialogField {
     this.keyboardType,
     this.isRequired = true,
     this.dropdownItems,
+    this.inputFormatters,
   });
 }
 
@@ -400,6 +403,7 @@ class _GenericFormDialogState extends State<GenericFormDialog> {
           child: TextField(
             controller: controller,
             keyboardType: field.keyboardType,
+            inputFormatters: field.inputFormatters,
             decoration: InputDecoration(
               hintText: field.hintText,
               hintStyle: TextStyle(

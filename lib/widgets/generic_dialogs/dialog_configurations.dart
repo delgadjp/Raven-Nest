@@ -1,3 +1,4 @@
+import 'package:flutter/services.dart';
 import '../../constants/app_exports.dart';
 
 class DialogConfigurations {
@@ -73,25 +74,9 @@ class DialogConfigurations {
   // Add Expense Dialog Configuration
   static DialogConfig addExpense({
     required String title,
-    required Function(String name, double amount, String categoryId) onAdd,
+    required Function(String name, double amount) onAdd,
     List<Map<String, dynamic>>? categories,
   }) {
-    // If categories are provided, use dropdown, otherwise use text field
-    final categoryField = categories != null && categories.isNotEmpty
-        ? DialogField(
-            key: 'category',
-            label: 'Category',
-            hintText: 'Select a category',
-            icon: Icons.category,
-            dropdownItems: categories.map((cat) => cat['name'] as String).toList(),
-          )
-        : const DialogField(
-            key: 'category',
-            label: 'Category',
-            hintText: 'e.g., Bills, Maintenance',
-            icon: Icons.category,
-          );
-
     return DialogConfig(
       title: title,
       headerIcon: Icons.add,
@@ -104,29 +89,20 @@ class DialogConfigurations {
           hintText: 'e.g., Internet Bill',
           icon: Icons.receipt_long,
         ),
-        const DialogField(
+        DialogField(
           key: 'amount',
           label: 'Amount (\$)',
           hintText: '0.00',
           icon: Icons.attach_money,
-          keyboardType: TextInputType.number,
+          keyboardType: TextInputType.numberWithOptions(decimal: true),
+          inputFormatters: [
+            FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d{0,2}')),
+          ],
         ),
-        categoryField,
       ],
       onSubmit: (values) {
         final amount = double.tryParse(values['amount']!) ?? 0;
-        
-        // If categories are provided, find the ID of the selected category
-        String categoryId = values['category']!;
-        if (categories != null && categories.isNotEmpty) {
-          final selectedCategory = categories.firstWhere(
-            (cat) => cat['name'] == values['category'],
-            orElse: () => {'id': values['category']!},
-          );
-          categoryId = selectedCategory['id'] as String;
-        }
-        
-        onAdd(values['name']!, amount, categoryId);
+        onAdd(values['name']!, amount);
       },
     );
   }
