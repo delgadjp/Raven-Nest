@@ -190,7 +190,6 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
       children: expenses.map((expense) => 
         ExpenseItemCard(
           name: expense['name'] as String,
-          category: expense['category'] as String,
           amount: expense['amount'] as double,
           showDeleteButton: true,
           onDelete: () => _deleteExpense(expense['id'] as String, variable),

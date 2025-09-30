@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 
 class ExpenseItemCard extends StatelessWidget {
   final String name;
-  final String category;
   final double amount;
   final bool showDeleteButton;
   final VoidCallback? onDelete;
@@ -11,7 +10,6 @@ class ExpenseItemCard extends StatelessWidget {
   const ExpenseItemCard({
     super.key,
     required this.name,
-    required this.category,
     required this.amount,
     this.showDeleteButton = false,
     this.onDelete,
@@ -31,25 +29,13 @@ class ExpenseItemCard extends StatelessWidget {
       child: Row(
         children: [
           Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  name,
-                  style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.black87,
-                  ),
-                ),
-                Text(
-                  category,
-                  style: const TextStyle(
-                    fontSize: 12,
-                    color: Colors.grey,
-                  ),
-                ),
-              ],
+            child: Text(
+              name,
+              style: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: Colors.black87,
+              ),
             ),
           ),
           Text(
