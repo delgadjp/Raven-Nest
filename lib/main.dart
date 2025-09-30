@@ -13,40 +13,6 @@ void main() async {
 class CondoManagerApp extends StatelessWidget {
   CondoManagerApp({super.key});
 
-  final GoRouter _router = GoRouter(
-    initialLocation: '/',
-    routes: [
-      GoRoute(
-        path: '/',
-        builder: (context, state) => const DashboardScreen(),
-      ),
-      GoRoute(
-        path: '/expenses',
-        builder: (context, state) => const ExpensesScreen(),
-      ),
-      GoRoute(
-        path: '/inventory',
-        builder: (context, state) => const InventoryScreen(),
-      ),
-      GoRoute(
-        path: '/calendar',
-        builder: (context, state) => const CalendarScreen(),
-      ),
-      GoRoute(
-        path: '/housekeeping',
-        builder: (context, state) => const HousekeepingScreen(),
-      ),
-      GoRoute(
-        path: '/notifications',
-        builder: (context, state) => const NotificationsScreen(),
-      ),
-      GoRoute(
-        path: '/settings',
-        builder: (context, state) => const SettingsScreen(),
-      ),
-    ],
-  );
-
   @override
   Widget build(BuildContext context) {
     return MaterialApp.router(
@@ -61,7 +27,7 @@ class CondoManagerApp extends StatelessWidget {
         ),
         scaffoldBackgroundColor: Colors.transparent,
       ),
-      routerConfig: _router,
+      routerConfig: AppRoutes.router,
     );
   }
 }

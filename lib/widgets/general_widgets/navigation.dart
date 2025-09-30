@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import '../../constants/app_routes.dart';
 
 class NavigationWidget extends StatelessWidget {
   const NavigationWidget({super.key});
@@ -7,43 +8,43 @@ class NavigationWidget extends StatelessWidget {
   // Function to get page info based on current route
   Map<String, dynamic> _getPageInfo(String currentLocation) {
     switch (currentLocation) {
-      case '/':
+      case AppRoutes.dashboard:
         return {
           'title': 'Condo Manager',
           'icon': Icons.home,
           'color': const Color(0xFF2563EB),
         };
-      case '/expenses':
+      case AppRoutes.expenses:
         return {
           'title': 'Expense Management',
           'icon': Icons.attach_money,
           'color': const Color(0xFF16A34A),
         };
-      case '/inventory':
+      case AppRoutes.inventory:
         return {
           'title': 'Inventory Management',
           'icon': Icons.inventory_2,
           'color': const Color(0xFF7C3AED),
         };
-      case '/calendar':
+      case AppRoutes.calendar:
         return {
           'title': 'Calendar & Bookings',
           'icon': Icons.calendar_today,
           'color': const Color(0xFF2563EB),
         };
-      case '/housekeeping':
+      case AppRoutes.housekeeping:
         return {
           'title': 'Housekeeping Management',
           'icon': Icons.people_alt_rounded,
           'color': Colors.teal.shade600,
         };
-      case '/notifications':
+      case AppRoutes.notifications:
         return {
           'title': 'Notifications',
           'icon': Icons.notifications,
           'color': Colors.red.shade600,
         };
-      case '/settings':
+      case AppRoutes.settings:
         return {
           'title': 'Settings',
           'icon': Icons.settings,
@@ -115,14 +116,14 @@ class NavigationWidget extends StatelessWidget {
                     scrollDirection: Axis.horizontal,
                     child: Row(
                       children: [
-                        _buildNavItem('Dashboard', '/', Icons.home, currentLocation, context),
-                        _buildNavItem('Expenses', '/expenses', Icons.attach_money, currentLocation, context),
-                        _buildNavItem('Inventory', '/inventory', Icons.inventory, currentLocation, context),
-                        _buildNavItem('Calendar', '/calendar', Icons.calendar_today, currentLocation, context),
-                        _buildNavItem('Housekeeping', '/housekeeping', Icons.cleaning_services, currentLocation, context),
-                        _buildNavItem('Notifications', '/notifications', Icons.notifications, currentLocation, context),
+                        _buildNavItem('Dashboard', AppRoutes.dashboard, Icons.home, currentLocation, context),
+                        _buildNavItem('Expenses', AppRoutes.expenses, Icons.attach_money, currentLocation, context),
+                        _buildNavItem('Inventory', AppRoutes.inventory, Icons.inventory, currentLocation, context),
+                        _buildNavItem('Calendar', AppRoutes.calendar, Icons.calendar_today, currentLocation, context),
+                        _buildNavItem('Housekeeping', AppRoutes.housekeeping, Icons.cleaning_services, currentLocation, context),
+                        _buildNavItem('Notifications', AppRoutes.notifications, Icons.notifications, currentLocation, context),
                         // _buildNavItem('Guest Logs', '/guest-logs', Icons.description, currentLocation, context),
-                        _buildNavItem('Settings', '/settings', Icons.settings, currentLocation, context),
+                        _buildNavItem('Settings', AppRoutes.settings, Icons.settings, currentLocation, context),
                       ],
                     ),
                   ),
@@ -222,14 +223,14 @@ class _SideMenuContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final items = [
-      ('Dashboard', '/', Icons.home),
-      ('Expenses', '/expenses', Icons.attach_money),
-      ('Inventory', '/inventory', Icons.inventory),
-      ('Calendar', '/calendar', Icons.calendar_today),
-      ('Housekeeping', '/housekeeping', Icons.cleaning_services),
-      ('Notifications', '/notifications', Icons.notifications),
+      ('Dashboard', AppRoutes.dashboard, Icons.home),
+      ('Expenses', AppRoutes.expenses, Icons.attach_money),
+      ('Inventory', AppRoutes.inventory, Icons.inventory),
+      ('Calendar', AppRoutes.calendar, Icons.calendar_today),
+      ('Housekeeping', AppRoutes.housekeeping, Icons.cleaning_services),
+      ('Notifications', AppRoutes.notifications, Icons.notifications),
       // ('Guest Logs', '/guest-logs', Icons.description),
-      ('Settings', '/settings', Icons.settings),
+      ('Settings', AppRoutes.settings, Icons.settings),
     ];
 
     return Padding(

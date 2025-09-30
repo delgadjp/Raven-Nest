@@ -80,6 +80,7 @@ export '/screens/housekeeping/staff_tab.dart';
 
 //CONSTANTS
 export '/constants/app_constants.dart';
+export '/constants/app_routes.dart'; //APP ROUTES CONFIGURATION
 export '/constants/schedule_utils.dart'; //SCHEDULE UTILITIES
 
 //MODELS

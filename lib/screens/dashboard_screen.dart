@@ -183,7 +183,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 subtitle: 'Fixed + Variable costs',
                 icon: Icons.attach_money,
                 iconColor: const Color(0xFF16A34A),
-                onTap: () => context.go('/expenses'),
+                onTap: () => context.go(AppRoutes.expenses),
               ),
             ),
             const SizedBox(width: 16),
@@ -194,7 +194,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 subtitle: 'This month',
                 icon: Icons.calendar_today,
                 iconColor: const Color(0xFF2563EB),
-                onTap: () => context.go('/calendar'),
+                onTap: () => context.go(AppRoutes.calendar),
               ),
             ),
           ],
@@ -211,7 +211,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 subtitle: 'Supplies & washables',
                 icon: Icons.inventory,
                 iconColor: const Color(0xFF7C3AED),
-                onTap: () => context.go('/inventory'),
+                onTap: () => context.go(AppRoutes.inventory),
               ),
             ),
             const SizedBox(width: 16),
@@ -222,7 +222,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 subtitle: 'Housekeeping items',
                 icon: Icons.check_circle,
                 iconColor: const Color(0xFFEA580C),
-                onTap: () => context.go('/housekeeping'),
+                onTap: () => context.go(AppRoutes.housekeeping),
               ),
             ),
           ],
@@ -239,7 +239,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 subtitle: 'This year',
                 icon: Icons.attach_money,
                 iconColor: const Color(0xFF10B981),
-                onTap: () => context.go('/'),
+                onTap: () => context.go(AppRoutes.dashboard),
               ),
             ),
             const SizedBox(width: 16),
@@ -250,7 +250,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 subtitle: 'Require attention',
                 icon: Icons.notifications,
                 iconColor: const Color(0xFFEF4444),
-                onTap: () => context.go('/notifications'),
+                onTap: () => context.go(AppRoutes.notifications),
               ),
             ),
           ],
@@ -408,7 +408,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
     return RecentActivityCard(
       activities: activities,
-      viewAllRoute: '/notifications',
+      viewAllRoute: AppRoutes.notifications,
     );
   }
 
@@ -430,7 +430,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Widget _buildEmptyActivityCard() {
     return RecentActivityCard(
       activities: const [],
-      viewAllRoute: '/notifications',
+      viewAllRoute: AppRoutes.notifications,
     );
   }
 
