@@ -16,13 +16,13 @@ class NavigationWidget extends StatelessWidget {
         };
       case AppRoutes.expenses:
         return {
-          'title': 'Expense Management',
+          'title': 'Expenses',
           'icon': Icons.attach_money,
           'color': const Color(0xFF16A34A),
         };
       case AppRoutes.inventory:
         return {
-          'title': 'Inventory Management',
+          'title': 'Inventory',
           'icon': Icons.inventory_2,
           'color': const Color(0xFF7C3AED),
         };
@@ -34,7 +34,7 @@ class NavigationWidget extends StatelessWidget {
         };
       case AppRoutes.housekeeping:
         return {
-          'title': 'Housekeeping Management',
+          'title': 'Housekeeping',
           'icon': Icons.people_alt_rounded,
           'color': Colors.teal.shade600,
         };

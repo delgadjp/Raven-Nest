@@ -66,6 +66,23 @@ class StaffTab extends StatelessWidget {
                   cols = 2;
                 }
                 
+                final totalSpacing = (cols - 1) * 16.0;
+                final cardWidth = (constraints.maxWidth - totalSpacing) / cols;
+
+                double desiredHeight;
+                switch (cols) {
+                  case 1:
+                    desiredHeight = 210;
+                    break;
+                  case 2:
+                    desiredHeight = 220;
+                    break;
+                  default:
+                    desiredHeight = 230;
+                }
+
+                final childAspectRatio = cardWidth / desiredHeight;
+
                 return GridView.builder(
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
@@ -73,7 +90,7 @@ class StaffTab extends StatelessWidget {
                     crossAxisCount: cols,
                     crossAxisSpacing: 16,
                     mainAxisSpacing: 16,
-                    childAspectRatio: 1.45,
+                    childAspectRatio: childAspectRatio.clamp(0.25, 1.3),
                   ),
                   itemCount: staff.length,
                   itemBuilder: (context, index) => StaffCard(

@@ -1,5 +1,6 @@
 import 'package:flutter/services.dart';
 import '../../constants/app_exports.dart';
+import 'generic_form_dialog.dart';
 
 class DialogConfigurations {
   // Add Category Dialog Configuration
@@ -109,7 +110,7 @@ class DialogConfigurations {
 
   // Add Task Dialog Configuration
   static DialogConfig addTask({
-    required Function(String room, String type, String assignee, DateTime dueDate, String? checkoutTime, String? checkinTime, String? notes) onAdd,
+    required Function(String room, String type, String assignee, DateTime dueDate, String? checkoutDate, String? checkinDate, String? notes) onAdd,
     required List<Map<String, dynamic>> staff,
   }) {
     // Extract staff names for dropdown
@@ -130,40 +131,43 @@ class DialogConfigurations {
         const DialogField(
           key: 'type',
           label: 'Task Type',
-          hintText: 'checkout_cleaning, maintenance, room_service',
+          hintText: 'Select task type',
           icon: Icons.category,
+          type: DialogFieldType.dropdown,
+          dropdownItems: [
+            'Check-out Cleaning',
+            'Room Service',
+          ],
         ),
         DialogField(
           key: 'assignee',
           label: 'Assign To',
           hintText: 'Select staff member',
           icon: Icons.person,
+          type: DialogFieldType.dropdown,
           dropdownItems: staffNames,
         ),
         const DialogField(
           key: 'dueDate',
           label: 'Due Date',
-          hintText: 'MM/DD/YYYY',
+          hintText: 'Select date',
           icon: Icons.calendar_today,
+          type: DialogFieldType.datePicker,
         ),
         const DialogField(
-          key: 'dueTime',
-          label: 'Due Time',
-          hintText: 'HH:MM',
-          icon: Icons.access_time,
-        ),
-        const DialogField(
-          key: 'checkoutTime',
-          label: 'Checkout Time (Optional)',
-          hintText: 'HH:MM AM/PM',
+          key: 'checkoutDate',
+          label: 'Checkout Date (Optional)',
+          hintText: 'Select checkout date',
           icon: Icons.logout,
+          type: DialogFieldType.datePicker,
           isRequired: false,
         ),
         const DialogField(
-          key: 'checkinTime',
-          label: 'Check-in Time (Optional)',
-          hintText: 'HH:MM AM/PM',
+          key: 'checkinDate',
+          label: 'Check-in Date (Optional)',
+          hintText: 'Select check-in date',
           icon: Icons.login,
+          type: DialogFieldType.datePicker,
           isRequired: false,
         ),
         const DialogField(
@@ -175,15 +179,12 @@ class DialogConfigurations {
         ),
       ],
       onSubmit: (values) {
-        // Parse date and time
+        // Parse due date
         final dateParts = values['dueDate']!.split('/');
-        final timeParts = values['dueTime']!.split(':');
         final dueDate = DateTime(
-          int.parse(dateParts[2]),
-          int.parse(dateParts[0]),
-          int.parse(dateParts[1]),
-          int.parse(timeParts[0]),
-          int.parse(timeParts[1]),
+          int.parse(dateParts[2]), // year
+          int.parse(dateParts[0]), // month
+          int.parse(dateParts[1]), // day
         );
         
         onAdd(
@@ -191,9 +192,9 @@ class DialogConfigurations {
           values['type']!,
           values['assignee']!,
           dueDate,
-          values['checkoutTime']!.isEmpty ? null : values['checkoutTime'],
-          values['checkinTime']!.isEmpty ? null : values['checkinTime'],
-          values['notes']!.isEmpty ? null : values['notes'],
+          values['checkoutDate']?.isEmpty == true ? null : values['checkoutDate'],
+          values['checkinDate']?.isEmpty == true ? null : values['checkinDate'],
+          values['notes']?.isEmpty == true ? null : values['notes'],
         );
       },
     );

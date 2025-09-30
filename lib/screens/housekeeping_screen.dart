@@ -106,12 +106,8 @@ class _HousekeepingScreenState extends State<HousekeepingScreen> {
     _loadHousekeepingData(); // Reload to get updated priorities
   }
 
-  void addTask(String room, String type, String assignedStaffId, DateTime dueDate, String? dueTime, String? notes) async {
-    final dueDateTime = dueTime != null 
-        ? DateTime.parse('${dueDate.toIso8601String().split('T')[0]} $dueTime')
-        : dueDate;
-    
-    final priority = HousekeepingService.calculatePriority(dueDateTime);
+  void addTask(String room, String type, String assignedStaffId, DateTime dueDate, String? checkoutDate, String? checkinDate, String? notes) async {
+    final priority = HousekeepingService.calculatePriority(dueDate);
     final priorityWeight = HousekeepingService.getPriorityWeight(priority);
     
     final taskData = {
@@ -119,10 +115,12 @@ class _HousekeepingScreenState extends State<HousekeepingScreen> {
       'task_type': type,
       'assigned_staff': assignedStaffId,
       'due_date': dueDate.toIso8601String().split('T')[0],
-      'due_time': dueTime,
+      'checkout_date': checkoutDate,
+      'checkin_date': checkinDate,
       'priority': priority,
       'priority_weight': priorityWeight,
       'status': 'pending',
+      'notes': notes,
     };
 
     final success = await HousekeepingService.addTask(taskData);
@@ -360,7 +358,7 @@ class _HousekeepingScreenState extends State<HousekeepingScreen> {
                       (s) => s['name'] == assignee,
                       orElse: () => {'id': ''},
                     );
-                    addTask(room, type, staffMember['id'], dueDate, checkoutTime, notes);
+                    addTask(room, type, staffMember['id'], dueDate, checkoutTime, checkinTime, notes);
                   },
                 ) 
               else 

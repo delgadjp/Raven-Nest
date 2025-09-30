@@ -22,7 +22,6 @@ CREATE TABLE public.bookings (
 );
 CREATE TABLE public.expenses (
   id uuid NOT NULL DEFAULT gen_random_uuid(),
-  booking_id uuid,
   name text,
   amount numeric,
   date date,
@@ -30,6 +29,7 @@ CREATE TABLE public.expenses (
   year integer,
   created_at timestamp with time zone DEFAULT now(),
   is_variable boolean NOT NULL DEFAULT false,
+  booking_id uuid,
   CONSTRAINT expenses_pkey PRIMARY KEY (id),
   CONSTRAINT expenses_booking_id_fkey FOREIGN KEY (booking_id) REFERENCES public.bookings(id)
 );
@@ -47,11 +47,13 @@ CREATE TABLE public.housekeeping_tasks (
   task_type text,
   assigned_staff uuid NOT NULL,
   due_date date,
-  due_time time without time zone,
   priority text,
   priority_weight integer DEFAULT 3 CHECK (priority_weight >= 1 AND priority_weight <= 5),
   status USER-DEFINED DEFAULT 'pending'::housekeeping_task_status,
   created_at timestamp with time zone NOT NULL DEFAULT now(),
+  checkout_date date,
+  checkin_date date,
+  notes text,
   CONSTRAINT housekeeping_tasks_pkey PRIMARY KEY (id),
   CONSTRAINT housekeeping_tasks_assigned_staff_fkey FOREIGN KEY (assigned_staff) REFERENCES public.housekeeping_staff(id)
 );
@@ -353,8 +355,7 @@ $$ LANGUAGE plpgsql;
 CREATE OR REPLACE FUNCTION notify_overdue_tasks()
 RETURNS TRIGGER AS $$
 BEGIN
-    IF NEW.due_date < CURRENT_DATE OR 
-       (NEW.due_date = CURRENT_DATE AND NEW.due_time < CURRENT_TIME) THEN
+    IF NEW.due_date < CURRENT_DATE THEN
         INSERT INTO public.notifications (
             type, title, message, priority, related_task
         ) VALUES (

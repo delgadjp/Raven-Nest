@@ -1,6 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+enum DialogFieldType {
+  text,
+  dropdown,
+  datePicker,
+  timePicker,
+}
+
 class DialogField {
   final String key;
   final String label;
@@ -10,6 +17,7 @@ class DialogField {
   final bool isRequired;
   final List<String>? dropdownItems; // Add dropdown items support
   final List<TextInputFormatter>? inputFormatters; // Add input formatters support
+  final DialogFieldType type; // Add field type support
 
   const DialogField({
     required this.key,
@@ -20,6 +28,7 @@ class DialogField {
     this.isRequired = true,
     this.dropdownItems,
     this.inputFormatters,
+    this.type = DialogFieldType.text,
   });
 }
 
@@ -56,13 +65,15 @@ class GenericFormDialog extends StatefulWidget {
 class _GenericFormDialogState extends State<GenericFormDialog> {
   final Map<String, TextEditingController> _controllers = {};
   final Map<String, String> _dropdownValues = {}; // Add dropdown values storage
+  final Map<String, DateTime> _dateValues = {}; // Add date values storage
+  final Map<String, TimeOfDay> _timeValues = {}; // Add time values storage
 
   @override
   void initState() {
     super.initState();
     // Initialize controllers for each field
     for (final field in widget.config.fields) {
-      if (field.dropdownItems == null) {
+      if (field.type == DialogFieldType.text) {
         _controllers[field.key] = TextEditingController();
       }
     }
@@ -84,12 +95,25 @@ class _GenericFormDialogState extends State<GenericFormDialog> {
     for (final field in widget.config.fields) {
       String value = '';
       
-      if (field.dropdownItems != null) {
-        // Get dropdown value
-        value = _dropdownValues[field.key] ?? '';
-      } else {
-        // Get text field value
-        value = _controllers[field.key]?.text ?? '';
+      switch (field.type) {
+        case DialogFieldType.dropdown:
+          value = _dropdownValues[field.key] ?? '';
+          break;
+        case DialogFieldType.datePicker:
+          final date = _dateValues[field.key];
+          if (date != null) {
+            value = '${date.month.toString().padLeft(2, '0')}/${date.day.toString().padLeft(2, '0')}/${date.year}';
+          }
+          break;
+        case DialogFieldType.timePicker:
+          final time = _timeValues[field.key];
+          if (time != null) {
+            value = '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}';
+          }
+          break;
+        case DialogFieldType.text:
+          value = _controllers[field.key]?.text ?? '';
+          break;
       }
       
       if (field.isRequired && value.isEmpty) {
@@ -101,11 +125,13 @@ class _GenericFormDialogState extends State<GenericFormDialog> {
     // Submit the form
     widget.config.onSubmit(values);
     
-    // Clear controllers and dropdown values
+    // Clear controllers, dropdown values, date values, and time values
     for (final controller in _controllers.values) {
       controller.clear();
     }
     _dropdownValues.clear();
+    _dateValues.clear();
+    _timeValues.clear();
     Navigator.of(context).pop();
   }
 
@@ -282,13 +308,18 @@ class _GenericFormDialogState extends State<GenericFormDialog> {
   }
 
   Widget _buildInputWidget(DialogField field) {
-    if (field.dropdownItems != null) {
-      return _buildDropdownField(field);
-    } else {
-      return _buildTextField(
-        controller: _controllers[field.key]!,
-        field: field,
-      );
+    switch (field.type) {
+      case DialogFieldType.dropdown:
+        return _buildDropdownField(field);
+      case DialogFieldType.datePicker:
+        return _buildDatePickerField(field);
+      case DialogFieldType.timePicker:
+        return _buildTimePickerField(field);
+      case DialogFieldType.text:
+        return _buildTextField(
+          controller: _controllers[field.key]!,
+          field: field,
+        );
     }
   }
 
@@ -424,6 +455,172 @@ class _GenericFormDialogState extends State<GenericFormDialog> {
             style: const TextStyle(
               fontSize: 14,
               color: Colors.black87,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildDatePickerField(DialogField field) {
+    final selectedDate = _dateValues[field.key];
+    String displayText = selectedDate != null
+        ? '${selectedDate.month.toString().padLeft(2, '0')}/${selectedDate.day.toString().padLeft(2, '0')}/${selectedDate.year}'
+        : field.hintText;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          field.label,
+          style: const TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+            color: Colors.black87,
+          ),
+        ),
+        const SizedBox(height: 8),
+        GestureDetector(
+          onTap: () async {
+            final pickedDate = await showDatePicker(
+              context: context,
+              initialDate: selectedDate ?? DateTime.now(),
+              firstDate: DateTime.now().subtract(const Duration(days: 1)),
+              lastDate: DateTime.now().add(const Duration(days: 365)),
+              builder: (context, child) {
+                return Theme(
+                  data: Theme.of(context).copyWith(
+                    colorScheme: ColorScheme.light(
+                      primary: widget.config.accentColor,
+                    ),
+                  ),
+                  child: child!,
+                );
+              },
+            );
+
+            if (pickedDate != null) {
+              setState(() {
+                _dateValues[field.key] = pickedDate;
+              });
+            }
+          },
+          child: Container(
+            decoration: BoxDecoration(
+              color: Colors.grey.shade50,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: Colors.grey.withValues(alpha: 0.2),
+              ),
+            ),
+            padding: const EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: 14,
+            ),
+            child: Row(
+              children: [
+                Icon(
+                  field.icon,
+                  color: selectedDate != null ? Colors.grey.shade600 : Colors.grey.shade500,
+                  size: 20,
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    displayText,
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: selectedDate != null ? Colors.black87 : Colors.grey.shade500,
+                    ),
+                  ),
+                ),
+                Icon(
+                  Icons.arrow_drop_down,
+                  color: Colors.grey.shade500,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildTimePickerField(DialogField field) {
+    final selectedTime = _timeValues[field.key];
+    String displayText = selectedTime != null
+        ? '${selectedTime.hour.toString().padLeft(2, '0')}:${selectedTime.minute.toString().padLeft(2, '0')}'
+        : field.hintText;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          field.label,
+          style: const TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+            color: Colors.black87,
+          ),
+        ),
+        const SizedBox(height: 8),
+        GestureDetector(
+          onTap: () async {
+            final pickedTime = await showTimePicker(
+              context: context,
+              initialTime: selectedTime ?? TimeOfDay.now(),
+              builder: (context, child) {
+                return Theme(
+                  data: Theme.of(context).copyWith(
+                    colorScheme: ColorScheme.light(
+                      primary: widget.config.accentColor,
+                    ),
+                  ),
+                  child: child!,
+                );
+              },
+            );
+
+            if (pickedTime != null) {
+              setState(() {
+                _timeValues[field.key] = pickedTime;
+              });
+            }
+          },
+          child: Container(
+            decoration: BoxDecoration(
+              color: Colors.grey.shade50,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: Colors.grey.withValues(alpha: 0.2),
+              ),
+            ),
+            padding: const EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: 14,
+            ),
+            child: Row(
+              children: [
+                Icon(
+                  field.icon,
+                  color: selectedTime != null ? Colors.grey.shade600 : Colors.grey.shade500,
+                  size: 20,
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    displayText,
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: selectedTime != null ? Colors.black87 : Colors.grey.shade500,
+                    ),
+                  ),
+                ),
+                Icon(
+                  Icons.arrow_drop_down,
+                  color: Colors.grey.shade500,
+                ),
+              ],
             ),
           ),
         ),
