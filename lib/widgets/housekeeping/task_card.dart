@@ -1,4 +1,4 @@
-import '../../constants/app_exports.dart';
+import '/constants/app_exports.dart';
 
 class TaskCard extends StatelessWidget {
   final Map<String, dynamic> task;
@@ -31,47 +31,67 @@ class TaskCard extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xFFF8FAFC),
-        border: Border.all(color: const Color(0xFFF1F5F9)),
-        borderRadius: BorderRadius.circular(12),
+        color: Colors.white,
+        border: Border.all(color: const Color(0xFFE2E8F0)),
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: Column(
         children: [
           // Header Row
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Row(
-                children: [
-                  Icon(
-                    HousekeepingHelpers.getTypeIcon(task['type']),
-                    size: 18,
-                    color: HousekeepingHelpers.getPriorityColor(task['priority']),
-                  ),
-                  const SizedBox(width: 8),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Room ${task['room']}',
-                        style: const TextStyle(fontWeight: FontWeight.w600),
-                      ),
-                      Text(
-                        HousekeepingHelpers.formatTaskType(task['type']),
-                        style: const TextStyle(fontSize: 12, color: Colors.grey),
-                      ),
-                    ],
-                  ),
-                ],
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: HousekeepingHelpers.getPriorityColor(task['priority']).withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(
+                  HousekeepingHelpers.getTypeIcon(task['type']),
+                  size: 18,
+                  color: HousekeepingHelpers.getPriorityColor(task['priority']),
+                ),
               ),
-              Row(
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '${task['room']}',
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 16,
+                      ),
+                    ),
+                    Text(
+                      HousekeepingHelpers.formatTaskType(task['type']),
+                      style: TextStyle(
+                        fontSize: 12, 
+                        color: Colors.grey[600],
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 8),
+              Wrap(
+                spacing: 6,
+                runSpacing: 4,
                 children: [
                   StatusChip(
                     text: task['priority'],
                     color: HousekeepingHelpers.getPriorityColor(task['priority']),
                   ),
-                  const SizedBox(width: 6),
                   StatusChip(
                     text: HousekeepingHelpers.formatStatus(task['status']),
                     color: HousekeepingHelpers.getStatusColor(task['status']),
@@ -92,8 +112,8 @@ class TaskCard extends StatelessWidget {
                 gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                   crossAxisCount: isMd ? 3 : 1,
                   crossAxisSpacing: 12,
-                  mainAxisSpacing: 12,
-                  childAspectRatio: 4,
+                  mainAxisSpacing: 4,
+                  childAspectRatio: 5.5,
                 ),
                 children: [
                   InfoRow(
@@ -115,7 +135,7 @@ class TaskCard extends StatelessWidget {
 
           // Notes Section
           if (task['notes'] != null) ...[
-            const SizedBox(height: 12),
+            const SizedBox(height: 8),
             const Align(
               alignment: Alignment.centerLeft,
               child: Text(
@@ -126,36 +146,72 @@ class TaskCard extends StatelessWidget {
             const SizedBox(height: 6),
             Container(
               width: double.infinity,
-              padding: const EdgeInsets.all(10),
+              padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: const Color(0xFFF8FAFC),
+                border: Border.all(color: const Color(0xFFE2E8F0)),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Text(
                 task['notes'],
-                style: const TextStyle(fontSize: 14, color: Colors.black87),
+                style: const TextStyle(
+                  fontSize: 14, 
+                  color: Colors.black87,
+                  height: 1.4,
+                ),
               ),
             ),
           ],
 
           // Action Buttons
-          const SizedBox(height: 12),
+          const SizedBox(height: 16),
           Row(
             children: [
               if (task['status'] == 'pending')
-                ElevatedButton(
-                  onPressed: onStatusUpdate,
-                  child: const Text('Start Task'),
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: onStatusUpdate,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF059669),
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      elevation: 0,
+                    ),
+                    child: const Text('Start Task'),
+                  ),
                 ),
               if (task['status'] == 'in_progress')
-                ElevatedButton(
-                  onPressed: onStatusUpdate,
-                  child: const Text('Mark Complete'),
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: onStatusUpdate,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF3B82F6),
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      elevation: 0,
+                    ),
+                    child: const Text('Mark Complete'),
+                  ),
                 ),
               if (task['status'] == 'scheduled')
-                OutlinedButton(
-                  onPressed: onViewDetails,
-                  child: const Text('View Details'),
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: onViewDetails,
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      side: const BorderSide(color: Color(0xFFE2E8F0)),
+                    ),
+                    child: const Text('View Details'),
+                  ),
                 ),
             ],
           ),
@@ -169,48 +225,69 @@ class TaskCard extends StatelessWidget {
     
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: const Color(0xFFF8FAFC),
+        color: Colors.white,
+        border: Border.all(color: const Color(0xFFE2E8F0)),
         borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.03),
+            blurRadius: 4,
+            offset: const Offset(0, 1),
+          ),
+        ],
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Row(
             children: [
-              Icon(
-                HousekeepingHelpers.getTypeIcon(task['type']),
-                size: 18,
-                color: HousekeepingHelpers.getPriorityColor(task['priority']),
+              Container(
+                padding: const EdgeInsets.all(6),
+                decoration: BoxDecoration(
+                  color: HousekeepingHelpers.getPriorityColor(task['priority']).withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Icon(
+                  HousekeepingHelpers.getTypeIcon(task['type']),
+                  size: 16,
+                  color: HousekeepingHelpers.getPriorityColor(task['priority']),
+                ),
               ),
-              const SizedBox(width: 8),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Room ${task['room']} - ${HousekeepingHelpers.formatTaskType(task['type'])}',
-                    style: const TextStyle(fontWeight: FontWeight.w600),
-                  ),
-                  Row(
-                    children: [
-                      const Icon(
-                        Icons.person,
-                        size: 12,
-                        color: Color(0xFF059669),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Room ${task['room']} - ${HousekeepingHelpers.formatTaskType(task['type'])}',
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 15,
                       ),
-                      const SizedBox(width: 4),
-                      Text(
-                        task['assignee'],
-                        style: const TextStyle(
-                          fontSize: 12, 
+                    ),
+                    const SizedBox(height: 2),
+                    Row(
+                      children: [
+                        const Icon(
+                          Icons.person,
+                          size: 12,
                           color: Color(0xFF059669),
-                          fontWeight: FontWeight.w500,
                         ),
-                      ),
-                    ],
-                  ),
-                ],
+                        const SizedBox(width: 4),
+                        Text(
+                          task['assignee'],
+                          style: const TextStyle(
+                            fontSize: 12, 
+                            color: Color(0xFF059669),
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
             ],
           ),
