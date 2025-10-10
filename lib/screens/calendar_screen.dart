@@ -100,6 +100,23 @@ class _CalendarScreenState extends State<CalendarScreen> {
     }
   }
 
+  void _showImportDialog() {
+    showCalendarImportDialog(
+      context,
+      onImportComplete: () {
+        _loadCalendarData(); // Reload calendar data after import
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Calendar import completed'),
+              backgroundColor: Colors.green,
+            ),
+          );
+        }
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return GradientBackground(
@@ -497,10 +514,48 @@ class _CalendarScreenState extends State<CalendarScreen> {
           Padding(
             padding: const EdgeInsets.all(16),
             child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Sync button
+                Row(
+                  children: [
+                    Icon(
+                      Icons.sync,
+                      size: 20,
+                      color: Colors.grey.shade700,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Calendar Sync',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.grey.shade900,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'Import bookings from external platforms',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.grey.shade600,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                
+                // Import Calendar button
                 ActionButton(
-                  text: 'Sync with Airbnb & Booking.com',
+                  text: 'Import Calendars',
+                  icon: Icons.cloud_download,
+                  onPressed: _showImportDialog,
+                ),
+                
+                const SizedBox(height: 8),
+                
+                // Quick sync button
+                ActionButton(
+                  text: 'Sync Existing',
                   icon: Icons.sync,
                   onPressed: _syncWithPlatforms,
                 ),

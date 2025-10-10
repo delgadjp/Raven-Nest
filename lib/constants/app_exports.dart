@@ -43,6 +43,14 @@ export '/widgets/calendar/booking_detail_row.dart';
 export '/widgets/calendar/status_badge.dart'; //STATUS BADGE = CONFIRMED, PENDING, CANCELLED
 export '/widgets/calendar/booking_card.dart'; //BOOKING CARD INSIDE UPCOMING BOOKINGS
 export '/widgets/calendar/action_button.dart'; //SYNC BUTTON
+export '/widgets/calendar/calendar_import_dialog.dart'; //MAIN CALENDAR IMPORT DIALOG
+export '/widgets/calendar/dialog_header.dart'; //DIALOG HEADER COMPONENT
+export '/widgets/calendar/dialog_footer.dart'; //DIALOG FOOTER COMPONENT
+export '/widgets/calendar/platform_card.dart'; //PLATFORM CARD COMPONENT
+export '/widgets/calendar/custom_calendar_section.dart'; //CUSTOM CALENDAR SECTION
+export '/widgets/calendar/import_result_message.dart'; //RESULT MESSAGE COMPONENT
+export '/widgets/calendar/sample_url_dialog.dart'; //SAMPLE URL DIALOG
+
 
 //FROM ANALYTICS
 export '/widgets/analytics/chart_container.dart'; 
@@ -92,5 +100,6 @@ export '/services/dashboard_service.dart';
 export '/services/expenses_service.dart';
 export '/services/inventory_service.dart';
 export '/services/calendar_service.dart';
+export '/services/calendar_import_service.dart';
 export '/services/housekeeping_service.dart';
 export '/services/notifications_service.dart';

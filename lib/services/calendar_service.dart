@@ -1,4 +1,5 @@
 import 'supabase_service.dart';
+import 'calendar_import_service.dart';
 
 class CalendarService {
   static final _supabase = SupabaseService.client;
@@ -333,13 +334,22 @@ class CalendarService {
     }
   }
 
-  // Sync with external platforms (placeholder for future implementation)
+  // Sync with external platforms using stored calendar URLs
   static Future<bool> syncWithPlatforms() async {
     try {
-      // This would integrate with Airbnb, Booking.com APIs
-      // For now, just return success
-      await Future.delayed(const Duration(seconds: 2)); // Simulate API call
-      return true;
+      // Get stored calendar URLs (you can implement this based on your storage preference)
+      final storedUrls = await CalendarImportService.getStoredCalendarUrls();
+      
+      if (storedUrls.isEmpty) {
+        // No stored URLs, return success but no actual sync
+        return true;
+      }
+
+      // Sync with stored calendars
+      final results = await CalendarImportService.syncMultipleCalendars(storedUrls);
+      
+      // Check if any imports were successful
+      return results.values.any((result) => result.success);
     } catch (e) {
       print('Error syncing with platforms: $e');
       return false;
