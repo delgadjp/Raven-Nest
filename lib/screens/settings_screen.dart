@@ -252,16 +252,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
             padding: const EdgeInsets.symmetric(vertical: 12),
           ),
           const SizedBox(height: 16),
-          ActionButton(
-            text: 'Download Reports',
-            onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Downloading reports...')),
-              );
-            },
-            isOutlined: true,
-            padding: const EdgeInsets.symmetric(vertical: 12),
-          ),
         ],
       ),
     );
