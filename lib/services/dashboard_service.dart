@@ -14,32 +14,53 @@ class DashboardService {
   static get _client => SupabaseService.client;
 
   // Summary Cards Data
-  Future<Map<String, dynamic>> getSummaryData() async {
+  Future<Map<String, dynamic>> getSummaryData({DateTimeRange? range}) async {
     try {
-      // Get current month and year
-      final now = DateTime.now();
-      final currentMonth = now.month;
-      final currentYear = now.year;
+  // Determine current context (kept for potential future use)
+  // final now = DateTime.now();
 
       // Monthly Expenses - sum from expenses table for current month
-      final expensesResponse = await _client
-          .from('expenses')
-          .select('amount')
-          .eq('month', currentMonth)
-          .eq('year', currentYear);
-
-      final monthlyExpenses = (expensesResponse as List).fold<double>(
-        0.0,
-        (sum, item) => sum + (item['amount'] ?? 0.0),
-      );
+      double monthlyExpenses = 0.0;
+      if (range == null) {
+        // All time: sum all expenses
+        final expensesResponse = await _client
+            .from('expenses')
+            .select('amount');
+        monthlyExpenses = (expensesResponse as List).fold<double>(
+          0.0,
+          (sum, item) => sum + (item['amount'] ?? 0.0),
+        );
+      } else {
+        // Sum expenses across months overlapping the range using month/year fields
+        final months = _monthsInRange(range);
+        for (final m in months) {
+          final expensesResponse = await _client
+              .from('expenses')
+              .select('amount')
+              .eq('month', m['month'])
+              .eq('year', m['year']);
+          monthlyExpenses += (expensesResponse as List).fold<double>(
+            0.0,
+            (sum, item) => sum + (item['amount'] ?? 0.0),
+          );
+        }
+      }
 
       // Active Bookings - count confirmed bookings this month
-      final bookingsResponse = await _client
-          .from('bookings')
-          .select()
-          .eq('status', 'confirmed')
-          .gte('check_in', '${currentYear}-${currentMonth.toString().padLeft(2, '0')}-01')
-          .lt('check_in', '${currentYear}-${(currentMonth + 1).toString().padLeft(2, '0')}-01');
+      dynamic bookingsResponse;
+      if (range == null) {
+        bookingsResponse = await _client
+            .from('bookings')
+            .select()
+            .eq('status', 'confirmed');
+      } else {
+        bookingsResponse = await _client
+            .from('bookings')
+            .select()
+            .eq('status', 'confirmed')
+            .gte('check_in', _isoDate(range.start))
+            .lt('check_in', _isoDate(range.end));
+      }
 
       // Inventory Items - total count
       final inventoryResponse = await _client
@@ -53,10 +74,17 @@ class DashboardService {
           .eq('status', 'pending');
 
       // Total Revenue - compute from bookings (fallback to pricing rules if amount missing)
-      final bookingsForRevenue = await _client
-          .from('bookings')
-          .select('id, check_in, check_out, status, total_amount, source_id')
-          .not('status', 'eq', 'cancelled');
+    dynamic bookingsForRevenueQuery = _client
+      .from('bookings')
+      .select('id, check_in, check_out, status, total_amount, source_id')
+      .not('status', 'eq', 'cancelled');
+
+    if (range != null) {
+    bookingsForRevenueQuery = bookingsForRevenueQuery
+      .gte('check_in', _isoDate(range.start))
+      .lt('check_in', _isoDate(range.end));
+    }
+    final bookingsForRevenue = await bookingsForRevenueQuery;
 
       double totalRevenue = 0.0;
       final Map<String, String> sourceNameCache = {};
@@ -99,7 +127,7 @@ class DashboardService {
       }
 
       // Unread Notifications
-      final notificationsResponse = await _client
+    final notificationsResponse = await _client
           .from('notifications')
           .select()
           .eq('is_read', false);
@@ -118,12 +146,12 @@ class DashboardService {
   }
 
   // Monthly Revenue Chart Data
-  Future<List<Map<String, dynamic>>> getMonthlyRevenueData() async {
+  Future<List<Map<String, dynamic>>> getMonthlyRevenueData({int? year}) async {
     try {
-      final currentYear = DateTime.now().year;
+      final currentYear = year ?? DateTime.now().year;
 
       // Get revenue data grouped by month
-      final revenueData = await _client
+    final revenueData = await _client
           .from('revenue')
           .select('month, net_income, booking_id')
           .eq('year', currentYear)
@@ -166,7 +194,7 @@ class DashboardService {
   }
 
   // Booking Sources Pie Chart Data
-  Future<List<Map<String, dynamic>>> getBookingSourcesData() async {
+  Future<List<Map<String, dynamic>>> getBookingSourcesData({DateTimeRange? range}) async {
     try {
       // Get booking sources with their booking counts
       final sourcesResponse = await _client
@@ -177,10 +205,16 @@ class DashboardService {
       
       for (var source in sourcesResponse) {
         // Count bookings for each source
-        final bookingsCount = await _client
-            .from('bookings')
-            .select('id')
-            .eq('source_id', source['id']);
+    dynamic bookingsQuery = _client
+      .from('bookings')
+      .select('id')
+      .eq('source_id', source['id']);
+    if (range != null) {
+      bookingsQuery = bookingsQuery
+        .gte('check_in', _isoDate(range.start))
+        .lt('check_in', _isoDate(range.end));
+    }
+    final bookingsCount = await bookingsQuery;
 
         result.add({
           'name': source['name'],
@@ -199,9 +233,10 @@ class DashboardService {
   }
 
   // Recent Activity Data (from notifications)
-  Future<List<Map<String, dynamic>>> getRecentActivityData({int limit = 3}) async {
+  Future<List<Map<String, dynamic>>> getRecentActivityData({int limit = 3, DateTimeRange? range}) async {
     try {
-      final notificationsData = await _client
+      // Build base filterable query first (PostgrestFilterBuilder) so we can apply range filters
+      var notificationsQuery = _client
           .from('notifications')
           .select('''
             type,
@@ -212,7 +247,15 @@ class DashboardService {
             related_booking,
             related_task,
             related_item
-          ''')
+          ''');
+
+      if (range != null) {
+        notificationsQuery = notificationsQuery
+            .gte('created_at', range.start.toIso8601String())
+            .lt('created_at', range.end.toIso8601String());
+      }
+      // Apply ordering/limit after filters to return a transform builder finally executed
+      final notificationsData = await notificationsQuery
           .order('created_at', ascending: false)
           .limit(limit);
 
@@ -282,6 +325,30 @@ class DashboardService {
       'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
     ];
     return months[month - 1];
+  }
+
+  // Helper: format YYYY-MM-DD
+  String _isoDate(DateTime d) => '${d.year.toString().padLeft(4, '0')}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
+
+  // Helper: list of month/year pairs within a range (inclusive of start month, exclusive of end if same month)
+  List<Map<String, int>> _monthsInRange(DateTimeRange range) {
+    final List<Map<String, int>> list = [];
+    var y = range.start.year;
+    var m = range.start.month;
+    // Use end at start of end month to make end exclusive
+    final endY = range.end.year;
+    final endM = range.end.month;
+
+    while (y < endY || (y == endY && m <= endM)) {
+      list.add({'year': y, 'month': m});
+      if (y == endY && m == endM) break;
+      m += 1;
+      if (m > 12) {
+        m = 1;
+        y += 1;
+      }
+    }
+    return list;
   }
 
   // Helper method to parse color from hex string

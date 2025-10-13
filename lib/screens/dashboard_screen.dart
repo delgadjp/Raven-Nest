@@ -12,6 +12,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
   final DashboardService _dashboardService = DashboardService();
   final NumberFormat _pesoFormat = NumberFormat.currency(locale: 'en_PH', symbol: '₱', decimalDigits: 0);
   
+  // Time range filter
+  TimeRange _selectedRange = TimeRange.month;
+  DateTimeRange? _currentRange;
+  
   // Data state
   Map<String, dynamic>? summaryData;
   List<Map<String, dynamic>> monthlyRevenueData = [];
@@ -31,6 +35,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   @override
   void initState() {
     super.initState();
+    _currentRange = _computeRange(_selectedRange);
     _loadDashboardData();
   }
 
@@ -50,7 +55,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         summaryError = null;
       });
       
-      final data = await _dashboardService.getSummaryData();
+      final data = await _dashboardService.getSummaryData(range: _effectiveRange());
       
       if (mounted) {
         setState(() {
@@ -75,9 +80,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
         chartsError = null;
       });
       
+      // Determine year for revenue chart (based on selected range start, fallback to current year)
+      final range = _effectiveRange();
+      final int year = (range?.start.year) ?? DateTime.now().year;
+
       final results = await Future.wait([
-        _dashboardService.getMonthlyRevenueData(),
-        _dashboardService.getBookingSourcesData(),
+        _dashboardService.getMonthlyRevenueData(year: year),
+        _dashboardService.getBookingSourcesData(range: range),
       ]);
       
       if (mounted) {
@@ -104,7 +113,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         activityError = null;
       });
       
-      final data = await _dashboardService.getRecentActivityData(limit: 3);
+      final data = await _dashboardService.getRecentActivityData(limit: 3, range: _effectiveRange());
       
       if (mounted) {
         setState(() {
@@ -137,6 +146,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      _buildFilterBar(),
+                      const SizedBox(height: 16),
                       // Summary Cards Section
                       _buildSummaryCards(),
                       const SizedBox(height: 32),
@@ -154,6 +165,62 @@ class _DashboardScreenState extends State<DashboardScreen> {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  // UI: Time range filter bar
+  Widget _buildFilterBar() {
+    return Align(
+      alignment: Alignment.centerRight,
+      child: PopupMenuButton<TimeRange>(
+        tooltip: 'Filter dashboard data',
+        onSelected: (r) async {
+          setState(() {
+            _selectedRange = r;
+            _currentRange = _computeRange(_selectedRange);
+          });
+          await _loadDashboardData();
+        },
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+          decoration: BoxDecoration(
+            color: Colors.white.withValues(alpha: 0.9),
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: Colors.black12),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.filter_list, size: 18),
+              const SizedBox(width: 6),
+              Text(
+                'Filter: ${_rangeTitle(_selectedRange)}',
+                style: TextStyle(
+                  color: Colors.grey.shade800,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
+        ),
+        itemBuilder: (context) {
+          final theme = Theme.of(context);
+          return [
+            for (final r in TimeRange.values)
+              PopupMenuItem<TimeRange>(
+                value: r,
+                child: Row(
+                  children: [
+                    if (_selectedRange == r)
+                      Icon(Icons.check, size: 16, color: theme.colorScheme.primary),
+                    if (_selectedRange == r) const SizedBox(width: 8),
+                    Text(_rangeTitle(r)),
+                  ],
+                ),
+              ),
+          ];
+        },
       ),
     );
   }
@@ -182,7 +249,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               child: SummaryCard(
                 title: 'Monthly Expenses',
                 value: '\$${(data['monthlyExpenses'] ?? 0.0).toStringAsFixed(0)}',
-                subtitle: 'Fixed + Variable costs',
+                subtitle: 'Costs • ${_rangeLabel(_selectedRange)}',
                 icon: Icons.attach_money,
                 iconColor: const Color(0xFF16A34A),
                 onTap: () => context.go(AppRoutes.expenses),
@@ -193,7 +260,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               child: SummaryCard(
                 title: 'Active Bookings',
                 value: '${data['activeBookings'] ?? 0}',
-                subtitle: 'This month',
+                subtitle: _rangeLabel(_selectedRange),
                 icon: Icons.calendar_today,
                 iconColor: const Color(0xFF2563EB),
                 onTap: () => context.go(AppRoutes.calendar),
@@ -238,7 +305,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               child: SummaryCard(
                 title: 'Total Revenue',
                 value: _pesoFormat.format((data['totalRevenue'] ?? 0.0) as num),
-                subtitle: 'This year',
+                subtitle: _selectedRange == TimeRange.all ? 'All time' : _rangeLabel(_selectedRange),
                 icon: Icons.attach_money,
                 iconColor: const Color(0xFF10B981),
                 onTap: () => context.go(AppRoutes.dashboard),
@@ -315,11 +382,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
       return _buildErrorCard('Failed to load charts: $chartsError');
     }
 
+    // Filter monthly revenue data based on selected range (client-side; data is monthly granularity)
+    final filteredRevenueData = _filterMonthlyRevenueForRange(monthlyRevenueData);
+
     return ResponsiveChartsLayout(
       charts: [
         ChartContainer(
           title: 'Monthly Revenue',
-          subtitle: 'Revenue and booking trends over the year',
+          subtitle: _selectedRange == TimeRange.year
+              ? 'Revenue and booking trends • ${_effectiveRange()?.start.year ?? DateTime.now().year}'
+              : 'Revenue filtered • ${_rangeLabel(_selectedRange)}',
           headerActions: [
             Tooltip(
               message: 'Refresh',
@@ -333,13 +405,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
               ),
             ),
           ],
-          chart: monthlyRevenueData.isEmpty 
+          chart: filteredRevenueData.isEmpty 
             ? _buildEmptyChart('No revenue data available')
-            : RevenueLineChart(data: monthlyRevenueData),
+            : RevenueLineChart(data: filteredRevenueData),
         ),
         ChartContainer(
           title: 'Booking Sources',
-          subtitle: 'Distribution of bookings by platform',
+          subtitle: 'Distribution by platform • ${_rangeLabel(_selectedRange)}',
           chart: bookingSourcesData.isEmpty
             ? _buildEmptyChart('No booking sources data available')
             : BookingSourcesPieChart(data: bookingSourcesData),
@@ -509,4 +581,102 @@ class _DashboardScreenState extends State<DashboardScreen> {
       ),
     );
   }
+
+  // Helpers
+  DateTimeRange? _effectiveRange() {
+    if (_selectedRange == TimeRange.all) return null;
+    return _currentRange;
+  }
+
+  DateTimeRange _computeRange(TimeRange range) {
+    final now = DateTime.now();
+    switch (range) {
+      case TimeRange.today:
+        final start = DateTime(now.year, now.month, now.day);
+        return DateTimeRange(start: start, end: start.add(const Duration(days: 1)));
+      case TimeRange.week:
+        // Start on Monday of this week
+        final int weekday = now.weekday; // Mon=1..Sun=7
+        final start = DateTime(now.year, now.month, now.day).subtract(Duration(days: weekday - 1));
+        return DateTimeRange(start: start, end: start.add(const Duration(days: 7)));
+      case TimeRange.month:
+        final start = DateTime(now.year, now.month, 1);
+        final end = DateTime(now.year, now.month + 1, 1);
+        return DateTimeRange(start: start, end: end);
+      case TimeRange.year:
+        final start = DateTime(now.year, 1, 1);
+        final end = DateTime(now.year + 1, 1, 1);
+        return DateTimeRange(start: start, end: end);
+      case TimeRange.all:
+        // Not used; represented by null in _effectiveRange
+        final start = DateTime(1970, 1, 1);
+        final end = DateTime(now.year + 10, 1, 1);
+        return DateTimeRange(start: start, end: end);
+    }
+  }
+
+  String _rangeTitle(TimeRange r) {
+    switch (r) {
+      case TimeRange.today:
+        return 'Today';
+      case TimeRange.week:
+        return 'Week';
+      case TimeRange.month:
+        return 'Month';
+      case TimeRange.year:
+        return 'Year';
+      case TimeRange.all:
+        return 'All';
+    }
+  }
+
+  String _rangeLabel(TimeRange r) {
+    switch (r) {
+      case TimeRange.today:
+        return 'Today';
+      case TimeRange.week:
+        return 'This week';
+      case TimeRange.month:
+        return 'This month';
+      case TimeRange.year:
+        return 'This year';
+      case TimeRange.all:
+        return 'All time';
+    }
+  }
+
+  List<Map<String, dynamic>> _filterMonthlyRevenueForRange(List<Map<String, dynamic>> data) {
+    if (data.isEmpty) return data;
+    final range = _effectiveRange();
+    if (range == null) return data; // all time -> current year shown
+
+    // Keep months that intersect range's months
+    final startMonth = range.start.month;
+    final endMonth = range.end.subtract(const Duration(days: 1)).month;
+    final startIdx = startMonth;
+    final endIdx = endMonth;
+
+    return data.where((m) {
+      final monthName = m['month']?.toString() ?? '';
+      final monthIndex = _monthIndex(monthName);
+      if (monthIndex == null) return false;
+      if (startIdx <= endIdx) {
+        return monthIndex >= startIdx && monthIndex <= endIdx;
+      } else {
+        // Range wraps year end (Dec..Jan) -> include if month >= start or month <= end
+        return monthIndex >= startIdx || monthIndex <= endIdx;
+      }
+    }).toList();
+  }
+
+  int? _monthIndex(String name) {
+    const months = [
+      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+    ];
+    final idx = months.indexOf(name);
+    return idx == -1 ? null : idx + 1;
+  }
 }
+
+enum TimeRange { today, week, month, year, all }
