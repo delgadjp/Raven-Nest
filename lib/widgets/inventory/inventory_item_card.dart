@@ -9,6 +9,8 @@ class InventoryItemCard extends StatelessWidget {
   final String unit;
   final String status;
   final VoidCallback onDelete;
+  final VoidCallback onIncrease;
+  final VoidCallback onDecrease;
 
   const InventoryItemCard({
     super.key,
@@ -17,7 +19,9 @@ class InventoryItemCard extends StatelessWidget {
     required this.minQuantity,
     required this.unit,
     required this.status,
-    required this.onDelete,
+  required this.onDelete,
+  required this.onIncrease,
+  required this.onDecrease,
   });
 
   IconData _statusIcon(String status) {
@@ -56,7 +60,7 @@ class InventoryItemCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Card(
       elevation: 0,
-      color: Colors.white.withOpacity(0.8),
+      color: Colors.white.withValues(alpha: 0.8),
       surfaceTintColor: Colors.transparent,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Padding(
@@ -131,6 +135,45 @@ class InventoryItemCard extends StatelessWidget {
               currentQuantity: quantity,
               minQuantity: minQuantity,
               unit: unit,
+            ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: quantity > 0 ? onDecrease : null,
+                    icon: const Icon(Icons.remove, size: 16),
+                    label: const Text(
+                      'Decrease',
+                      style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
+                    ),
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 10),
+                      side: BorderSide(color: Colors.black.withValues(alpha: 0.1)),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: ElevatedButton.icon(
+                    onPressed: onIncrease,
+                    icon: const Icon(Icons.add, size: 16),
+                    label: const Text(
+                      'Increase',
+                      style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.black87,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 10),
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
           ],
         ),

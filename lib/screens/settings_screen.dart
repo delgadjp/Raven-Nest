@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import '../constants/app_exports.dart';
 
 /// Settings screen with notification preferences, platform integrations, app preferences, and data management.
@@ -20,6 +22,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
   // App preferences state
   bool darkMode = false;
   bool autoSyncData = true;
+  Timer? _autoSyncTimer;
+  bool _isSyncInProgress = false;
+  static const Duration _autoSyncInterval = Duration(hours: 1);
   final List<String> timezoneOptions = const [
     'UTC+8 (Philippine Time)',
     'UTC+9 (Japan Standard Time)',
@@ -46,6 +51,25 @@ class _SettingsScreenState extends State<SettingsScreen> {
   String timezone = 'UTC+8 (Philippine Time)';
   String currency = 'PHP (₱)';
   String dateFormat = 'DD/MM/YYYY';
+
+  @override
+  void initState() {
+    super.initState();
+    if (autoSyncData) {
+      // Kick off auto-sync after the first frame to ensure context is ready for snackbars.
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          _startAutoSync(immediate: false);
+        }
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _autoSyncTimer?.cancel();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -202,17 +226,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
           const Divider(),
           const SizedBox(height: 16),
           SettingsSwitchTile(
-            title: 'Dark Mode',
-            subtitle: 'Switch to dark theme',
-            value: darkMode,
-            onChanged: (value) => setState(() => darkMode = value),
-          ),
-          const SizedBox(height: 16),
-          SettingsSwitchTile(
             title: 'Auto-sync Data',
             subtitle: 'Sync with booking platforms hourly',
             value: autoSyncData,
-            onChanged: (value) => setState(() => autoSyncData = value),
+            onChanged: _toggleAutoSync,
             isLast: true,
           ),
         ],
@@ -251,5 +268,91 @@ class _SettingsScreenState extends State<SettingsScreen> {
         ],
       ),
     );
+  }
+
+  void _toggleAutoSync(bool value) {
+    if (value == autoSyncData) {
+      return;
+    }
+
+    setState(() => autoSyncData = value);
+
+    if (value) {
+      _startAutoSync();
+    } else {
+      _stopAutoSync();
+    }
+  }
+
+  void _startAutoSync({bool immediate = true}) {
+    _autoSyncTimer?.cancel();
+
+    if (immediate) {
+      _performAutoSync();
+    }
+
+    _autoSyncTimer = Timer.periodic(_autoSyncInterval, (_) {
+      _performAutoSync(showFeedback: false);
+    });
+
+    _showSnackBar('Auto-sync enabled. We\'ll refresh every hour.');
+  }
+
+  void _stopAutoSync({bool showFeedback = true}) {
+    _autoSyncTimer?.cancel();
+    _autoSyncTimer = null;
+
+    if (showFeedback) {
+      _showSnackBar('Auto-sync disabled. You can re-enable it anytime.');
+    }
+  }
+
+  Future<void> _performAutoSync({bool showFeedback = true}) async {
+    if (_isSyncInProgress || !mounted) {
+      return;
+    }
+
+    setState(() => _isSyncInProgress = true);
+
+    try {
+      final calendarUrls = await CalendarImportService.getStoredCalendarUrls();
+
+      if (calendarUrls.isEmpty) {
+        if (showFeedback) {
+          _showSnackBar('Auto-sync skipped. Add calendar URLs to get started.');
+        }
+        return;
+      }
+
+      final results = await CalendarImportService.syncMultipleCalendars(calendarUrls);
+
+      if (showFeedback) {
+        final total = results.length;
+        final successes = results.values.where((result) => result.success).length;
+        final failures = total - successes;
+        _showSnackBar('Auto-sync complete: $successes success, $failures failed.');
+      }
+    } catch (e) {
+      if (showFeedback) {
+        _showSnackBar('Auto-sync failed: $e');
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isSyncInProgress = false);
+      }
+    }
+  }
+
+  void _showSnackBar(String message) {
+    if (!mounted) return;
+
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          content: Text(message),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
   }
 }

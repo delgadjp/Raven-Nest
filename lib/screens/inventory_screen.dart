@@ -539,6 +539,8 @@ class _InventoryScreenState extends State<InventoryScreen> {
                   unit: item.unit,
                   status: item.status,
                   onDelete: () => onDelete(item.id),
+                  onIncrease: () => _changeInventoryItemStock(item.id, categoryId, item.quantity, 1),
+                  onDecrease: () => _changeInventoryItemStock(item.id, categoryId, item.quantity, -1),
                 )).toList(),
               ),
             ],
@@ -596,5 +598,99 @@ class _InventoryScreenState extends State<InventoryScreen> {
         );
       }
     }
+  }
+
+  Future<void> _changeInventoryItemStock(
+    String itemId,
+    String categoryId,
+    int currentQuantity,
+    int delta,
+  ) async {
+    final newQuantity = currentQuantity + delta;
+
+    if (newQuantity < 0) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text("Stock can't go below zero"),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+      return;
+    }
+
+    final success = await InventoryService.updateInventoryItemStock(itemId, newQuantity);
+
+    if (success) {
+      final updatedCategories = categories.map((category) {
+        if (category.id != categoryId) return category;
+
+        final updatedItems = category.items.map((item) {
+          if (item.id != itemId) return item;
+
+          return item.copyWith(
+            quantity: newQuantity,
+            status: InventoryService.getStockStatus(newQuantity, item.minQuantity),
+          );
+        }).toList();
+
+        return category.copyWith(items: updatedItems);
+      }).toList();
+
+      final summary = _calculateSummary(updatedCategories);
+
+      setState(() {
+        categories = updatedCategories;
+        totalItems = summary['totalItems'] ?? totalItems;
+        lowStockItems = summary['lowStockItems'] ?? lowStockItems;
+        criticalItems = summary['criticalItems'] ?? criticalItems;
+      });
+
+      if (mounted) {
+        final action = delta >= 0 ? 'increased' : 'decreased';
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Stock $action to $newQuantity'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } else {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Failed to update stock'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  Map<String, int> _calculateSummary(List<InventoryCategory> categories) {
+    int total = 0;
+    int low = 0;
+    int critical = 0;
+
+    for (final category in categories) {
+      total += category.items.length;
+
+      for (final item in category.items) {
+        if (item.quantity <= item.minQuantity) {
+          low++;
+          final criticalThreshold = item.minQuantity * 3 ~/ 10;
+          if (item.quantity <= criticalThreshold) {
+            critical++;
+          }
+        }
+      }
+    }
+
+    return {
+      'totalItems': total,
+      'lowStockItems': low,
+      'criticalItems': critical,
+    };
   }
 }

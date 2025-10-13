@@ -39,7 +39,8 @@ class SettingsDropdownField extends StatelessWidget {
         ),
         const SizedBox(height: 6),
         DropdownButtonFormField<String>(
-          value: effectiveValue,
+          key: ValueKey('${label}_$effectiveValue'),
+          initialValue: effectiveValue,
           onChanged: (newValue) {
             if (newValue != null) {
               onChanged(newValue);
