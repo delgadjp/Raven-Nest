@@ -1,5 +1,6 @@
 import 'package:http/http.dart' as http;
 import 'package:ravens_nest/services/supabase_service.dart';
+import 'package:ravens_nest/services/pricing_service.dart';
 
 class CalendarImportService {
   static final _supabase = SupabaseService.client;
@@ -179,12 +180,30 @@ class CalendarImportService {
         return false; // Booking already exists, skip
       }
 
-      // Create new booking
+      // Determine source name for pricing
+      String sourceName = 'Unknown';
+      try {
+        final source = await _supabase
+            .from('booking_sources')
+            .select('name')
+            .eq('id', sourceId)
+            .single();
+        sourceName = (source['name'] ?? 'Unknown').toString();
+      } catch (_) {}
+
+      // Compute total amount using pricing rules if applicable
+      final computed = PricingService.computeTotalAmount(
+        sourceName: sourceName,
+        checkIn: checkInDate,
+        checkOut: checkOutDate,
+      );
+
+      // Create new booking with computed amount if available
       await _supabase.from('bookings').insert({
         'check_in': checkInDate.toIso8601String().split('T')[0],
         'check_out': checkOutDate.toIso8601String().split('T')[0],
         'status': 'confirmed',
-        'total_amount': 0, // We don't have pricing info from calendar
+        'total_amount': computed ?? 0,
         'source_id': sourceId,
       });
 

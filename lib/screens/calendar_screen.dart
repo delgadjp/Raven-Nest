@@ -1,5 +1,6 @@
 import '/constants/app_exports.dart';
 import 'package:intl/intl.dart';
+import 'package:ravens_nest/services/pricing_service.dart';
 
 // Utility function to check if two dates are the same day
 bool isSameDay(DateTime a, DateTime b) {
@@ -19,6 +20,11 @@ class _CalendarScreenState extends State<CalendarScreen> {
   Map<String, dynamic> summaryData = {};
   bool isLoading = true;
   String? errorMessage;
+  final NumberFormat _pesoFormat = NumberFormat.currency(
+    locale: 'en_PH',
+    symbol: '₱',
+    decimalDigits: 0,
+  );
 
   @override
   void initState() {
@@ -262,6 +268,29 @@ class _CalendarScreenState extends State<CalendarScreen> {
     }
   }
 
+  Future<void> _recalculatePrices() async {
+    try {
+      final updated = await CalendarService.backfillMissingPrices();
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Recalculated prices for $updated booking(s).'),
+          backgroundColor: Colors.green,
+        ),
+      );
+      await _loadCalendarData();
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to recalculate prices: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
   void _showImportDialog() {
     showCalendarImportDialog(
       context,
@@ -354,7 +383,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
                         ),
                         SummaryCard(
                           title: 'Total Revenue',
-                          value: '\$${totalRevenue.toStringAsFixed(0)}',
+                          value: _pesoFormat.format(totalRevenue),
                           subtitle: 'Expected income',
                           icon: Icons.attach_money,
                           iconColor: Colors.purple.shade600,
@@ -864,6 +893,28 @@ class _CalendarScreenState extends State<CalendarScreen> {
     return 'Guest';
   }
 
+  double _getDisplayAmount(Map<String, dynamic> booking) {
+    final dynamic raw = booking['total_amount'];
+    double current = 0;
+    if (raw is num) current = raw.toDouble();
+    if (current > 0) return current;
+
+    // Fallback compute using PricingService if DB amount is missing/zero
+    try {
+      final sourceName = _getBookingSourceName(booking);
+      final checkIn = DateTime.parse(booking['check_in']);
+      final checkOut = DateTime.parse(booking['check_out']);
+      final computed = PricingService.computeTotalAmount(
+        sourceName: sourceName,
+        checkIn: checkIn,
+        checkOut: checkOut,
+      );
+      return (computed ?? 0).toDouble();
+    } catch (_) {
+      return 0;
+    }
+  }
+
   Widget _buildEnhancedLegend() {
     final sourceLegend = _calendarSourceLegend;
 
@@ -1172,6 +1223,14 @@ class _CalendarScreenState extends State<CalendarScreen> {
                         onPressed: _syncWithPlatforms,
                       ),
                     ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: ActionButton(
+                        text: 'Recalculate',
+                        icon: Icons.calculate,
+                        onPressed: _recalculatePrices,
+                      ),
+                    ),
                   ],
                 ),
               ],
@@ -1367,7 +1426,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
               ),
               const Spacer(),
               Text(
-                '\$${(booking['total_amount'] ?? 0).toStringAsFixed(0)}',
+                _pesoFormat.format(_getDisplayAmount(booking)),
                 style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w600,

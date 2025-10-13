@@ -1,5 +1,6 @@
 import 'supabase_service.dart';
 import 'calendar_import_service.dart';
+import 'pricing_service.dart';
 
 class CalendarService {
   static final _supabase = SupabaseService.client;
@@ -220,19 +221,51 @@ class CalendarService {
           .select('id')
           .eq('status', 'confirmed');
 
-      // Get total revenue (sum of all booking amounts)
-      final revenueResponse = await _supabase
+      // Get total revenue (sum of all booking amounts) using fallback pricing when needed
+      final bookingsForRevenue = await _supabase
           .from('bookings')
-          .select('total_amount')
+          .select('id, check_in, check_out, status, total_amount, source_id')
           .not('status', 'eq', 'cancelled');
 
       double totalRevenue = 0.0;
-      if (revenueResponse.isNotEmpty) {
-        for (var booking in revenueResponse) {
-          if (booking['total_amount'] != null) {
-            totalRevenue += (booking['total_amount'] as num).toDouble();
-          }
+      final Map<String, String> sourceNameCache = {};
+      for (final booking in bookingsForRevenue) {
+        final amount = booking['total_amount'];
+        if (amount is num && amount > 0) {
+          totalRevenue += amount.toDouble();
+          continue;
         }
+
+        // Fallback compute based on source name and stay length
+        try {
+          final checkIn = DateTime.parse(booking['check_in']);
+          final checkOut = DateTime.parse(booking['check_out']);
+          String sourceName = 'Unknown';
+          final sourceId = booking['source_id'];
+          if (sourceId != null) {
+            if (sourceNameCache.containsKey(sourceId)) {
+              sourceName = sourceNameCache[sourceId]!;
+            } else {
+              try {
+                final s = await _supabase
+                    .from('booking_sources')
+                    .select('name')
+                    .eq('id', sourceId)
+                    .single();
+                sourceName = (s['name'] ?? 'Unknown').toString();
+                sourceNameCache[sourceId] = sourceName;
+              } catch (_) {}
+            }
+          }
+          final computed = PricingService.computeTotalAmount(
+            sourceName: sourceName,
+            checkIn: checkIn,
+            checkOut: checkOut,
+          );
+          if (computed != null && computed > 0) {
+            totalRevenue += computed;
+          }
+        } catch (_) {}
       }
 
       // Calculate occupancy rate for current month
@@ -348,11 +381,63 @@ class CalendarService {
       // Sync with stored calendars
       final results = await CalendarImportService.syncMultipleCalendars(storedUrls);
       
-      // Check if any imports were successful
-      return results.values.any((result) => result.success);
+      // If any imports were successful, try to backfill prices for zero-amount bookings
+      final anySuccess = results.values.any((result) => result.success);
+      if (anySuccess) {
+        await backfillMissingPrices();
+      }
+      return anySuccess;
     } catch (e) {
       print('Error syncing with platforms: $e');
       return false;
+    }
+  }
+
+  /// Backfill total_amount for bookings where amount is null or 0, based on source and dates.
+  /// Returns the number of rows updated.
+  static Future<int> backfillMissingPrices() async {
+    try {
+      final rows = await _supabase
+          .from('bookings')
+          .select('id, check_in, check_out, total_amount, source_id')
+          .or('total_amount.is.null,total_amount.eq.0');
+
+  if (rows.isEmpty) return 0;
+
+      var updated = 0;
+      for (final row in rows) {
+        final checkIn = DateTime.parse(row['check_in']);
+        final checkOut = DateTime.parse(row['check_out']);
+        String sourceName = 'Unknown';
+        if (row['source_id'] != null) {
+          try {
+            final source = await _supabase
+                .from('booking_sources')
+                .select('name')
+                .eq('id', row['source_id'])
+                .single();
+            sourceName = (source['name'] ?? 'Unknown').toString();
+          } catch (_) {}
+        }
+
+        final computed = PricingService.computeTotalAmount(
+          sourceName: sourceName,
+          checkIn: checkIn,
+          checkOut: checkOut,
+        );
+
+        if (computed != null && computed > 0) {
+          await _supabase
+              .from('bookings')
+              .update({'total_amount': computed})
+              .eq('id', row['id']);
+          updated++;
+        }
+      }
+      return updated;
+    } catch (e) {
+      print('Error backfilling prices: $e');
+      return 0;
     }
   }
 }

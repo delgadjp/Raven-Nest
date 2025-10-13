@@ -3,6 +3,7 @@
 
 import 'package:flutter/material.dart';
 import 'supabase_service.dart';
+import 'pricing_service.dart';
 
 class DashboardService {
   static final DashboardService _instance = DashboardService._internal();
@@ -51,16 +52,51 @@ class DashboardService {
           .select()
           .eq('status', 'pending');
 
-      // Total Revenue - from revenue table for current year
-      final revenueResponse = await _client
-          .from('revenue')
-          .select('net_income')
-          .eq('year', currentYear);
+      // Total Revenue - compute from bookings (fallback to pricing rules if amount missing)
+      final bookingsForRevenue = await _client
+          .from('bookings')
+          .select('id, check_in, check_out, status, total_amount, source_id')
+          .not('status', 'eq', 'cancelled');
 
-      final totalRevenue = (revenueResponse as List).fold<double>(
-        0.0,
-        (sum, item) => sum + (item['net_income'] ?? 0.0),
-      );
+      double totalRevenue = 0.0;
+      final Map<String, String> sourceNameCache = {};
+      for (final booking in bookingsForRevenue) {
+        final amount = booking['total_amount'];
+        if (amount is num && amount > 0) {
+          totalRevenue += amount.toDouble();
+          continue;
+        }
+
+        try {
+          final checkIn = DateTime.parse(booking['check_in']);
+          final checkOut = DateTime.parse(booking['check_out']);
+          String sourceName = 'Unknown';
+          final sourceId = booking['source_id'];
+          if (sourceId != null) {
+            if (sourceNameCache.containsKey(sourceId)) {
+              sourceName = sourceNameCache[sourceId]!;
+            } else {
+              try {
+                final s = await _client
+                    .from('booking_sources')
+                    .select('name')
+                    .eq('id', sourceId)
+                    .single();
+                sourceName = (s['name'] ?? 'Unknown').toString();
+                sourceNameCache[sourceId] = sourceName;
+              } catch (_) {}
+            }
+          }
+          final computed = PricingService.computeTotalAmount(
+            sourceName: sourceName,
+            checkIn: checkIn,
+            checkOut: checkOut,
+          );
+          if (computed != null && computed > 0) {
+            totalRevenue += computed;
+          }
+        } catch (_) {}
+      }
 
       // Unread Notifications
       final notificationsResponse = await _client

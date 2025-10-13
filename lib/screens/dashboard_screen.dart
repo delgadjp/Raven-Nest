@@ -1,4 +1,5 @@
 import '/constants/app_exports.dart';
+import 'package:intl/intl.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -9,6 +10,7 @@ class DashboardScreen extends StatefulWidget {
 
 class _DashboardScreenState extends State<DashboardScreen> {
   final DashboardService _dashboardService = DashboardService();
+  final NumberFormat _pesoFormat = NumberFormat.currency(locale: 'en_PH', symbol: '₱', decimalDigits: 0);
   
   // Data state
   Map<String, dynamic>? summaryData;
@@ -235,7 +237,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             Expanded(
               child: SummaryCard(
                 title: 'Total Revenue',
-                value: '\$${(data['totalRevenue'] ?? 0.0).toStringAsFixed(0)}',
+                value: _pesoFormat.format((data['totalRevenue'] ?? 0.0) as num),
                 subtitle: 'This year',
                 icon: Icons.attach_money,
                 iconColor: const Color(0xFF10B981),
