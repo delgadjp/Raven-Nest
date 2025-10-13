@@ -132,57 +132,72 @@ class NotificationCard extends StatelessWidget {
   }
 
   Widget _buildMetadata() {
-    return Row(
-      children: [
-        Text(
-          _formatTime(timestamp),
-          style: const TextStyle(
-            color: Colors.black38,
-            fontSize: 12,
-          ),
+    final baseStyle = const TextStyle(
+      color: Colors.black38,
+      fontSize: 12,
+    );
+
+    // Build tag spans: prefer related tags if present; otherwise show the type once.
+    final List<InlineSpan> spans = [
+      TextSpan(text: _formatTime(timestamp), style: baseStyle),
+    ];
+
+    final List<InlineSpan> tagSpans = [];
+
+    if (relatedBooking != null) {
+      tagSpans.add(const TextSpan(
+        text: 'Booking',
+        style: TextStyle(
+          color: Colors.blue,
+          fontSize: 12,
+          fontWeight: FontWeight.w500,
         ),
-        const Text(' • ', style: TextStyle(color: Colors.black38)),
-        Text(
-          type,
-          style: const TextStyle(
-            color: Colors.black38,
-            fontSize: 12,
-          ),
+      ));
+    }
+
+    if (relatedTask != null) {
+      tagSpans.add(const TextSpan(
+        text: 'Task',
+        style: TextStyle(
+          color: Colors.orange,
+          fontSize: 12,
+          fontWeight: FontWeight.w500,
         ),
-        if (relatedBooking != null) ...[
-          const Text(' • ', style: TextStyle(color: Colors.black38)),
-          Text(
-            'Booking Related',
-            style: const TextStyle(
-              color: Colors.blue,
-              fontSize: 12,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-        ],
-        if (relatedTask != null) ...[
-          const Text(' • ', style: TextStyle(color: Colors.black38)),
-          Text(
-            'Task Related',
-            style: const TextStyle(
-              color: Colors.orange,
-              fontSize: 12,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-        ],
-        if (relatedItem != null) ...[
-          const Text(' • ', style: TextStyle(color: Colors.black38)),
-          Text(
-            'Inventory Related',
-            style: const TextStyle(
-              color: Colors.green,
-              fontSize: 12,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-        ],
-      ],
+      ));
+    }
+
+    if (relatedItem != null) {
+      tagSpans.add(const TextSpan(
+        text: 'Inventory',
+        style: TextStyle(
+          color: Colors.green,
+          fontSize: 12,
+          fontWeight: FontWeight.w500,
+        ),
+      ));
+    }
+
+    if (tagSpans.isEmpty) {
+      // No related tags; show the type (capitalized) instead.
+      final typeLabel = type.isEmpty
+          ? type
+          : '${type[0].toUpperCase()}${type.substring(1)}';
+      tagSpans.add(TextSpan(text: typeLabel, style: baseStyle));
+    }
+
+    // Add a separator before tags and join multiple tags with separators.
+    spans.add(const TextSpan(text: ' • ', style: TextStyle(color: Colors.black38)));
+    for (int i = 0; i < tagSpans.length; i++) {
+      if (i > 0) {
+        spans.add(const TextSpan(text: ' • ', style: TextStyle(color: Colors.black38)));
+      }
+      spans.add(tagSpans[i]);
+    }
+
+    return Text.rich(
+      TextSpan(children: spans),
+      maxLines: 1,
+      overflow: TextOverflow.ellipsis,
     );
   }
 

@@ -320,6 +320,19 @@ class _DashboardScreenState extends State<DashboardScreen> {
         ChartContainer(
           title: 'Monthly Revenue',
           subtitle: 'Revenue and booking trends over the year',
+          headerActions: [
+            Tooltip(
+              message: 'Refresh',
+              child: IconButton(
+                icon: const Icon(Icons.refresh, size: 20),
+                color: Colors.grey.shade700,
+                splashRadius: 18,
+                onPressed: () async {
+                  await _loadChartsData();
+                },
+              ),
+            ),
+          ],
           chart: monthlyRevenueData.isEmpty 
             ? _buildEmptyChart('No revenue data available')
             : RevenueLineChart(data: monthlyRevenueData),
@@ -341,6 +354,19 @@ class _DashboardScreenState extends State<DashboardScreen> {
         ChartContainer(
           title: 'Monthly Revenue',
           subtitle: 'Loading...',
+          headerActions: [
+            Tooltip(
+              message: 'Refresh',
+              child: IconButton(
+                icon: const Icon(Icons.refresh, size: 20),
+                color: Colors.grey.shade700,
+                splashRadius: 18,
+                onPressed: () async {
+                  await _loadChartsData();
+                },
+              ),
+            ),
+          ],
           chart: const Center(
             child: CircularProgressIndicator(),
           ),

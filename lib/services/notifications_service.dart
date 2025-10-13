@@ -24,8 +24,27 @@ class NotificationsService {
           ''')
           .order('created_at', ascending: false);
 
-      return response.map<NotificationModel>((notification) {
-        return NotificationModel(
+      // Enrich with booking amount where applicable
+      final List<NotificationModel> list = [];
+      for (final notification in response) {
+        num? bookingAmount;
+        final relatedBookingId = notification['related_booking'];
+        if (relatedBookingId != null) {
+          try {
+            final booking = await _supabase
+                .from('bookings')
+                .select('total_amount')
+                .eq('id', relatedBookingId)
+                .maybeSingle();
+            if (booking != null) {
+              final amt = booking['total_amount'];
+              if (amt is num) bookingAmount = amt;
+              if (amt is String) bookingAmount = num.tryParse(amt);
+            }
+          } catch (_) {}
+        }
+
+        list.add(NotificationModel(
           id: notification['id'], // Keep as string UUID
           type: notification['type'] ?? 'system',
           title: notification['title'] ?? 'Notification',
@@ -33,12 +52,14 @@ class NotificationsService {
           timestamp: DateTime.parse(notification['created_at']),
           read: notification['is_read'] ?? false,
           priority: notification['priority'] ?? 'medium',
-          relatedBooking: notification['related_booking'],
+          relatedBooking: relatedBookingId,
           relatedTask: notification['related_task'],
           relatedItem: notification['related_item'],
           icon: _getIconFromType(notification['type']),
-        );
-      }).toList();
+          bookingAmount: bookingAmount,
+        ));
+      }
+      return list;
     } catch (e) {
       print('Error fetching notifications: $e');
       return [];
@@ -65,8 +86,26 @@ class NotificationsService {
           .eq('is_read', false)
           .order('created_at', ascending: false);
 
-      return response.map<NotificationModel>((notification) {
-        return NotificationModel(
+      final List<NotificationModel> list = [];
+      for (final notification in response) {
+        num? bookingAmount;
+        final relatedBookingId = notification['related_booking'];
+        if (relatedBookingId != null) {
+          try {
+            final booking = await _supabase
+                .from('bookings')
+                .select('total_amount')
+                .eq('id', relatedBookingId)
+                .maybeSingle();
+            if (booking != null) {
+              final amt = booking['total_amount'];
+              if (amt is num) bookingAmount = amt;
+              if (amt is String) bookingAmount = num.tryParse(amt);
+            }
+          } catch (_) {}
+        }
+
+        list.add(NotificationModel(
           id: notification['id'],
           type: notification['type'] ?? 'system',
           title: notification['title'] ?? 'Notification',
@@ -74,12 +113,14 @@ class NotificationsService {
           timestamp: DateTime.parse(notification['created_at']),
           read: notification['is_read'] ?? false,
           priority: notification['priority'] ?? 'medium',
-          relatedBooking: notification['related_booking'],
+          relatedBooking: relatedBookingId,
           relatedTask: notification['related_task'],
           relatedItem: notification['related_item'],
           icon: _getIconFromType(notification['type']),
-        );
-      }).toList();
+          bookingAmount: bookingAmount,
+        ));
+      }
+      return list;
     } catch (e) {
       print('Error fetching unread notifications: $e');
       return [];
@@ -109,8 +150,26 @@ class NotificationsService {
           .lte('created_at', '${today}T23:59:59')
           .order('created_at', ascending: false);
 
-      return response.map<NotificationModel>((notification) {
-        return NotificationModel(
+      final List<NotificationModel> list = [];
+      for (final notification in response) {
+        num? bookingAmount;
+        final relatedBookingId = notification['related_booking'];
+        if (relatedBookingId != null) {
+          try {
+            final booking = await _supabase
+                .from('bookings')
+                .select('total_amount')
+                .eq('id', relatedBookingId)
+                .maybeSingle();
+            if (booking != null) {
+              final amt = booking['total_amount'];
+              if (amt is num) bookingAmount = amt;
+              if (amt is String) bookingAmount = num.tryParse(amt);
+            }
+          } catch (_) {}
+        }
+
+        list.add(NotificationModel(
           id: notification['id'],
           type: notification['type'] ?? 'system',
           title: notification['title'] ?? 'Notification',
@@ -118,12 +177,14 @@ class NotificationsService {
           timestamp: DateTime.parse(notification['created_at']),
           read: notification['is_read'] ?? false,
           priority: notification['priority'] ?? 'medium',
-          relatedBooking: notification['related_booking'],
+          relatedBooking: relatedBookingId,
           relatedTask: notification['related_task'],
           relatedItem: notification['related_item'],
           icon: _getIconFromType(notification['type']),
-        );
-      }).toList();
+          bookingAmount: bookingAmount,
+        ));
+      }
+      return list;
     } catch (e) {
       print('Error fetching today notifications: $e');
       return [];

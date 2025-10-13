@@ -12,6 +12,7 @@ class NotificationModel {
   final String? relatedTask;
   final String? relatedItem;
   final IconData icon;
+  final num? bookingAmount; // optional: total_amount from related booking
 
   NotificationModel({
     required this.id,
@@ -25,10 +26,12 @@ class NotificationModel {
     this.relatedTask,
     this.relatedItem,
     required this.icon,
+    this.bookingAmount,
   });
 
   NotificationModel copyWith({
     bool? read,
+    num? bookingAmount,
   }) {
     return NotificationModel(
       id: id,
@@ -42,6 +45,7 @@ class NotificationModel {
       relatedTask: relatedTask,
       relatedItem: relatedItem,
       icon: icon,
+      bookingAmount: bookingAmount ?? this.bookingAmount,
     );
   }
 }

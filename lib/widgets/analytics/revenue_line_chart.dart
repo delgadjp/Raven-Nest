@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
+import 'package:intl/intl.dart';
 
 class RevenueLineChart extends StatelessWidget {
   final List<Map<String, dynamic>> data;
@@ -15,6 +16,18 @@ class RevenueLineChart extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Use Philippine Peso formatting to match the rest of the dashboard
+    final NumberFormat pesoFormat = NumberFormat.currency(
+      locale: 'en_PH',
+      symbol: '₱',
+      decimalDigits: 0,
+    );
+    final NumberFormat compactPesoFormat = NumberFormat.compactCurrency(
+      locale: 'en_PH',
+      symbol: '₱',
+      decimalDigits: 0,
+    );
+
     return LineChart(
       LineChartData(
         gridData: FlGridData(
@@ -72,7 +85,7 @@ class RevenueLineChart extends StatelessWidget {
                 // Only show titles for values that are multiples of the interval and within our range
                 if (value >= _getMinValue() && value <= _getMaxValue()) {
                   return Text(
-                    '\$${(value / 1000).toStringAsFixed(1)}k',
+                    compactPesoFormat.format(value),
                     style: TextStyle(
                       color: Colors.grey[600],
                       fontWeight: FontWeight.w400,
@@ -142,7 +155,7 @@ class RevenueLineChart extends StatelessWidget {
                     ),
                     children: [
                       TextSpan(
-                        text: 'Revenue: \$${dataPoint['revenue'] ?? 0}\n',
+                        text: 'Revenue: ${pesoFormat.format((dataPoint['revenue'] ?? 0) as num)}\n',
                         style: const TextStyle(
                           color: Colors.white,
                           fontSize: 11,

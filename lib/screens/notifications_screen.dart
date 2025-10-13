@@ -265,11 +265,24 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                                 )
                               else
                                 ...notifications.map((notification) {
+                                  // If this is a booking-related notification and we fetched a bookingAmount,
+                                  // replace any placeholder amount in the message with the real value.
+                                  String displayMessage = notification.message;
+                                  if (notification.type.toLowerCase() == 'booking' && notification.bookingAmount != null) {
+                                    final amt = notification.bookingAmount!;
+                                    // Basic currency formatting without intl: prefix with $ and keep 2 decimals.
+                                    final formatted = '\₱${amt.toStringAsFixed(2)}';
+                                    displayMessage = displayMessage.replaceAll(
+                                      RegExp(r"\(amount:.*?\)"),
+                                      '(amount: ' + formatted + ')',
+                                    );
+                                  }
+
                                   return NotificationCard(
                                     id: notification.id,
                                     type: notification.type,
                                     title: notification.title,
-                                    message: notification.message,
+                                    message: displayMessage,
                                     timestamp: notification.timestamp,
                                     read: notification.read,
                                     priority: notification.priority,
@@ -280,7 +293,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                                     onMarkAsRead: () => markAsRead(notification.id),
                                     onDelete: () => deleteNotification(notification.id),
                                   );
-                                }).toList(),
+                                }),
                             ],
                           ),
                         ),
