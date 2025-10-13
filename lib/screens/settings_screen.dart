@@ -24,6 +24,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   bool autoSyncData = true;
   Timer? _autoSyncTimer;
   bool _isSyncInProgress = false;
+  bool _isExportInProgress = false;
   static const Duration _autoSyncInterval = Duration(hours: 1);
   final List<String> timezoneOptions = const [
     'UTC+8 (Philippine Time)',
@@ -246,11 +247,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         children: [
           ActionButton(
             text: 'Export All Data',
-            onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Exporting all data...')),
-              );
-            },
+            onPressed: _onExportButtonPressed,
             isOutlined: true,
             padding: const EdgeInsets.symmetric(vertical: 12),
           ),
@@ -354,5 +351,133 @@ class _SettingsScreenState extends State<SettingsScreen> {
           behavior: SnackBarBehavior.floating,
         ),
       );
+  }
+
+  // --- Data Export helpers ---
+  Future<void> _onExportButtonPressed() async {
+    if (!mounted) return;
+    if (_isExportInProgress) {
+      _showSnackBar('An export is already in progress…');
+      return;
+    }
+
+    final range = await _pickExportRange();
+    if (range == null) return;
+
+    final format = await _pickExportFormat();
+    if (format == null) return;
+
+    await _exportData(range, format);
+  }
+
+  Future<ExportRange?> _pickExportRange() async {
+    return showModalBottomSheet<ExportRange>(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (ctx) {
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                leading: const Icon(Icons.today_outlined),
+                title: const Text('Today'),
+                onTap: () => Navigator.of(ctx).pop(ExportRange.today),
+              ),
+              ListTile(
+                leading: const Icon(Icons.view_week_outlined),
+                title: const Text('This Week'),
+                onTap: () => Navigator.of(ctx).pop(ExportRange.week),
+              ),
+              ListTile(
+                leading: const Icon(Icons.calendar_view_month_outlined),
+                title: const Text('This Month'),
+                onTap: () => Navigator.of(ctx).pop(ExportRange.month),
+              ),
+              ListTile(
+                leading: const Icon(Icons.calendar_today_outlined),
+                title: const Text('This Year'),
+                onTap: () => Navigator.of(ctx).pop(ExportRange.year),
+              ),
+              const Divider(height: 8),
+              ListTile(
+                leading: const Icon(Icons.all_inbox_outlined),
+                title: const Text('All Data'),
+                onTap: () => Navigator.of(ctx).pop(ExportRange.all),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _exportData(ExportRange range, ExportFormat format) async {
+    if (!mounted) return;
+    if (_isExportInProgress) return;
+
+    setState(() => _isExportInProgress = true);
+    _showSnackBar('Exporting ${_exportLabel(range)} as ${format.name.toUpperCase()}…');
+
+    try {
+      final result = await DataExportService.exportAllData(range, format: format);
+      final suffix = result.fileName != null ? ' (${result.fileName})' : '';
+      _showSnackBar(result.message + suffix);
+    } catch (e) {
+      _showSnackBar('Export failed: $e');
+    } finally {
+      if (mounted) {
+        setState(() => _isExportInProgress = false);
+      }
+    }
+  }
+
+  Future<ExportFormat?> _pickExportFormat() {
+    return showModalBottomSheet<ExportFormat>(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (ctx) {
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const ListTile(
+                title: Text('Choose export format'),
+                subtitle: Text('Select how you want to export your data'),
+              ),
+              ListTile(
+                leading: const Icon(Icons.grid_on_outlined),
+                title: const Text('CSV (Spreadsheet)'),
+                onTap: () => Navigator.of(ctx).pop(ExportFormat.csv),
+              ),
+              ListTile(
+                leading: const Icon(Icons.picture_as_pdf_outlined),
+                title: const Text('PDF (Printable)'),
+                onTap: () => Navigator.of(ctx).pop(ExportFormat.pdf),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  String _exportLabel(ExportRange range) {
+    switch (range) {
+      case ExportRange.today:
+        return 'Today';
+      case ExportRange.week:
+        return 'This Week';
+      case ExportRange.month:
+        return 'This Month';
+      case ExportRange.year:
+        return 'This Year';
+      case ExportRange.all:
+        return 'All Data';
+    }
   }
 }
