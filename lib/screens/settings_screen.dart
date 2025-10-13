@@ -20,9 +20,32 @@ class _SettingsScreenState extends State<SettingsScreen> {
   // App preferences state
   bool darkMode = false;
   bool autoSyncData = true;
-  String timezone = 'UTC-5 (Eastern Time)';
-  String currency = 'USD (\$)';
-  String dateFormat = 'MM/DD/YYYY';
+  final List<String> timezoneOptions = const [
+    'UTC+8 (Philippine Time)',
+    'UTC+9 (Japan Standard Time)',
+    'UTC (Coordinated Universal Time)',
+    'UTC-5 (Eastern Time)',
+    'UTC+1 (Central European Time)',
+  ];
+
+  final List<String> currencyOptions = const [
+    'PHP (₱)',
+    'USD (\$)',
+    'EUR (€)',
+    'JPY (¥)',
+    'AUD (\$)',
+  ];
+
+  final List<String> dateFormatOptions = const [
+    'DD/MM/YYYY',
+    'MM/DD/YYYY',
+    'YYYY-MM-DD',
+    'MMMM D, YYYY',
+  ];
+
+  String timezone = 'UTC+8 (Philippine Time)';
+  String currency = 'PHP (₱)';
+  String dateFormat = 'DD/MM/YYYY';
 
   @override
   Widget build(BuildContext context) {
@@ -95,19 +118,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
             value: maintenanceUpdatesNotification,
             onChanged: (value) => setState(() => maintenanceUpdatesNotification = value),
           ),
-          SettingsSwitchTile(
-            title: 'Payment Notifications',
-            subtitle: 'Payment confirmations and updates',
-            value: paymentNotifications,
-            onChanged: (value) => setState(() => paymentNotifications = value),
-          ),
-          SettingsSwitchTile(
-            title: 'Review Notifications',
-            subtitle: 'New guest reviews and ratings',
-            value: reviewNotifications,
-            onChanged: (value) => setState(() => reviewNotifications = value),
-            isLast: true,
-          ),
         ],
       ),
     );
@@ -167,22 +177,26 @@ class _SettingsScreenState extends State<SettingsScreen> {
       subtitle: 'Customize your app experience',
       child: Column(
         children: [
-          SettingsInputField(
+          SettingsDropdownField(
             label: 'Time Zone',
             value: timezone,
+            options: timezoneOptions,
             onChanged: (value) => setState(() => timezone = value),
           ),
           const SizedBox(height: 16),
-          SettingsInputField(
+          SettingsDropdownField(
             label: 'Default Currency',
             value: currency,
+            options: currencyOptions,
             onChanged: (value) => setState(() => currency = value),
           ),
           const SizedBox(height: 16),
-          SettingsInputField(
+          SettingsDropdownField(
             label: 'Date Format',
             value: dateFormat,
+            options: dateFormatOptions,
             onChanged: (value) => setState(() => dateFormat = value),
+            helperText: 'Common formats based on popular booking channels',
           ),
           const SizedBox(height: 24),
           const Divider(),

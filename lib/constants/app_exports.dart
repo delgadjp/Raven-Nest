@@ -70,6 +70,7 @@ export '/widgets/settings/settings_card.dart'; //SETTINGS CARD WRAPPER
 export '/widgets/settings/settings_switch_tile.dart'; //SWITCH TILE FOR SETTINGS
 export '/widgets/settings/platform_tile.dart'; //PLATFORM INTEGRATION TILE
 export '/widgets/settings/settings_input_field.dart'; //TEXT BOX IN APP PREFERENCES
+export '/widgets/settings/settings_dropdown_field.dart'; //DROPDOWN FIELD IN APP PREFERENCES
 export '/widgets/settings/settings_section.dart'; //SETTINGS SECTION WITH SPACING
 
 //FROM HOUSEKEEPING
