@@ -75,6 +75,40 @@ class _HousekeepingScreenState extends State<HousekeepingScreen> {
   int get totalTasks => summaryData['totalTasks'] ?? 0;
   int get todayTasksCount => summaryData['todayTasks'] ?? 0;
 
+  // Helper to parse due date reliably from task map
+  DateTime? _parseDueDate(dynamic value) {
+    if (value == null) return null;
+    if (value is DateTime) return value;
+    if (value is String) {
+      // Try parsing ISO or date-only strings
+      try {
+        return DateTime.tryParse(value);
+      } catch (_) {
+        return null;
+      }
+    }
+    return null;
+  }
+
+  // Count of tasks that are not completed/done
+  int get openTasksCount {
+    return tasks.where((t) {
+      final status = (t['status'] ?? '').toString().toLowerCase();
+      return status != 'completed' && status != 'done';
+    }).length;
+  }
+
+  // Count of tasks past due and not completed/done
+  int get overdueTasksCount {
+    final now = DateTime.now();
+    return tasks.where((t) {
+      final status = (t['status'] ?? '').toString().toLowerCase();
+      if (status == 'completed' || status == 'done') return false;
+      final due = _parseDueDate(t['dueDate'] ?? t['due_date']);
+      return due != null && due.isBefore(DateTime(now.year, now.month, now.day, now.hour, now.minute));
+    }).length;
+  }
+
   void updateTaskStatus(String taskId, String newStatus) async {
     final success = await HousekeepingService.updateTaskStatus(taskId, newStatus);
     
@@ -241,6 +275,32 @@ class _HousekeepingScreenState extends State<HousekeepingScreen> {
           builder: (context) => StaffScheduleDialog(
             staffMember: staffMember,
             staffTasks: staffTasks,
+            onMarkDone: (String taskId) async {
+              final success = await HousekeepingService.updateTaskStatus(taskId, 'completed');
+              if (success) {
+                // Refresh data so summary cards and lists update
+                await _loadHousekeepingData();
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Task marked as completed'),
+                      backgroundColor: Colors.green,
+                    ),
+                  );
+                }
+                return true;
+              } else {
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Failed to update task'),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                }
+                return false;
+              }
+            },
           ),
         );
       }
@@ -330,6 +390,13 @@ class _HousekeepingScreenState extends State<HousekeepingScreen> {
                         subtitle: 'all tasks',
                         icon: Icons.assignment,
                         iconColor: Colors.deepPurple,
+                      ),
+                      SummaryCard(
+                        title: 'Open Tasks',
+                        value: openTasksCount.toString(),
+                        subtitle: overdueTasksCount > 0 ? '${overdueTasksCount} overdue' : 'no overdue',
+                        icon: Icons.warning_amber_rounded,
+                        iconColor: overdueTasksCount > 0 ? Colors.orange : Colors.blueGrey,
                       ),
                       SummaryGradientCard(
                         title: 'Completed',

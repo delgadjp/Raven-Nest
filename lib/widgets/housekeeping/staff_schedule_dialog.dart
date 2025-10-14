@@ -1,14 +1,50 @@
 import '../../constants/app_exports.dart';
 
-class StaffScheduleDialog extends StatelessWidget {
+class StaffScheduleDialog extends StatefulWidget {
   final Map<String, dynamic> staffMember;
   final List<Map<String, dynamic>> staffTasks;
+  final Future<bool> Function(String taskId) onMarkDone;
 
   const StaffScheduleDialog({
     super.key,
     required this.staffMember,
     required this.staffTasks,
+    required this.onMarkDone,
   });
+
+  @override
+  State<StaffScheduleDialog> createState() => _StaffScheduleDialogState();
+}
+
+class _StaffScheduleDialogState extends State<StaffScheduleDialog> {
+  // Track updating tasks to disable buttons while request in-flight
+  final Set<String> _updating = {};
+
+  bool _isCompleted(String? status) {
+    final s = (status ?? '').toLowerCase();
+    return s == 'completed' || s == 'done';
+  }
+
+  Future<bool> _confirmMarkDone(BuildContext context) async {
+    final res = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Mark task as complete?'),
+        content: const Text('This will mark the task as completed.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: const Text('Mark complete'),
+          ),
+        ],
+      ),
+    );
+    return res == true;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -16,13 +52,13 @@ class StaffScheduleDialog extends StatelessWidget {
     final isSmallScreen = screenSize.width < 600;
     
     // Sort tasks by due date using utility
-    final sortedTasks = ScheduleUtils.sortTasksByDateTime(staffTasks);
+    final sortedTasks = ScheduleUtils.sortTasksByDateTime(widget.staffTasks);
 
     // Group tasks by date using utility
     final tasksByDate = ScheduleUtils.groupTasksByDate(sortedTasks);
     
     // Calculate dynamic height based on task count
-    final taskCount = staffTasks.length;
+    final taskCount = widget.staffTasks.length;
     final dateCount = tasksByDate.keys.length;
     
     // Estimate heights
@@ -35,7 +71,7 @@ class StaffScheduleDialog extends StatelessWidget {
     final spacingHeight = dateCount > 1 ? (dateCount - 1) * (isSmallScreen ? 16.0 : 20.0) : 0.0;
     
     double contentHeight;
-    if (staffTasks.isEmpty) {
+    if (widget.staffTasks.isEmpty) {
       contentHeight = headerHeight + dividerHeight + emptyStateHeight;
     } else {
       contentHeight = headerHeight + dividerHeight + paddingHeight + 
@@ -87,7 +123,7 @@ class StaffScheduleDialog extends StatelessWidget {
             
             // Schedule Content
             Expanded(
-              child: staffTasks.isEmpty
+              child: widget.staffTasks.isEmpty
                   ? _buildEmptyState(isSmallScreen)
                   : _buildScheduleContent(tasksByDate, isSmallScreen),
             ),
@@ -120,7 +156,7 @@ class StaffScheduleDialog extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  staffMember['name'],
+                  widget.staffMember['name'],
                   style: TextStyle(
                     fontSize: isSmallScreen ? 18 : 20,
                     fontWeight: FontWeight.w600,
@@ -129,7 +165,7 @@ class StaffScheduleDialog extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                 ),
                 Text(
-                  staffMember['role'],
+                  widget.staffMember['role'],
                   style: TextStyle(
                     fontSize: isSmallScreen ? 12 : 14,
                     color: Colors.grey[600],
@@ -263,6 +299,9 @@ class StaffScheduleDialog extends StatelessWidget {
 
   Widget _buildTaskCard(Map<String, dynamic> task, bool isSmallScreen) {
     final priorityColor = ScheduleUtils.getTaskPriorityColor(task['priority']);
+    final taskId = (task['id'] ?? task['task_id'] ?? task['uuid'] ?? '').toString();
+    final completed = _isCompleted(task['status']?.toString());
+    final isUpdating = _updating.contains(taskId);
     
     return Container(
       margin: EdgeInsets.only(bottom: isSmallScreen ? 8 : 12),
@@ -300,7 +339,6 @@ class StaffScheduleDialog extends StatelessWidget {
                 ),
               ),
               SizedBox(width: isSmallScreen ? 6 : 8),
-              const Spacer(),
               TaskStatusBadge(
                 status: task['status'],
                 fontSize: isSmallScreen ? 8 : 9,
@@ -309,6 +347,72 @@ class StaffScheduleDialog extends StatelessWidget {
                   vertical: 2,
                 ),
               ),
+              const Spacer(),
+              if (!completed && taskId.isNotEmpty) ...[
+                SizedBox(width: isSmallScreen ? 6 : 8),
+                Tooltip(
+                  message: 'Mark as complete',
+                  child: Ink(
+                    decoration: ShapeDecoration(
+                      color: const Color(0xFF22C55E).withOpacity(0.12),
+                      shape: CircleBorder(
+                        side: BorderSide(color: const Color(0xFF16A34A).withOpacity(0.2)),
+                      ),
+                    ),
+                    child: IconButton(
+                      iconSize: isSmallScreen ? 22 : 24,
+                      color: const Color(0xFF16A34A),
+                      onPressed: isUpdating
+                          ? null
+                          : () async {
+                              final confirm = await _confirmMarkDone(context);
+                              if (!confirm) return;
+                              setState(() => _updating.add(taskId));
+                              final prevStatus = task['status'];
+                              final ok = await widget.onMarkDone(taskId);
+                              if (!mounted) return;
+                              if (ok) {
+                                setState(() {
+                                  task['status'] = 'completed';
+                                  _updating.remove(taskId);
+                                });
+                                // Show UNDO snackbar
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: const Text('Task marked complete'),
+                                    action: SnackBarAction(
+                                      label: 'UNDO',
+                                      onPressed: () async {
+                                        // Revert status
+                                        try {
+                                          await HousekeepingService.updateTaskStatus(taskId, (prevStatus ?? 'pending').toString());
+                                          if (!mounted) return;
+                                          setState(() {
+                                            task['status'] = prevStatus ?? 'pending';
+                                          });
+                                          ScaffoldMessenger.of(context).showSnackBar(
+                                            const SnackBar(content: Text('Reverted completion')),
+                                          );
+                                        } catch (_) {}
+                                      },
+                                    ),
+                                  ),
+                                );
+                              } else {
+                                setState(() => _updating.remove(taskId));
+                              }
+                            },
+                      icon: isUpdating
+                          ? SizedBox(
+                              width: isSmallScreen ? 16 : 18,
+                              height: isSmallScreen ? 16 : 18,
+                              child: const CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : const Icon(Icons.check),
+                    ),
+                  ),
+                ),
+              ],
             ],
           ),
           

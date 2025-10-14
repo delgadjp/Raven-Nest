@@ -125,17 +125,15 @@ class _ExpensesScreenState extends State<ExpensesScreen> {
                                     icon: Icons.trending_down,
                                     iconColor: const Color(0xFFEA580C),
                                   ),
-                                  SummaryCard(
+                                  SummaryGradientCard(
                                     title: 'Monthly Expenses',
                                     value: "\$${grandTotal.toInt()}",
                                     subtitle: 'Combined total',
-                                    icon: Icons.attach_money,
-                                    iconColor: const Color(0xFFDC2626),
-                                  ),
-                                  SummaryGradientCard(
-                                    title: 'Budget Status',
-                                    value: '${budgetUtilization.toStringAsFixed(0)}%',
-                                    subtitle: budgetUtilization <= 100 ? 'Within budget' : 'Over budget',
+                                    trendingIcon: Icons.attach_money,
+                                    gradientColors: const [
+                                      Color(0xFFDC2626),
+                                      Color(0xFFB91C1C),
+                                    ],
                                   ),
                                 ],
                               ),
