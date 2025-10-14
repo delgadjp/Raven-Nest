@@ -18,7 +18,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   
   // Data state
   Map<String, dynamic>? summaryData;
-  List<Map<String, dynamic>> monthlyRevenueData = [];
+  List<Map<String, dynamic>> revenueSeries = [];
   List<Map<String, dynamic>> bookingSourcesData = [];
   List<Map<String, dynamic>> recentActivityData = [];
   
@@ -80,18 +80,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
         chartsError = null;
       });
       
-      // Determine year for revenue chart (based on selected range start, fallback to current year)
       final range = _effectiveRange();
-      final int year = (range?.start.year) ?? DateTime.now().year;
-
       final results = await Future.wait([
-        _dashboardService.getMonthlyRevenueData(year: year),
+        _dashboardService.getRevenueTimeSeries(range: range),
         _dashboardService.getBookingSourcesData(range: range),
       ]);
       
       if (mounted) {
         setState(() {
-          monthlyRevenueData = results[0];
+          revenueSeries = results[0];
           bookingSourcesData = results[1];
           isLoadingCharts = false;
         });
@@ -324,6 +321,31 @@ class _DashboardScreenState extends State<DashboardScreen> {
             ),
           ],
         ),
+        const SizedBox(height: 16),
+
+        // Net Income row
+        Row(
+          children: [
+            Expanded(
+              child: Builder(
+                builder: (_) {
+                  final totalRevenue = (data['totalRevenue'] ?? 0.0) as num;
+                  final monthlyExpenses = (data['monthlyExpenses'] ?? 0.0) as num;
+                  final netIncome = totalRevenue - monthlyExpenses;
+                  final bool positive = netIncome >= 0;
+                  return SummaryCard(
+                    title: 'Net Income',
+                    value: _pesoFormat.format(netIncome),
+                    subtitle: 'Revenue - Expenses • ${_rangeLabel(_selectedRange)}',
+                    icon: positive ? Icons.trending_up : Icons.trending_down,
+                    iconColor: positive ? const Color(0xFF16A34A) : const Color(0xFFDC2626),
+                    onTap: () => context.go(AppRoutes.dashboard),
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
       ],
     );
   }
@@ -382,16 +404,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
       return _buildErrorCard('Failed to load charts: $chartsError');
     }
 
-    // Filter monthly revenue data based on selected range (client-side; data is monthly granularity)
-    final filteredRevenueData = _filterMonthlyRevenueForRange(monthlyRevenueData);
-
     return ResponsiveChartsLayout(
       charts: [
         ChartContainer(
           title: 'Monthly Revenue',
           subtitle: _selectedRange == TimeRange.year
-              ? 'Revenue and booking trends • ${_effectiveRange()?.start.year ?? DateTime.now().year}'
-              : 'Revenue filtered • ${_rangeLabel(_selectedRange)}',
+              ? 'Revenue by month • ${_effectiveRange()?.start.year ?? DateTime.now().year}'
+              : 'Revenue • ${_rangeLabel(_selectedRange)}',
           headerActions: [
             Tooltip(
               message: 'Refresh',
@@ -405,9 +424,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
               ),
             ),
           ],
-          chart: filteredRevenueData.isEmpty 
+          chart: revenueSeries.isEmpty 
             ? _buildEmptyChart('No revenue data available')
-            : RevenueLineChart(data: filteredRevenueData),
+            : RevenueLineChart(data: revenueSeries),
         ),
         ChartContainer(
           title: 'Booking Sources',
@@ -645,38 +664,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     }
   }
 
-  List<Map<String, dynamic>> _filterMonthlyRevenueForRange(List<Map<String, dynamic>> data) {
-    if (data.isEmpty) return data;
-    final range = _effectiveRange();
-    if (range == null) return data; // all time -> current year shown
-
-    // Keep months that intersect range's months
-    final startMonth = range.start.month;
-    final endMonth = range.end.subtract(const Duration(days: 1)).month;
-    final startIdx = startMonth;
-    final endIdx = endMonth;
-
-    return data.where((m) {
-      final monthName = m['month']?.toString() ?? '';
-      final monthIndex = _monthIndex(monthName);
-      if (monthIndex == null) return false;
-      if (startIdx <= endIdx) {
-        return monthIndex >= startIdx && monthIndex <= endIdx;
-      } else {
-        // Range wraps year end (Dec..Jan) -> include if month >= start or month <= end
-        return monthIndex >= startIdx || monthIndex <= endIdx;
-      }
-    }).toList();
-  }
-
-  int? _monthIndex(String name) {
-    const months = [
-      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
-    ];
-    final idx = months.indexOf(name);
-    return idx == -1 ? null : idx + 1;
-  }
+  // Monthly filtering helpers no longer needed after switching to range-aware series
 }
 
 enum TimeRange { today, week, month, year, all }

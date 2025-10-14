@@ -2,6 +2,7 @@
 // This service handles all dashboard-specific database queries
 
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'supabase_service.dart';
 import 'pricing_service.dart';
 
@@ -191,6 +192,120 @@ class DashboardService {
     } catch (e) {
       throw Exception('Failed to fetch monthly revenue data: $e');
     }
+  }
+
+  // Revenue time series that adapts to range:
+  // - If range is null or long (> ~2 months): returns monthly series for the year of range.start (or current year)
+  // - If range is short (<= 62 days): returns daily series between start..end-1
+  Future<List<Map<String, dynamic>>> getRevenueTimeSeries({DateTimeRange? range}) async {
+    // Decide granularity
+    final bool useDaily = range != null && range.end.difference(range.start).inDays <= 62;
+    if (!useDaily) {
+      // Monthly aggregation based on revenue table
+      final int year = (range?.start.year) ?? DateTime.now().year;
+      final monthly = await getMonthlyRevenueData(year: year);
+      // Convert to generic series shape using 'label'
+      return monthly
+          .map((m) => {
+                'label': m['month'],
+                'revenue': (m['revenue'] ?? 0.0) as num,
+                'bookings': m['bookings'] ?? 0,
+              })
+          .toList();
+    }
+
+    // Daily aggregation from bookings within range
+  final start = DateTime(range.start.year, range.start.month, range.start.day);
+    final end = DateTime(range.end.year, range.end.month, range.end.day); // exclusive
+
+    // Initialize buckets for each day in [start, end)
+    final Map<String, Map<String, dynamic>> buckets = {};
+    final List<DateTime> days = [];
+    for (DateTime d = start; d.isBefore(end); d = d.add(const Duration(days: 1))) {
+      final key = _isoDate(d);
+      buckets[key] = {
+        'date': d,
+        'revenue': 0.0,
+        'bookings': <String>{},
+      };
+      days.add(d);
+    }
+
+    // Fetch bookings that are not cancelled and whose check_in falls within the range
+    dynamic bookingsQuery = _client
+        .from('bookings')
+        .select('id, check_in, check_out, status, total_amount, source_id')
+        .not('status', 'eq', 'cancelled')
+        .gte('check_in', _isoDate(start))
+        .lt('check_in', _isoDate(end));
+    final bookings = await bookingsQuery;
+
+    // Cache for source names to compute pricing when total_amount is null
+    final Map<String, String> sourceNameCache = {};
+
+    for (final booking in bookings) {
+      try {
+        final id = booking['id'].toString();
+        final checkIn = DateTime.parse(booking['check_in']);
+        final dayKey = _isoDate(DateTime(checkIn.year, checkIn.month, checkIn.day));
+        if (!buckets.containsKey(dayKey)) continue; // safety
+
+        double amount = 0.0;
+        final total = booking['total_amount'];
+        if (total is num && total > 0) {
+          amount = total.toDouble();
+        } else {
+          // Compute using PricingService if possible
+          String sourceName = 'Unknown';
+          final sourceId = booking['source_id'];
+          if (sourceId != null) {
+            if (sourceNameCache.containsKey(sourceId)) {
+              sourceName = sourceNameCache[sourceId]!;
+            } else {
+              try {
+                final s = await _client
+                    .from('booking_sources')
+                    .select('name')
+                    .eq('id', sourceId)
+                    .single();
+                sourceName = (s['name'] ?? 'Unknown').toString();
+                sourceNameCache[sourceId] = sourceName;
+              } catch (_) {}
+            }
+          }
+          final checkOut = DateTime.parse(booking['check_out']);
+          final computed = PricingService.computeTotalAmount(
+            sourceName: sourceName,
+            checkIn: checkIn,
+            checkOut: checkOut,
+          );
+          if (computed != null && computed > 0) amount = computed;
+        }
+
+        buckets[dayKey]!['revenue'] = (buckets[dayKey]!['revenue'] as double) + amount;
+        (buckets[dayKey]!['bookings'] as Set<String>).add(id);
+      } catch (_) {}
+    }
+
+    // Prepare final list in order, with friendly labels
+    final bool isShortWeek = end.difference(start).inDays <= 8;
+    final DateFormat weekFmt = DateFormat('E'); // Mon, Tue
+    final DateFormat monthDayFmt = DateFormat('MMMd'); // Oct 14
+
+    final List<Map<String, dynamic>> series = [];
+    for (final d in days) {
+      final key = _isoDate(d);
+      final bucket = buckets[key]!;
+      final label = isShortWeek ? weekFmt.format(d) : monthDayFmt.format(d);
+      series.add({
+        'label': label,
+        'date': d.toIso8601String(),
+        'revenue': bucket['revenue'] ?? 0.0,
+        'bookings': (bucket['bookings'] as Set).length,
+      });
+    }
+
+    return series;
   }
 
   // Booking Sources Pie Chart Data

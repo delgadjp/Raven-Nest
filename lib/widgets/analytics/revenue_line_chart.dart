@@ -6,12 +6,16 @@ class RevenueLineChart extends StatelessWidget {
   final List<Map<String, dynamic>> data;
   final Color lineColor;
   final double lineWidth;
+  final bool showMovingAverage;
+  final int movingAverageWindow; // in points
 
   const RevenueLineChart({
     super.key,
     required this.data,
     this.lineColor = const Color(0xFF10B981),
     this.lineWidth = 3,
+    this.showMovingAverage = true,
+    this.movingAverageWindow = 7,
   });
 
   @override
@@ -58,17 +62,20 @@ class RevenueLineChart extends StatelessWidget {
             sideTitles: SideTitles(
               showTitles: true,
               reservedSize: 30,
-              interval: 1,
+              interval: _xLabelInterval(),
               getTitlesWidget: (double value, TitleMeta meta) {
-                if (value.toInt() >= 0 && value.toInt() < data.length) {
+                final i = value.toInt();
+                if (i >= 0 && i < data.length) {
+                  // Thin labels when dataset is dense
+                  if (_shouldSkipLabel(i)) return const SizedBox.shrink();
                   return Padding(
                     padding: const EdgeInsets.only(top: 8.0),
                     child: Text(
-                      data[value.toInt()]['month'] ?? '',
+                      _labelForIndex(i),
                       style: TextStyle(
-                        color: Colors.grey[600],
-                        fontWeight: FontWeight.w400,
-                        fontSize: 11,
+                        color: Colors.grey[700],
+                        fontWeight: FontWeight.w500,
+                        fontSize: 10,
                       ),
                     ),
                   );
@@ -118,12 +125,12 @@ class RevenueLineChart extends StatelessWidget {
                 (entry.value['revenue'] ?? 0).toDouble(),
               );
             }).toList(),
-            isCurved: false,
+            isCurved: true,
             color: lineColor,
             barWidth: lineWidth,
             isStrokeCapRound: true,
             dotData: FlDotData(
-              show: true,
+              show: data.length <= 40,
               getDotPainter: (spot, percent, barData, index) {
                 return FlDotCirclePainter(
                   radius: 4,
@@ -135,6 +142,16 @@ class RevenueLineChart extends StatelessWidget {
             ),
             belowBarData: BarAreaData(show: false),
           ),
+          if (showMovingAverage && data.length >= movingAverageWindow)
+            LineChartBarData(
+              spots: _movingAverageSpots(),
+              isCurved: true,
+              color: lineColor.withOpacity(0.35),
+              barWidth: 2,
+              isStrokeCapRound: true,
+              dotData: const FlDotData(show: false),
+              belowBarData: BarAreaData(show: false),
+            ),
         ],
         lineTouchData: LineTouchData(
           enabled: true,
@@ -146,8 +163,13 @@ class RevenueLineChart extends StatelessWidget {
                 final index = flSpot.x.toInt();
                 if (index >= 0 && index < data.length) {
                   final dataPoint = data[index];
+                  final label = _labelForIndex(index);
+                  final fullDate = dataPoint['date'];
+                  final header = (fullDate is String && fullDate.isNotEmpty)
+                      ? '$label • ${_fullDateFromIso(fullDate)}\n'
+                      : '$label\n';
                   return LineTooltipItem(
-                    '${dataPoint['month'] ?? ''}\n',
+                    header,
                     const TextStyle(
                       color: Colors.white,
                       fontWeight: FontWeight.bold,
@@ -185,6 +207,58 @@ class RevenueLineChart extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  String _labelForIndex(int index) {
+    if (index < 0 || index >= data.length) return '';
+    final map = data[index];
+    // Prefer generic 'label', fallback to 'month'
+    final label = map['label'] ?? map['month'] ?? '';
+    return label.toString();
+  }
+
+  double _xLabelInterval() {
+    final n = data.length;
+    if (n <= 12) return 1; // monthly or short series
+    if (n <= 30) return 2; // show every 2nd label
+    if (n <= 60) return 4;
+    return 6; // very dense
+  }
+
+  bool _shouldSkipLabel(int index) {
+    final n = data.length;
+    if (n <= 12) return false;
+    if (n <= 30) return index % 2 != 0;
+    if (n <= 60) return index % 4 != 0;
+    return index % 6 != 0;
+  }
+
+  List<FlSpot> _movingAverageSpots() {
+  final List<double> y = data
+    .map<double>((e) => (e['revenue'] ?? 0).toDouble())
+    .toList(growable: false);
+    final int w = movingAverageWindow;
+    final List<FlSpot> spots = [];
+    if (y.isEmpty || w <= 1) return spots;
+    double sum = 0;
+    for (int i = 0; i < y.length; i++) {
+      sum += y[i];
+      if (i >= w) sum -= y[i - w];
+      if (i >= w - 1) {
+        final avg = sum / w;
+        spots.add(FlSpot(i.toDouble(), avg));
+      }
+    }
+    return spots;
+  }
+
+  String _fullDateFromIso(String iso) {
+    try {
+      final dt = DateTime.parse(iso);
+      return DateFormat('yMMMd').format(dt);
+    } catch (_) {
+      return iso;
+    }
   }
 
   double _getYAxisInterval() {
